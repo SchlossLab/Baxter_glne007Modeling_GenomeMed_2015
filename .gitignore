@@ -1,0 +1,11 @@
+.Rproj.user
+.Rhistory
+.RData
+
+
+data/
+
+*.qsub*
+mothur*logfile
+*temp*
+*.docx
