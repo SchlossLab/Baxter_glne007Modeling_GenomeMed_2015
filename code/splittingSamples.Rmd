@@ -1,0 +1,103 @@
+---
+title: "splittingSamples.Rmd"
+author: "Niel"
+date: "October 27, 2014"
+output: pdf_document
+---
+
+```{r}
+setwd('~/Desktop/glne007/')
+```
+
+### The following chunk splits samples into either the training or testing set.  Within each diagnosis (normal, high-risk normal, adenoma, advanced adenoma, cancer) 2/3 of samples going into the training set and 1/3 going into the testing set.
+
+```{r}
+meta <- read.delim('~/Desktop/glne007/metadata.pick.txt', sep='\t', header=T)
+
+table(meta$dx)
+table(meta$Dx.Bin)
+
+advAd <- meta[meta$Dx.Bin=='adv Adenoma',]
+ade <- meta[meta$Dx.Bin=='Adenoma',]
+cancer<- meta[meta$Dx.Bin=='Cancer',]
+HRnorm <- meta[meta$Dx.Bin=='High Risk Normal',]
+norm <- meta[meta$Dx.Bin=='Normal',]
+
+index <- 1:nrow(cancer)
+testindex <- sample(index, trunc(length(index)/3))
+testCancer <- cancer[testindex,]
+trainCancer <- cancer[-testindex,]
+
+index <- 1:nrow(advAd)
+testindex <- sample(index, trunc(length(index)/3))
+testadvAd <- advAd[testindex,]
+trainadvAd <- advAd[-testindex,]
+
+index <- 1:nrow(ade)
+testindex <- sample(index, trunc(length(index)/3))
+testade <- ade[testindex,]
+trainade <- ade[-testindex,]
+
+index <- 1:nrow(HRnorm)
+testindex <- sample(index, trunc(length(index)/3))
+testHRnorm <- HRnorm[testindex,]
+trainHRnorm <- HRnorm[-testindex,]
+
+index <- 1:nrow(norm)
+testindex <- sample(index, trunc(length(index)/3))
+testnorm <- norm[testindex,]
+trainnorm <- norm[-testindex,]
+
+train <- rbind(trainCancer, trainadvAd, trainade, trainHRnorm, trainnorm)
+test <- rbind(testCancer, testadvAd, testade, testHRnorm, testnorm)
+
+write.table(train, file='~/Desktop/glne007/training.meta.txt', quote=F, sep='\t', row.names=F)
+write.table(train[,1], file='~/Desktop/glne007/training.accnos', quote=F, row.names=F, col.names=F)
+write.table(test, file='~/Desktop/glne007/testing.meta.txt', quote=F, sep='\t', row.names=F)
+write.table(test[,1], file='~/Desktop/glne007/testing.accnos', quote=F, row.names=F, col.names=F)
+```
+
+
+### The follwing chunk performs post hoc tests to determine whether splitting the samples resulted in uneven sampling of patients by BMI, age, gender, smoking, or diabetes)
+
+```{r}
+### Test for unbalanced metadata
+chisq.test(as.table(rbind(table(train$Smoke),table(test$Smoke))))$p.value
+chisq.test(as.table(rbind(table(train$Gender),table(test$Gender))))$p.value
+chisq.test(as.table(rbind(table(train$Diabetic),table(test$Diabetic))))$p.value
+t.test(train$Ageat.study.entry, test$Ageat.study.entry)$p.value
+t.test(train$BMI, test$BMI)$p.value
+
+chisq.test(as.table(rbind(table(trainCancer$Smoke, exclude='?'),table(testCancer$Smoke, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainCancer$Gender, exclude='?'),table(testCancer$Gender, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainCancer$Diabetic, exclude='?'),table(testCancer$Diabetic, exclude='?'))))$p.value
+t.test(testCancer$Ageat.study.entry, trainCancer$Ageat.study.entry)$p.value
+t.test(testCancer$BMI, trainCancer$BMI)$p.value
+
+chisq.test(as.table(rbind(table(trainadvAd$Smoke, exclude='?'),table(testadvAd$Smoke, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainadvAd$Gender, exclude='?'),table(testadvAd$Gender, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainadvAd$Diabetic, exclude='?'),table(testadvAd$Diabetic, exclude='?'))))$p.value
+t.test(trainadvAd$Ageat.study.entry, testadvAd$Ageat.study.entry)$p.value
+t.test(trainadvAd$BMI, testadvAd$BMI)$p.value
+
+chisq.test(as.table(rbind(table(trainade$Smoke, exclude='?'),table(testade$Smoke, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainade$Gender, exclude='?'),table(testade$Gender, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainade$Diabetic, exclude='?'),table(testade$Diabetic, exclude='?'))))$p.value
+t.test(trainade$Ageat.study.entry, testade$Ageat.study.entry)$p.value
+t.test(trainade$BMI, testade$BMI)$p.value
+
+chisq.test(as.table(rbind(table(trainnorm$Smoke, exclude='?'),table(testnorm$Smoke, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainnorm$Gender, exclude='?'),table(testnorm$Gender, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainnorm$Diabetic, exclude='?'),table(testnorm$Diabetic, exclude='?'))))$p.value
+t.test(trainnorm$Ageat.study.entry, testnorm$Ageat.study.entry)$p.value
+t.test(trainnorm$BMI, testnorm$BMI)$p.value
+
+chisq.test(as.table(rbind(table(trainHRnorm$Smoke, exclude='?'),table(testHRnorm$Smoke, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainHRnorm$Gender, exclude='?'),table(testHRnorm$Gender, exclude='?'))))$p.value
+chisq.test(as.table(rbind(table(trainHRnorm$Diabetic, exclude='?'),table(testHRnorm$Diabetic, exclude='?'))))$p.value
+t.test(trainHRnorm$Ageat.study.entry, testnorm$Ageat.study.entry)$p.value
+t.test(trainHRnorm$BMI, testnorm$BMI)$p.value
+
+```
+
+
