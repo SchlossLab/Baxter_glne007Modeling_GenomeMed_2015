@@ -1,0 +1,12 @@
+set.dir(input=data/, output=data/)
+cluster.split(fasta=glne007.final.fasta, count=glne007.final.counts, taxonomy=glne007.final.taxonomy, splitmethod=classify, taxlevel=4, cutoff=0.15, processors=1)
+
+make.shared(list=glne007.final.an.unique_list.list, count=glne007.final.counts, label=0.03)
+classify.otu(list=glne007.final.an.unique_list.list, count=glne007.final.counts, glne007.final.taxonomy, label=0.03)
+
+phylotype(taxonomy=glne007.final.taxonomy, label=1)
+make.shared(list=glne007.final.tx.list, count=glne007.final.counts, label=1)
+classify.otu(list=glne007.final.tx.list, count=glne007.final.counts, taxonomy=glne007.final.taxonomy, label=1)
+
+sub.sample(shared=glne007.final.an.unique_list.0.03.shared, size=10000)
+sub.sample(shared=glne007.final.tx.1.shared, size=10000)
