@@ -21,7 +21,14 @@ summary.seqs(fasta=current,count=current)
 classify.seqs(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.count_table, reference=trainset10_082014.pds.fasta, taxonomy=trainset10_082014.pds.tax, cutoff=80)
 remove.lineage(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.count_table, taxonomy=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.taxonomy, taxon=Chloroplast-Mitochondria-unknown-Archaea-Eukaryota)
 
-system(cp data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.fasta data/glne007.final.fasta)
-system(cp data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.pick.count_table data/glne007.final.counts)
-system(cp data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.pick.taxonomy data/glne007.final.taxonomy)
+get.groups(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.pick.count_table, taxonomy=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.pick.taxonomy, groups=mock1-mock2-mock5-mock6-mock7)
 
+system(mv data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.pick.fasta data/mocks.final.fasta)
+system(mv data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.pick.pick.count_table data/mocks.final.counts)
+system(mv data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.pick.pick.taxonomy data/mocks.final.taxonomy)
+
+remove.groups(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.pick.count_table, taxonomy=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.pick.taxonomy, groups=mock1-mock2-mock5-mock6-mock7)
+
+system(mv data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.pick.fasta data/glne007.final.fasta)
+system(mv data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.pick.pick.count_table data/glne007.final.counts)
+system(mv data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.pick.pick.taxonomy data/glne007.final.taxonomy)
