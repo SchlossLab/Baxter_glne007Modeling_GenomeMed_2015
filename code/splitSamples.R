@@ -36,7 +36,7 @@ normal <- splitDx('Normal')
 train <- rbind(adv.adenoma$training, adenoma$training, cancer$training, hr.norm$training, normal$training)
 test <- rbind(adv.adenoma$testing, adenoma$testing, cancer$testing, hr.norm$testing, normal$testing)
 
-write.table(train, file='data/training.meta.txt', quote=F, sep='\t', row.names=F) #write training set metadata
+write.table(train, file='data/training.meta.tsv', quote=F, sep='\t', row.names=F) #write training set metadata
 write.table(train[,1], file='data/training.accnos', quote=F, row.names=F, col.names=F) #make training set accnos file
-write.table(test, file='data/testing.meta.txt', quote=F, sep='\t', row.names=F) #write testing set metadata
+write.table(test, file='data/testing.meta.tsv', quote=F, sep='\t', row.names=F) #write testing set metadata
 write.table(test[,1], file='data/testing.accnos', quote=F, row.names=F, col.names=F) #make testing set accnos file
