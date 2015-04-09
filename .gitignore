@@ -4,7 +4,8 @@
 
 
 data/
-
+*.Rout
+*.pbs*
 *.qsub*
 mothur*logfile
 *temp*
