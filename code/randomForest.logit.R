@@ -18,7 +18,7 @@ canc.data$dx <- factor(canc.data$dx, levels=c('normal', 'cancer'))
 
 canc.rf <- cbind(dx=canc.data$dx, canc.data[,grep('Otu[0123456789]', colnames(all.data))]) #makes table on which to run random forest
 canc.rf.out <- randomForest(dx ~ ., data=canc.rf, importance=TRUE, proximity=TRUE, ntree=10000)
-canc.rf.out
+save(canc.rf.out, file='data/cancer.RFmodel.RData')
 
 canc.imp <- as.data.frame(importance(canc.rf.out, scale=T)) #extracts OTU importance from RF output
 canc.imp <- canc.imp[order(canc.imp[,3], decreasing=T),] #sorts by mean decrease accuracy
@@ -51,7 +51,7 @@ ade.data$dx <- factor(ade.data$dx, levels=c('normal', 'adenoma'))
 
 ade.rf <- cbind(dx=ade.data$dx, ade.data[,grep('Otu[0123456789]', colnames(all.data))]) #makes table on which to run random forest
 ade.rf.out <- randomForest(dx ~ ., data=ade.rf, importance=TRUE, proximity=TRUE, ntree=10000)
-ade.rf.out
+save(ade.rf.out, file='data/adenoma.RFmodel.RData')
 
 ade.imp <- as.data.frame(importance(ade.rf.out, scale=T)) #extracts OTU importance from RF output
 ade.imp <- ade.imp[order(ade.imp[,3], decreasing=T),] #sorts by mean decrease accuracy
@@ -85,7 +85,7 @@ les.data$dx <- factor(les.data$dx, levels=c('normal', 'lesion'))
 
 les.rf <- cbind(dx=les.data$dx, les.data[,grep('Otu[0123456789]', colnames(all.data))]) #makes table on which to run random forest
 les.rf.out <- randomForest(dx ~ ., data=les.rf, importance=TRUE, proximity=TRUE, ntree=10000)
-les.rf.out
+save(les.rf.out, file='data/lesion.RFmodel.RData')
 
 les.imp <- as.data.frame(importance(les.rf.out, scale=T)) #extracts OTU importance from RF output
 les.imp <- les.imp[order(les.imp[,3], decreasing=T),] #sorts by mean decrease accuracy
