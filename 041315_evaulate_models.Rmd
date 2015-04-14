@@ -1,0 +1,386 @@
+---
+title: "Evaulating Training Set Models and Initial Validation"
+author: "Niel"
+date: "April 13, 2015"
+output: html_document
+---
+
+```{r, echo=F, message=F, warning=F}
+deps = c("pROC","randomForest","knitr");
+for (dep in deps){
+  if (dep %in% installed.packages()[,"Package"] == FALSE){
+    install.packages(as.character(dep), quiet=TRUE);
+  }
+  library(dep, verbose=FALSE, character.only=TRUE)
+}
+
+train.meta <- read.delim('training.meta.tsv', header=T, sep='\t')
+train.shared <- read.delim('training.an.0.03.0.03.filter.shared', header=T, sep='\t')
+test.meta <- read.delim('testing.meta.tsv', header=T, sep='\t')
+test.shared <- read.delim('testing.an.0.03.shared', header=T, sep='\t')
+
+all.train.data <- merge(train.meta, train.shared, by.x='sample', by.y='Group')
+all.test.data <- merge(test.meta, test.shared, by.x='sample', by.y='Group')
+```
+
+### Finding the best models
+
+The first plot shows the results from the semi-exhaustive approach to finding the best models.  For lesion, the AIC drops steadily until 15 OTUs.  After that, the models would not converge.  The adenoma models improve steadily all the way to the 30-OTU model.  I didn't want to got any further than 30 OTUs.  The AIC of the cancer models bottoms out with 18 OTUs. The raw values are in a table below the plot.  
+
+```{r, results='hold', echo=F}
+### Picking the Best Semi-Exhaustive Models
+canc.aics <- c()
+ade.aics <- c()
+les.aics <- c()
+for(i in 1:30){
+  canc.input <- read.table(sprintf('%iotu.cancer.se.out', i))
+  canc.aics[i] <- as.numeric(canc.input[1,i+1])
+  ade.input <- read.table(sprintf('%iotu.adenoma.se.out', i))
+  ade.aics[i] <- as.numeric(ade.input[1,i+1])
+  les.input <- read.table(sprintf('%iotu.lesion.se.out', i))
+  les.aics[i] <- as.numeric(les.input[1,i+1])
+}
+
+plot(0, type='n', ylab='AIC of best model', xlab='OTUs per model', ylim=c(100,500), xlim=c(1,30), main='SemiExhaustive Method')
+points(1:length(canc.aics), canc.aics, type='b', col='red')
+points(1:length(ade.aics), ade.aics, type='b', col='blue')
+points(1:length(les.aics), les.aics, type='b', col='green4')
+legend('topright', legend=c('Lesion','Adenoma','Cancer'), lty=1, pch=1, col=c('green4','blue','red'))
+kable(cbind(1:30, canc.aics, ade.aics, les.aics))
+```
+
+After using RandomForest to find the 20 best OTUs for each comparison, I tested all possible logit models.  Comprared to the Semi-exhaustive approach, the AICs bottom out with fewer OTUs and never get as low. I used the 12-OTU model for cancer, 13-OTU model for adenoma, and the 16-OTU model for lesion.
+
+
+```{r, results='hold', echo=F}
+### Picking the Best RandomForest-Logit Models
+canc.aics <- c()
+ade.aics <- c()
+les.aics <- c()
+for(i in 1:19){
+  canc.input <- read.table(sprintf('%iotu.cancer.rfLog.out', i))
+  canc.aics[i] <- as.numeric(canc.input[1,i+1])
+  ade.input <- read.table(sprintf('%iotu.adenoma.rfLog.out', i))
+  ade.aics[i] <- as.numeric(ade.input[1,i+1])
+  les.input <- read.table(sprintf('%iotu.lesion.rfLog.out', i))
+  les.aics[i] <- as.numeric(les.input[1,i+1])
+}
+
+plot(0, type='n', ylab='AIC of best model', xlab='OTUs per model', ylim=c(min(canc.aics),max(les.aics)), xlim=c(1,19), main='RandomForest-Logit Method')
+points(1:length(canc.aics), canc.aics, type='b', col='red')
+points(1:length(ade.aics), ade.aics, type='b', col='blue')
+points(1:length(les.aics), les.aics, type='b', col='green4')
+legend('topright', legend=c('Lesion','Adenoma','Cancer'), lty=1, pch=1, col=c('green4','blue','red'))
+kable(cbind(1:19, canc.aics, ade.aics, les.aics))
+```
+
+###Cancer vs Normal  
+Below is a ROC curve using the models cancer models I selected above. The Random Forest classifier (in green) works poorly compared to the logit models. The logit model that was guided by RF feature selection (Logit(RF) in yellow) uses 12 OTUs and does quite well, but not as well as FIT. The logit model from the semi-exhaustive approach does very well, but is probably more overfit since it contains 18 OTUs.
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+###Cancer vs Healthy
+canc.train.data <- all.train.data[all.train.data$dx!='adenoma',]
+canc.train.data$dx <- factor(canc.train.data$dx, levels=c('normal', 'cancer'))
+
+#make ROC from RandomForest Model
+load('cancer.RFmodel.Rout') #canc.rf.out
+forest <- canc.rf.out
+forest.pred <- predict(canc.rf.out, type='prob')
+forest.roc<-roc(canc.train.data$dx ~ forest.pred[,1], levels=c('normal','cancer'))
+
+#make ROC curve for best semi-exhaustive logit model
+se.fit <- glm(dx ~ Otu000029 + Otu000043 + Otu000057 + Otu000063 + Otu000130 + Otu000146 + Otu000152 + Otu000168 + Otu000200 + Otu000216 + Otu000217 + Otu000231 + Otu000238 + Otu000285 + Otu000288 + Otu000306 + Otu000310 + Otu000395, data=canc.train.data, family=binomial('logit'))
+canc.train.data$se.prob=predict(se.fit, type=c("response"))
+se.roc <- roc(dx ~ se.prob, data = canc.train.data)
+
+#make ROC curve for best logit model from RF feature-selection
+rf.fit <- glm(dx ~ Otu000029+Otu000057+Otu000063+Otu000105+Otu000139+Otu000163+Otu000170+Otu000217+Otu000260+Otu000310+Otu000358+Otu000395, data=canc.train.data, family=binomial('logit'))
+canc.train.data$rf.prob=predict(rf.fit, type=c("response"))
+rf.roc <- roc(dx ~ rf.prob, data = canc.train.data)
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=canc.train.data, family=binomial('logit'))
+canc.train.data$fit.prob=predict(fit, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = canc.train.data)
+
+par(mar=c(5,5,4,1))
+#pdf(file='cancer.trainROC.#pdf', height=6, width=6)
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Carcinoma: Training Set')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(forest.roc, col='green4', lwd=2, add=T)
+plot(se.roc, col='red', lwd=2, add=T)
+plot(rf.roc, col='orange', lwd=2, add=T)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('Logit(SemiEx): %.3g', se.roc$auc),sprintf('Logit(RF): %.3g', rf.roc$auc),sprintf('RandomForest: %.3g', forest.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','red','orange','green4'), lwd=2, lty=1)
+#dev.off()
+```
+
+Below is the exact same figure as above, but I've added in curves with dashed lines for the models run on the testing set. The RF classifier does just as well, if not better, on the testing set.  This is promising.  As you suggested, I will try running random forest on the whole dataset.  The two logit models (red and yellow) do equally well on the testing set.  I favor the RF feature selection method since its much quicker and there's less of a difference in performance between the training and testing sets.  
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+###Cancer vs Healthy
+canc.train.data <- all.train.data[all.train.data$dx!='adenoma',]
+canc.train.data$dx <- factor(canc.train.data$dx, levels=c('normal', 'cancer'))
+canc.test.data <- all.test.data[all.test.data$dx!='adenoma',]
+canc.test.data$dx <- factor(canc.test.data$dx, levels=c('normal', 'cancer'))
+
+#make ROC from RandomForest Model
+load('cancer.RFmodel.Rout') #canc.rf.out
+forest <- canc.rf.out
+forest.pred <- predict(canc.rf.out, type='prob')
+test.rf <- cbind(dx=canc.test.data$dx, canc.test.data[,grep('Otu[0123456789]', colnames(all.test.data))])
+forest.test <- predict(canc.rf.out, test.rf, type='prob')
+forest.roc<-roc(canc.train.data$dx ~ forest.pred[,1], levels=c('normal','cancer'))
+forest.test.roc <- roc(canc.test.data$dx ~ forest.test[,1], levels=c('normal','cancer'))
+
+#make ROC curve for best semi-exhaustive logit model
+se.fit <- glm(dx ~ Otu000029 + Otu000043 + Otu000057 + Otu000063 + Otu000130 + Otu000146 + Otu000152 + Otu000168 + Otu000200 + Otu000216 + Otu000217 + Otu000231 + Otu000238 + Otu000285 + Otu000288 + Otu000306 + Otu000310 + Otu000395, data=canc.train.data, family=binomial('logit'))
+canc.train.data$se.prob=predict(se.fit, type=c("response"))
+canc.test.data$se.test.prob=predict(se.fit, canc.test.data, type=c("response"))
+se.roc <- roc(dx ~ se.prob, data = canc.train.data)
+se.test.roc <- roc(dx ~ se.test.prob, data = canc.test.data)
+
+#make ROC curve for best logit model from RF feature-selection
+rf.fit <- glm(dx ~ Otu000029+Otu000057+Otu000063+Otu000105+Otu000139+Otu000163+Otu000170+Otu000217+Otu000260+Otu000310+Otu000358+Otu000395, data=canc.train.data, family=binomial('logit'))
+canc.train.data$rf.prob=predict(rf.fit, type=c("response"))
+canc.test.data$rf.test.prob=predict(rf.fit, canc.test.data, type=c("response"))
+rf.roc <- roc(dx ~ rf.prob, data = canc.train.data)
+rf.test.roc <- roc(dx ~ rf.test.prob, data = canc.test.data)
+
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=canc.train.data, family=binomial('logit'))
+canc.train.data$fit.prob=predict(fit, type=c("response"))
+canc.test.data$fit.test.prob=predict(fit, canc.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = canc.train.data)
+fit.test.roc <- roc(dx ~ fit.test.prob, data = canc.test.data)
+
+par(mar=c(5,5,4,1))
+#pdf(file='cancer.testROC.pdf', height=6, width=6)
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Carcinoma: Training/Validation')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(fit.test.roc, col='blue', lwd=2, lty=2, add=T)
+plot(forest.roc, col='green4', lwd=2, add=T)
+plot(forest.test.roc, col='green4', lwd=2, lty=2, add=T)
+plot(se.roc, col='red', lwd=2, add=T)
+plot(se.test.roc, col='red', lwd=2, lty=2, add=T)
+plot(rf.roc, col='orange', lwd=2, add=T)
+plot(rf.test.roc, col='orange', lwd=2, lty=2, add=T)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('test FIT: %.3g', fit.test.roc$auc),
+       sprintf('Logit(SemiEx): %.3g', se.roc$auc),sprintf('test Logit(SemiEx): %.3g', se.test.roc$auc),
+       sprintf('Logit(RF): %.3g', rf.roc$auc),sprintf('test Logit(RF): %.3g', rf.test.roc$auc),
+       sprintf('RandomForest: %.3g', forest.roc$auc),sprintf('test RandomForest: %.3g', forest.test.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','blue','red','red','orange','orange','green4','green4'), lwd=2, lty=c(1,2))
+#dev.off()
+```
+
+###Adenoma vs Normal  
+For adenomas, the RF classifier is terrible.  The logit models both do better than FIT.  The red model contains 30 OTUs.  The yellow contains 13.
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+###Adenoma vs Healthy
+ade.train.data <- all.train.data[all.train.data$dx!='cancer',]
+ade.train.data$dx <- factor(ade.train.data$dx, levels=c('normal', 'adenoma'))
+
+#make ROC from RandomForest Model
+load('adenoma.RFmodel.Rout') #ade.rf.out
+forest <- ade.rf.out
+forest.pred <- predict(ade.rf.out, type='prob')
+forest.roc<-roc(ade.train.data$dx ~ forest.pred[,1], levels=c('normal','adenoma'))
+
+#make ROC curve for best semi-exhaustive logit model
+se.fit <- glm(dx ~ Otu000009+Otu000015+Otu000029+Otu000032+Otu000033+Otu000034+Otu000039+Otu000057+Otu000062+Otu000088+Otu000091+Otu000096+Otu000104+Otu000126+Otu000146+Otu000162+Otu000180+Otu000193+Otu000198+Otu000213+Otu000216+Otu000225+Otu000271+Otu000282+Otu000302+Otu000336+Otu000337+Otu000348+Otu000355+Otu000358, data=ade.train.data, family=binomial('logit'))
+ade.train.data$se.prob=predict(se.fit, type=c("response"))
+se.roc <- roc(dx ~ se.prob, data = ade.train.data)
+
+#make ROC curve for best logit model from RF feature-selection
+rf.fit <- glm(dx ~ Otu000014+Otu000029+Otu000032+Otu000057+Otu000091+Otu000104+Otu000105+Otu000146+Otu000198+Otu000216+Otu000336+Otu000339+Otu000358, data=ade.train.data, family=binomial('logit'))
+ade.train.data$rf.prob=predict(rf.fit, type=c("response"))
+rf.roc <- roc(dx ~ rf.prob, data = ade.train.data)
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=ade.train.data, family=binomial('logit'))
+ade.train.data$fit.prob=predict(fit, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = ade.train.data)
+
+par(mar=c(5,5,4,1))
+#pdf(file='adenoma.trainROC.#pdf', height=6, width=6)
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Adenoma: Training Set')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(forest.roc, col='green4', lwd=2, add=T)
+plot(se.roc, col='red', lwd=2, add=T)
+plot(rf.roc, col='orange', lwd=2, add=T)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('Logit(SemiEx): %.3g', se.roc$auc),sprintf('Logit(RF): %.3g', rf.roc$auc),sprintf('RandomForest: %.3g', forest.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','red','orange','green4'), lwd=2, lty=1)
+#dev.off()
+```
+
+Clearly the models were overfit, since they work terribly on the testing set.  The RF-guided method does slightly better.  I'll try using fewer OTUs so that its not so overfit.
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+###Adenoma vs Healthy
+ade.train.data <- all.train.data[all.train.data$dx!='cancer',]
+ade.train.data$dx <- factor(ade.train.data$dx, levels=c('normal', 'adenoma'))
+ade.test.data <- all.test.data[all.test.data$dx!='cancer',]
+ade.test.data$dx <- factor(ade.test.data$dx, levels=c('normal', 'adenoma'))
+
+#make ROC from RandomForest Model
+load('adenoma.RFmodel.Rout') #ade.rf.out
+forest <- ade.rf.out
+forest.pred <- predict(ade.rf.out, type='prob')
+test.rf <- cbind(dx=ade.test.data$dx, ade.test.data[,grep('Otu[0123456789]', colnames(all.test.data))])
+forest.test <- predict(ade.rf.out, test.rf, type='prob')
+forest.roc<-roc(ade.train.data$dx ~ forest.pred[,1], levels=c('normal','adenoma'))
+forest.test.roc <- roc(ade.test.data$dx ~ forest.test[,1], levels=c('normal','adenoma'))
+
+#make ROC curve for best semi-exhaustive logit model
+se.fit <- glm(dx ~ Otu000009+Otu000015+Otu000029+Otu000032+Otu000033+Otu000034+Otu000039+Otu000057+Otu000062+Otu000088+Otu000091+Otu000096+Otu000104+Otu000126+Otu000146+Otu000162+Otu000180+Otu000193+Otu000198+Otu000213+Otu000216+Otu000225+Otu000271+Otu000282+Otu000302+Otu000336+Otu000337+Otu000348+Otu000355+Otu000358, data=ade.train.data, family=binomial('logit'))
+ade.train.data$se.prob=predict(se.fit, type=c("response"))
+ade.test.data$se.test.prob=predict(se.fit, ade.test.data, type=c("response"))
+se.roc <- roc(dx ~ se.prob, data = ade.train.data)
+se.test.roc <- roc(dx ~ se.test.prob, data = ade.test.data)
+
+#make ROC curve for best logit model from RF feature-selection
+rf.fit <- glm(dx ~ Otu000014+Otu000029+Otu000032+Otu000057+Otu000091+Otu000104+Otu000105+Otu000146+Otu000198+Otu000216+Otu000336+Otu000339+Otu000358, data=ade.train.data, family=binomial('logit'))
+ade.train.data$rf.prob=predict(rf.fit, type=c("response"))
+ade.test.data$rf.test.prob=predict(rf.fit, ade.test.data, type=c("response"))
+rf.roc <- roc(dx ~ rf.prob, data = ade.train.data)
+rf.test.roc <- roc(dx ~ rf.test.prob, data = ade.test.data)
+
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=ade.train.data, family=binomial('logit'))
+ade.train.data$fit.prob=predict(fit, type=c("response"))
+ade.test.data$fit.test.prob=predict(fit, ade.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = ade.train.data)
+fit.test.roc <- roc(dx ~ fit.test.prob, data = ade.test.data)
+
+par(mar=c(5,5,4,1))
+#pdf(file='adenoma.testROC.pdf', height=6, width=6)
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Adenoma: Training/Validation')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(fit.test.roc, col='blue', lwd=2, lty=2, add=T)
+plot(forest.roc, col='green4', lwd=2, add=T)
+plot(forest.test.roc, col='green4', lwd=2, lty=2, add=T)
+plot(se.roc, col='red', lwd=2, add=T)
+plot(se.test.roc, col='red', lwd=2, lty=2, add=T)
+plot(rf.roc, col='orange', lwd=2, add=T)
+plot(rf.test.roc, col='orange', lwd=2, lty=2, add=T)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('test FIT: %.3g', fit.test.roc$auc),
+       sprintf('Logit(SemiEx): %.3g', se.roc$auc),sprintf('test Logit(SemiEx): %.3g', se.test.roc$auc),
+       sprintf('Logit(RF): %.3g', rf.roc$auc),sprintf('test Logit(RF): %.3g', rf.test.roc$auc),
+       sprintf('RandomForest: %.3g', forest.roc$auc),sprintf('test RandomForest: %.3g', forest.test.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','blue','red','red','orange','orange','green4','green4'), lwd=2, lty=c(1,2))
+#dev.off()
+```
+
+###Lesion vs Normal  
+The results for lesion are similar to adenoma, except that there is a higher bar for beating FIT.  Again, the RF-guided logit models are marginally better than the others.
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+###Lesion vs Healthy
+les.train.data <- all.train.data
+levels(les.train.data$dx)[1:2] <- 'lesion'
+les.train.data$dx <- factor(les.train.data$dx, levels=c('normal', 'lesion'))
+
+#make ROC from RandomForest Model
+load('lesion.RFmodel.Rout') #les.rf.out
+forest <- les.rf.out
+forest.pred <- predict(les.rf.out, type='prob')
+forest.roc<-roc(les.train.data$dx ~ forest.pred[,1], levels=c('normal','lesion'))
+
+#make ROC curve for best semi-exhaustive logit model
+se.fit <- glm(dx ~ Otu000029+Otu000032+Otu000088+Otu000091+Otu000096+Otu000105+Otu000146+Otu000216+Otu000225+Otu000271+Otu000282+Otu000310+Otu000339+Otu000358+Otu000395, data=les.train.data, family=binomial('logit'))
+les.train.data$se.prob=predict(se.fit, type=c("response"))
+se.roc <- roc(dx ~ se.prob, data = les.train.data)
+
+#make ROC curve for best logit model from RF feature-selection
+rf.fit <- glm(dx ~ Otu000014+Otu000029+Otu000044+Otu000057+Otu000060+Otu000087+Otu000088+Otu000091+Otu000104+Otu000105+Otu000146+Otu000198+Otu000216+Otu000310+Otu000339+Otu000358, data=les.train.data, family=binomial('logit'))
+les.train.data$rf.prob=predict(rf.fit, type=c("response"))
+rf.roc <- roc(dx ~ rf.prob, data = les.train.data)
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=les.train.data, family=binomial('logit'))
+les.train.data$fit.prob=predict(fit, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = les.train.data)
+
+par(mar=c(5,5,4,1))
+#pdf(file='lesion.trainROC.#pdf', height=6, width=6)
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Lesion: Training Set')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(forest.roc, col='green4', lwd=2, add=T)
+plot(se.roc, col='red', lwd=2, add=T)
+plot(rf.roc, col='orange', lwd=2, add=T)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('Logit(SemiEx): %.3g', se.roc$auc),sprintf('Logit(RF): %.3g', rf.roc$auc),sprintf('RandomForest: %.3g', forest.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','red','orange','green4'), lwd=2, lty=1)
+#dev.off()
+```
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+###Lesion vs Healthy
+les.train.data <- all.train.data
+levels(les.train.data$dx)[1:2] <- 'lesion'
+les.train.data$dx <- factor(les.train.data$dx, levels=c('normal', 'lesion'))
+
+les.test.data <- all.test.data
+levels(les.test.data$dx)[1:2] <- 'lesion'
+les.test.data$dx <- factor(les.test.data$dx, levels=c('normal', 'lesion'))
+
+#make ROC from RandomForest Model
+load('lesion.RFmodel.Rout') #les.rf.out
+forest <- les.rf.out
+forest.pred <- predict(les.rf.out, type='prob')
+test.rf <- cbind(dx=les.test.data$dx, les.test.data[,grep('Otu[0123456789]', colnames(all.test.data))])
+forest.test <- predict(les.rf.out, test.rf, type='prob')
+forest.roc<-roc(les.train.data$dx ~ forest.pred[,1], levels=c('normal','lesion'))
+forest.test.roc <- roc(les.test.data$dx ~ forest.test[,1], levels=c('normal','lesion'))
+
+#make ROC curve for best semi-exhaustive logit model
+se.fit <- glm(dx ~ Otu000029+Otu000032+Otu000088+Otu000091+Otu000096+Otu000105+Otu000146+Otu000216+Otu000225+Otu000271+Otu000282+Otu000310+Otu000339+Otu000358+Otu000395, data=les.train.data, family=binomial('logit'))
+les.train.data$se.prob=predict(se.fit, type=c("response"))
+les.test.data$se.test.prob=predict(se.fit, les.test.data, type=c("response"))
+se.roc <- roc(dx ~ se.prob, data = les.train.data)
+se.test.roc <- roc(dx ~ se.test.prob, data = les.test.data)
+
+#make ROC curve for best logit model from RF feature-selection
+rf.fit <- glm(dx ~ Otu000014+Otu000029+Otu000044+Otu000057+Otu000060+Otu000087+Otu000088+Otu000091+Otu000104+Otu000105+Otu000146+Otu000198+Otu000216+Otu000310+Otu000339+Otu000358, data=les.train.data, family=binomial('logit'))
+les.train.data$rf.prob=predict(rf.fit, type=c("response"))
+les.test.data$rf.test.prob=predict(rf.fit, les.test.data, type=c("response"))
+rf.roc <- roc(dx ~ rf.prob, data = les.train.data)
+rf.test.roc <- roc(dx ~ rf.test.prob, data = les.test.data)
+
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=les.train.data, family=binomial('logit'))
+les.train.data$fit.prob=predict(fit, type=c("response"))
+les.test.data$fit.test.prob=predict(fit, les.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = les.train.data)
+fit.test.roc <- roc(dx ~ fit.test.prob, data = les.test.data)
+
+par(mar=c(5,5,4,1))
+#pdf(file='lesion.testROC.pdf', height=6, width=6)
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Lesion: Training/Validation')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(fit.test.roc, col='blue', lwd=2, lty=2, add=T)
+plot(forest.roc, col='green4', lwd=2, add=T)
+plot(forest.test.roc, col='green4', lwd=2, lty=2, add=T)
+plot(se.roc, col='red', lwd=2, add=T)
+plot(se.test.roc, col='red', lwd=2, lty=2, add=T)
+plot(rf.roc, col='orange', lwd=2, add=T)
+plot(rf.test.roc, col='orange', lwd=2, lty=2, add=T)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('test FIT: %.3g', fit.test.roc$auc),
+       sprintf('Logit(SemiEx): %.3g', se.roc$auc),sprintf('test Logit(SemiEx): %.3g', se.test.roc$auc),
+       sprintf('Logit(RF): %.3g', rf.roc$auc),sprintf('test Logit(RF): %.3g', rf.test.roc$auc),
+       sprintf('RandomForest: %.3g', forest.roc$auc),sprintf('test RandomForest: %.3g', forest.test.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','blue','red','red','orange','orange','green4','green4'), lwd=2, lty=c(1,2))
+#dev.off()
+```
+
+###Conclusions
+There is some potential for using a Random Forest model for the cancer vs normal comparison, however random forest does poorly on the other comparisons.  I think the most promising method is the logit model guided by RF feature selection.  I will try cutting down the number of OTUs to see where we get the best models with the least overfitting.
+
+
+
+

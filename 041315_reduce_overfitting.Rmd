@@ -1,0 +1,348 @@
+---
+title: "Effect of Varying Number of OTUs on Overfitting"
+author: "Niel"
+date: "April 13, 2015"
+output: html_document
+---
+
+Here I'm testing whether reducing the number of OTUs will result in less overfitting.  So far it seems like the features that Random Forest picks work well in logit models, as they overfit less than picking the model with the lowest possible AIC.  So for these experiments, the models are based on what RF considers the 15, 10, 5, etc. most predictive OTUs, not necessarily the combination of OTUs with lowest AIC on the training set. Note: The OTU importance is from running Random Forest on the training set only. I will try RF on the whole dataset shortly.
+
+```{r, echo=F, message=F, warning=F}
+deps = c("pROC","randomForest","knitr");
+for (dep in deps){
+  if (dep %in% installed.packages()[,"Package"] == FALSE){
+    install.packages(as.character(dep), quiet=TRUE);
+  }
+  library(dep, verbose=FALSE, character.only=TRUE)
+}
+
+train.meta <- read.delim('training.meta.tsv', header=T, sep='\t')
+train.shared <- read.delim('training.an.0.03.0.03.filter.shared', header=T, sep='\t')
+test.meta <- read.delim('testing.meta.tsv', header=T, sep='\t')
+test.shared <- read.delim('testing.an.0.03.shared', header=T, sep='\t')
+
+all.train.data <- merge(train.meta, train.shared, by.x='sample', by.y='Group')
+all.test.data <- merge(test.meta, test.shared, by.x='sample', by.y='Group')
+
+makeFormula <- function(x){ #this function will be used to convert combinations of OTUs in formula objects
+  as.formula(paste('dx', paste(x, collapse=' + '), sep=' ~ '))
+}
+
+
+```
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+load('cancer.RFmodel.Rout')
+canc.imp <- as.data.frame(importance(canc.rf.out, scale=T)) #extracts OTU importance from RF output
+canc.imp <- canc.imp[order(canc.imp[,3], decreasing=T),] #sorts by mean decrease accuracy
+canc.otus <- row.names(canc.imp)[1:20] #takes top 20 OTUs
+
+canc.train.data <- all.train.data[all.train.data$dx!='adenoma',]
+canc.train.data$dx <- factor(canc.train.data$dx, levels=c('normal', 'cancer'))
+canc.test.data <- all.test.data[all.test.data$dx!='adenoma',]
+canc.test.data$dx <- factor(canc.test.data$dx, levels=c('normal', 'cancer'))
+
+train.aucs <- c()
+test.aucs <- c()
+train.comb <- c()
+test.comb <- c()
+for(i in 1:20){
+  mod <- makeFormula(canc.otus[1:i])
+  fit <- glm(mod, data=canc.train.data, family=binomial('logit'))
+  canc.train.data$prob=predict(fit, type=c("response"))
+  canc.test.data$test.prob=predict(fit, canc.test.data, type=c("response"))
+  train.aucs[i] <- roc(dx ~ prob, data = canc.train.data)$auc
+  test.aucs[i] <- roc(dx ~ test.prob, data = canc.test.data)$auc
+  
+  comb.mod <- as.formula(paste('dx', paste(paste(canc.otus[1:i], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+  comb.fit <- glm(comb.mod, data=canc.train.data, family=binomial('logit'))
+  canc.train.data$comb.prob=predict(comb.fit, type=c("response"))
+  canc.test.data$test.comb.prob=predict(comb.fit, canc.test.data, type=c("response"))
+  train.comb[i] <- roc(dx ~ comb.prob, data = canc.train.data)$auc
+  test.comb[i] <- roc(dx ~ test.comb.prob, data = canc.test.data)$auc
+  }
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=canc.train.data, family=binomial('logit'))
+canc.train.data$fit.prob=predict(fit, type=c("response"))
+canc.test.data$fit.test.prob=predict(fit, canc.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = canc.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = canc.test.data)
+
+plot(1:20, train.aucs, type='l', lwd=2, ylab='AUC', col='red',xlab='Number of OTUS', ylim=c(0.6,1))
+points(1:20, test.aucs, type='l', col='red', lty=2, lwd=2)
+points(1:20, train.comb, type='l', col='green4', lwd=2)
+points(1:20, test.comb, type='l', col='green4', lty=2, lwd=2)
+abline(v=8, lty=3)
+abline(h=fit.roc$auc, col='blue')
+abline(h=test.fit.roc$auc, col='blue', lty=2)
+legend('bottomright', legend=c('FIT (training)','FIT (testing)','Microbiome (training)','Microbiome (test)','Combined (training)','Combined (testing)'), col=c('blue','blue','red','red','green4','green4'), lty=c(1,2), lwd=2)
+```
+
+Rather than showing 20+ ROC curves I thought it would be easier to summarize the results as in the figure above.  The plot shows how changing the number of OTUs effects the AUC on the training and testing sets.  The red lines are the microbiome only.  The green lines are microbiome + FIT.  The blue lines are FIT.  The vertical dotted black line is where the optimal number of OTUs seems to be. It looks like the 8-OTU model gives the highest AUC with minimal overfitting. This is true of both the microbiome only and combined models. Compare these results to Joe's paper. His 6-OTU microbiome-only model for cancer vs healthy had an AUC of 0.798.  My 8-OTU model has an AUC of `r signif(test.aucs[8], 3)` **on the validation set**.  I think thats pretty good. 
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+#Microbiome Model
+mod2 <- makeFormula(canc.otus[1:8])
+fit2 <- glm(mod2, data=canc.train.data, family=binomial('logit'))
+canc.train.data$prob2=predict(fit2, type=c("response"))
+canc.test.data$test.prob2=predict(fit2, canc.test.data, type=c("response"))
+roc2 <- roc(dx ~ prob2, data = canc.train.data)
+test.roc2 <- roc(dx ~ test.prob2, data = canc.test.data)
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=canc.train.data, family=binomial('logit'))
+canc.train.data$fit.prob=predict(fit, type=c("response"))
+canc.test.data$fit.test.prob=predict(fit, canc.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = canc.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = canc.test.data)
+
+#Combined FIT and Microbiome
+comb.mod <- as.formula(paste('dx', paste(paste(canc.otus[1:8], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+comb.fit <- glm(comb.mod, data=canc.train.data, family=binomial('logit'))
+canc.train.data$comb.prob=predict(comb.fit, type=c("response"))
+canc.test.data$test.comb.prob=predict(comb.fit, canc.test.data, type=c("response"))
+comb.roc <- roc(dx ~ comb.prob, data = canc.train.data)
+test.comb.roc <- roc(dx ~ test.comb.prob, data = canc.test.data)
+
+
+par(mar=c(5,5,4,1))
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Carcinoma: Training/Testing')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(test.fit.roc, col='blue', lwd=2, add=T, lty=2)
+plot(roc2, col='red', lwd=2, add=T)
+plot(test.roc2, col='red', lwd=2, add=T, lty=2)
+plot(comb.roc, col='green4', lwd=2, add=T)
+plot(test.comb.roc, col='green4', lwd=2, add=T, lty=2)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('test FIT: %.3g', test.fit.roc$auc),
+       sprintf('8 OTUs: %.3g', roc2$auc),sprintf('test 8 OTUs: %.3g', test.roc2$auc),
+       sprintf('Combined: %.3g', comb.roc$auc),sprintf('test Combined: %.3g', test.comb.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','blue','red','red','green4','green4'), lwd=2, lty=c(1,2))
+
+```
+
+The ROC curve above shows the 8-OTU models for Normal vs Cancer from the previous figure. The combined model does significantly better on the testing set than FIT alone (p=`r signif(roc.test(test.fit.roc,test.comb.roc)$p.value, 3)`)
+
+And in case you're curious, the 8-OTU model contains the following taxa:  
+1. Peptostreptococcus  
+2. Porphyromonas (periodontal pathogen)  
+3. Parvimonas (periodontal pathogen)  
+4. Fusobacterium (periodontal pathogen)  
+5. Gemella (mouth commensal, occasionally in oral cysts or endocarditis)  
+6. Ruminococcaceae (butyrate producer?)  
+7. Prevotella  
+8. Ruminococcaceae (butyrate producer?)  
+
+If CRC turns out to be a 1-bug disease, my money is on Porphrymonas. It keeps popping up. There's another one a little further down the list too.
+
+###Adenoma vs Healthy
+The results for adeanomas are far less promising. Adding OTUs to the model is great for the training set, but doesn't help for the testing set. Combining the microbiome and FIT is always worse than FIT alone, except for the 1-OTU model which has no effect on FIT. Keep in mind that the OTUs picked for this are from RF feature selection on the training set alone.  Unlike for carcinomas, it isn't very good at picking out OTUs that work for the testing set. Still these shitty models do much better on the testing set than the "best" models from the semi-exhaustive approach. **Conclusion:** detecting adenomas is *really hard*!
+
+For what it's worth, the one OTU is Odoribacter, which was enriched in Joe's AOM/DSS mice. 
+
+
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+ade.train.data <- all.train.data[all.train.data$dx!='cancer',]
+ade.train.data$dx <- factor(ade.train.data$dx, levels=c('normal', 'adenoma'))
+ade.test.data <- all.test.data[all.test.data$dx!='cancer',]
+ade.test.data$dx <- factor(ade.test.data$dx, levels=c('normal', 'adenoma'))
+
+load('adenoma.RFmodel.Rout')
+ade.imp <- as.data.frame(importance(ade.rf.out, scale=T)) #extracts OTU importance from RF output
+ade.imp <- ade.imp[order(ade.imp[,3], decreasing=T),] #sorts by mean decrease accuracy
+ade.otus <- row.names(ade.imp)[1:30] #takes top 20 OTUs
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=ade.train.data, family=binomial('logit'))
+ade.train.data$fit.prob=predict(fit, type=c("response"))
+ade.test.data$fit.test.prob=predict(fit, ade.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = ade.train.data)
+fit.test.roc <- roc(dx ~ fit.test.prob, data = ade.test.data)
+
+
+train.aucs <- c()
+test.aucs <- c()
+train.comb <- c()
+test.comb <- c()
+for(i in 1:30){
+  mod <- makeFormula(ade.otus[1:i])
+  fit <- glm(mod, data=ade.train.data, family=binomial('logit'))
+  ade.train.data$prob=predict(fit, type=c("response"))
+  ade.test.data$test.prob=predict(fit, ade.test.data, type=c("response"))
+  train.aucs[i] <- roc(dx ~ prob, data = ade.train.data)$auc
+  test.aucs[i] <- roc(dx ~ test.prob, data = ade.test.data)$auc
+  
+  comb.mod <- as.formula(paste('dx', paste(paste(ade.otus[1:i], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+  comb.fit <- glm(comb.mod, data=ade.train.data, family=binomial('logit'))
+  ade.train.data$comb.prob=predict(comb.fit, type=c("response"))
+  ade.test.data$test.comb.prob=predict(comb.fit, ade.test.data, type=c("response"))
+  train.comb[i] <- roc(dx ~ comb.prob, data = ade.train.data)$auc
+  test.comb[i] <- roc(dx ~ test.comb.prob, data = ade.test.data)$auc
+  }
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=ade.train.data, family=binomial('logit'))
+ade.train.data$fit.prob=predict(fit, type=c("response"))
+ade.test.data$fit.test.prob=predict(fit, ade.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = ade.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = ade.test.data)
+
+plot(1:30, train.aucs, type='l', lwd=2, ylab='AUC', col='red',xlab='Number of OTUS', ylim=c(0.4,0.85))
+points(1:30, test.aucs, type='l', col='red', lty=2, lwd=2)
+points(1:30, train.comb, type='l', col='green4', lwd=2)
+points(1:30, test.comb, type='l', col='green4', lty=2, lwd=2)
+abline(v=1, lty=3)
+abline(h=fit.roc$auc, col='blue')
+abline(h=test.fit.roc$auc, col='blue', lty=2)
+legend('bottomright', legend=c('FIT (training)','FIT (testing)','Microbiome (training)','Microbiome (test)','Combined (training)','Combined (testing)'), col=c('blue','blue','red','red','green4','green4'), lty=c(1,2), lwd=2)
+
+```
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+#Microbiome Model
+mod2 <- makeFormula(ade.otus[1:1])
+fit2 <- glm(mod2, data=ade.train.data, family=binomial('logit'))
+ade.train.data$prob2=predict(fit2, type=c("response"))
+ade.test.data$test.prob2=predict(fit2, ade.test.data, type=c("response"))
+roc2 <- roc(dx ~ prob2, data = ade.train.data)
+test.roc2 <- roc(dx ~ test.prob2, data = ade.test.data)
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=ade.train.data, family=binomial('logit'))
+ade.train.data$fit.prob=predict(fit, type=c("response"))
+ade.test.data$fit.test.prob=predict(fit, ade.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = ade.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = ade.test.data)
+
+#Combined FIT and Microbiome
+comb.mod <- as.formula(paste('dx', paste(paste(ade.otus[1:1], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+comb.fit <- glm(comb.mod, data=ade.train.data, family=binomial('logit'))
+ade.train.data$comb.prob=predict(comb.fit, type=c("response"))
+ade.test.data$test.comb.prob=predict(comb.fit, ade.test.data, type=c("response"))
+comb.roc <- roc(dx ~ comb.prob, data = ade.train.data)
+test.comb.roc <- roc(dx ~ test.comb.prob, data = ade.test.data)
+
+par(mar=c(5,5,4,1))
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Adenoma: Training/Testing')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(test.fit.roc, col='blue', lwd=2, add=T, lty=2)
+plot(roc2, col='red', lwd=2, add=T)
+plot(test.roc2, col='red', lwd=2, add=T, lty=2)
+plot(comb.roc, col='green4', lwd=2, add=T)
+plot(test.comb.roc, col='green4', lwd=2, add=T, lty=2)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('test FIT: %.3g', test.fit.roc$auc),
+       sprintf('1 OTUs: %.3g', roc2$auc),sprintf('test 1 OTUs: %.3g', test.roc2$auc),
+       sprintf('Combined: %.3g', comb.roc$auc),sprintf('test Combined: %.3g', test.comb.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','blue','red','red','green4','green4'), lwd=2, lty=c(1,2))
+```
+
+###Lesion vs Healthy
+The lesion models tell the same story as the adenoma ones.  Only the model with 1 OTU + FIT is slightly better than FIT, but not significantly (p=`r signif(roc.test(test.fit.roc,test.comb.roc)$p.value, 3)`). That one OTU is the Porphrymonas that's really good for detecting carcinoma.
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+les.train.data <- all.train.data
+levels(les.train.data$dx)[1:2] <- 'lesion'
+les.train.data$dx <- factor(les.train.data$dx, levels=c('normal', 'lesion'))
+
+les.test.data <- all.test.data
+levels(les.test.data$dx)[1:2] <- 'lesion'
+les.test.data$dx <- factor(les.test.data$dx, levels=c('normal', 'lesion'))
+
+
+load('lesion.RFmodel.Rout')
+les.imp <- as.data.frame(importance(les.rf.out, scale=T)) #extracts OTU importance from RF output
+les.imp <- les.imp[order(les.imp[,3], decreasing=T),] #sorts by mean decrease accuracy
+les.otus <- row.names(les.imp)[1:20] #takes top 20 OTUs
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=les.train.data, family=binomial('logit'))
+les.train.data$fit.prob=predict(fit, type=c("response"))
+les.test.data$fit.test.prob=predict(fit, les.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = les.train.data)
+fit.test.roc <- roc(dx ~ fit.test.prob, data = les.test.data)
+
+train.aucs <- c()
+test.aucs <- c()
+train.comb <- c()
+test.comb <- c()
+for(i in 1:20){
+  mod <- makeFormula(les.otus[1:i])
+  fit <- glm(mod, data=les.train.data, family=binomial('logit'))
+  les.train.data$prob=predict(fit, type=c("response"))
+  les.test.data$test.prob=predict(fit, les.test.data, type=c("response"))
+  train.aucs[i] <- roc(dx ~ prob, data = les.train.data)$auc
+  test.aucs[i] <- roc(dx ~ test.prob, data = les.test.data)$auc
+  
+  comb.mod <- as.formula(paste('dx', paste(paste(les.otus[1:i], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+  comb.fit <- glm(comb.mod, data=les.train.data, family=binomial('logit'))
+  les.train.data$comb.prob=predict(comb.fit, type=c("response"))
+  les.test.data$test.comb.prob=predict(comb.fit, les.test.data, type=c("response"))
+  train.comb[i] <- roc(dx ~ comb.prob, data = les.train.data)$auc
+  test.comb[i] <- roc(dx ~ test.comb.prob, data = les.test.data)$auc
+  }
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=les.train.data, family=binomial('logit'))
+les.train.data$fit.prob=predict(fit, type=c("response"))
+les.test.data$fit.test.prob=predict(fit, les.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = les.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = les.test.data)
+
+plot(1:20, train.aucs, type='l', lwd=2, ylab='AUC', col='red',xlab='Number of OTUS', ylim=c(0.4,0.9))
+points(1:20, test.aucs, type='l', col='red', lty=2, lwd=2)
+points(1:20, train.comb, type='l', col='green4', lwd=2)
+points(1:20, test.comb, type='l', col='green4', lty=2, lwd=2)
+abline(v=1, lty=3)
+abline(h=fit.roc$auc, col='blue')
+abline(h=test.fit.roc$auc, col='blue', lty=2)
+legend('bottomright', legend=c('FIT (training)','FIT (testing)','Microbiome (training)','Microbiome (test)','Combined (training)','Combined (testing)'), col=c('blue','blue','red','red','green4','green4'), lty=c(1,2), lwd=2)
+
+```
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+#Microbiome Model
+mod2 <- makeFormula(les.otus[1:1])
+fit2 <- glm(mod2, data=les.train.data, family=binomial('logit'))
+les.train.data$prob2=predict(fit2, type=c("response"))
+les.test.data$test.prob2=predict(fit2, les.test.data, type=c("response"))
+roc2 <- roc(dx ~ prob2, data = les.train.data)
+test.roc2 <- roc(dx ~ test.prob2, data = les.test.data)
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=les.train.data, family=binomial('logit'))
+les.train.data$fit.prob=predict(fit, type=c("response"))
+les.test.data$fit.test.prob=predict(fit, les.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = les.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = les.test.data)
+
+#Combined FIT and Microbiome
+comb.mod <- as.formula(paste('dx', paste(paste(les.otus[1:1], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+comb.fit <- glm(comb.mod, data=les.train.data, family=binomial('logit'))
+les.train.data$comb.prob=predict(comb.fit, type=c("response"))
+les.test.data$test.comb.prob=predict(comb.fit, les.test.data, type=c("response"))
+comb.roc <- roc(dx ~ comb.prob, data = les.train.data)
+test.comb.roc <- roc(dx ~ test.comb.prob, data = les.test.data)
+
+
+par(mar=c(5,5,4,1))
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Lesion: Training/Testing')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(test.fit.roc, col='blue', lwd=2, add=T, lty=2)
+plot(roc2, col='red', lwd=2, add=T)
+plot(test.roc2, col='red', lwd=2, add=T, lty=2)
+plot(comb.roc, col='green4', lwd=2, add=T)
+plot(test.comb.roc, col='green4', lwd=2, add=T, lty=2)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('test FIT: %.3g', test.fit.roc$auc),
+       sprintf('1 OTUs: %.3g', roc2$auc),sprintf('test 1 OTUs: %.3g', test.roc2$auc),
+       sprintf('Combined: %.3g', comb.roc$auc),sprintf('test Combined: %.3g', test.comb.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','blue','red','red','green4','green4'), lwd=2, lty=c(1,2))
+```
+
+###Conclusions
+It *is* possible to make models that are not overfit, but they aren't very good.  Even though these adenoma and lesion models really suck, they still do better on the validaiton set than when I picked the "best" models from the semi-exhaustive approach.  I think the cancer vs normal comparisons are quite good.  We could just focus on those for the paper.  Next, I'll try RF on the whole model just to see how it does. 
+
