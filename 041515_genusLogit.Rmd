@@ -1,0 +1,324 @@
+---
+title: "Logit models using bacterial genera picked by Random Forest"
+author: "Niel"
+date: "April 14, 2015"
+output: html_document
+---
+
+```{r, echo=F, message=F, warning=F}
+deps = c("pROC","randomForest","knitr");
+for (dep in deps){
+  if (dep %in% installed.packages()[,"Package"] == FALSE){
+    install.packages(as.character(dep), quiet=TRUE);
+  }
+  library(dep, verbose=FALSE, character.only=TRUE)
+}
+
+train.meta <- read.delim('training.meta.tsv', header=T, sep='\t')
+train.shared <- read.delim('training.tx.1.shared', header=T, sep='\t')
+test.meta <- read.delim('testing.meta.tsv', header=T, sep='\t')
+test.shared <- read.delim('testing.tx.1.shared', header=T, sep='\t')
+
+all.train.data <- merge(train.meta, train.shared, by.x='sample', by.y='Group')
+all.test.data <- merge(test.meta, test.shared, by.x='sample', by.y='Group')
+
+makeFormula <- function(x){ #this function will be used to convert combinations of genera in formula objects
+  as.formula(paste('dx', paste(x, collapse=' + '), sep=' ~ '))
+}
+```
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+canc.train.data <- all.train.data[all.train.data$dx!='adenoma',]
+canc.train.data$dx <- factor(canc.train.data$dx, levels=c('normal', 'cancer'))
+canc.test.data <- all.test.data[all.test.data$dx!='adenoma',]
+canc.test.data$dx <- factor(canc.test.data$dx, levels=c('normal', 'cancer'))
+canc.rf <- cbind(dx=canc.train.data$dx, canc.train.data[,grep('Otu[0123456789]', colnames(all.train.data))])
+canc.rf.out <- randomForest(dx ~ ., data=canc.rf, importance=TRUE, proximity=TRUE, ntree=2000)
+
+canc.imp <- as.data.frame(importance(canc.rf.out, scale=T)) #extracts OTU importance from RF output
+canc.imp <- canc.imp[order(canc.imp[,3], decreasing=T),] #sorts by mean decrease accuracy
+canc.otus <- row.names(canc.imp) 
+canc.otus<- canc.otus[canc.otus %in% colnames(canc.test.data)]
+
+train.aucs <- c()
+test.aucs <- c()
+train.comb <- c()
+test.comb <- c()
+for(i in 1:20){
+  mod <- makeFormula(canc.otus[1:i])
+  fit <- glm(mod, data=canc.train.data, family=binomial('logit'))
+  canc.train.data$prob=predict(fit, type=c("response"))
+  canc.test.data$test.prob=predict(fit, canc.test.data, type=c("response"))
+  train.aucs[i] <- roc(dx ~ prob, data = canc.train.data)$auc
+  test.aucs[i] <- roc(dx ~ test.prob, data = canc.test.data)$auc
+  
+  comb.mod <- as.formula(paste('dx', paste(paste(canc.otus[1:i], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+  comb.fit <- glm(comb.mod, data=canc.train.data, family=binomial('logit'))
+  canc.train.data$comb.prob=predict(comb.fit, type=c("response"))
+  canc.test.data$test.comb.prob=predict(comb.fit, canc.test.data, type=c("response"))
+  train.comb[i] <- roc(dx ~ comb.prob, data = canc.train.data)$auc
+  test.comb[i] <- roc(dx ~ test.comb.prob, data = canc.test.data)$auc
+  }
+
+
+fit <- glm(dx ~ fit_result,  data=canc.train.data, family=binomial('logit'))
+canc.train.data$fit.prob=predict(fit, type=c("response"))
+canc.test.data$fit.test.prob=predict(fit, canc.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = canc.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = canc.test.data)
+
+plot(1:20, train.aucs, type='l', lwd=2, ylab='AUC', col='red',xlab='Number of OTUS', ylim=c(0.6,1), main='Cancer vs Normal: Genera')
+points(1:20, test.aucs, type='l', col='red', lty=2, lwd=2)
+points(1:20, train.comb, type='l', col='green4', lwd=2)
+points(1:20, test.comb, type='l', col='green4', lty=2, lwd=2)
+abline(v=7, lty=3)
+abline(h=fit.roc$auc, col='blue')
+abline(h=test.fit.roc$auc, col='blue', lty=2)
+legend('bottomright', legend=c('FIT (training)','FIT (testing)','Microbiome (training)','Microbiome (test)','Combined (training)','Combined (testing)'), col=c('blue','blue','red','red','green4','green4'), lty=c(1,2), lwd=2)
+```
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, eval=F}
+#Microbiome Model
+mod2 <- makeFormula(canc.otus[1:7])
+fit2 <- glm(mod2, data=canc.train.data, family=binomial('logit'))
+canc.train.data$prob2=predict(fit2, type=c("response"))
+canc.test.data$test.prob2=predict(fit2, canc.test.data, type=c("response"))
+roc2 <- roc(dx ~ prob2, data = canc.train.data)
+test.roc2 <- roc(dx ~ test.prob2, data = canc.test.data)
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=canc.train.data, family=binomial('logit'))
+canc.train.data$fit.prob=predict(fit, type=c("response"))
+canc.test.data$fit.test.prob=predict(fit, canc.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = canc.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = canc.test.data)
+
+#Combined FIT and Microbiome
+comb.mod <- as.formula(paste('dx', paste(paste(canc.otus[1:7], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+comb.fit <- glm(comb.mod, data=canc.train.data, family=binomial('logit'))
+canc.train.data$comb.prob=predict(comb.fit, type=c("response"))
+canc.test.data$test.comb.prob=predict(comb.fit, canc.test.data, type=c("response"))
+comb.roc <- roc(dx ~ comb.prob, data = canc.train.data)
+test.comb.roc <- roc(dx ~ test.comb.prob, data = canc.test.data)
+
+
+par(mar=c(5,5,4,1))
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Carcinoma: Training/Testing')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(test.fit.roc, col='blue', lwd=2, add=T, lty=2)
+plot(roc2, col='red', lwd=2, add=T)
+plot(test.roc2, col='red', lwd=2, add=T, lty=2)
+plot(comb.roc, col='green4', lwd=2, add=T)
+plot(test.comb.roc, col='green4', lwd=2, add=T, lty=2)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('test FIT: %.3g', test.fit.roc$auc),
+       sprintf('8 genera: %.3g', roc2$auc),sprintf('test 8 genera: %.3g', test.roc2$auc),
+       sprintf('Combined: %.3g', comb.roc$auc),sprintf('test Combined: %.3g', test.comb.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','blue','red','red','green4','green4'), lwd=2, lty=c(1,2))
+
+```
+
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+ade.train.data <- all.train.data[all.train.data$dx!='cancer',]
+ade.train.data$dx <- factor(ade.train.data$dx, levels=c('normal', 'adenoma'))
+ade.test.data <- all.test.data[all.test.data$dx!='cancer',]
+ade.test.data$dx <- factor(ade.test.data$dx, levels=c('normal', 'adenoma'))
+
+ade.rf <- cbind(dx=ade.train.data$dx, ade.train.data[,grep('Otu[0123456789]', colnames(all.train.data))])
+ade.rf.out <- randomForest(dx ~ ., data=ade.rf, importance=TRUE, proximity=TRUE, ntree=2000)
+
+ade.imp <- as.data.frame(importance(ade.rf.out, scale=T)) #extracts OTU importance from RF output
+ade.imp <- ade.imp[order(ade.imp[,3], decreasing=T),] #sorts by mean decrease accuracy
+ade.otus <- row.names(ade.imp) #takes top 20 genera
+ade.otus<- ade.otus[ade.otus %in% colnames(ade.test.data)]
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=ade.train.data, family=binomial('logit'))
+ade.train.data$fit.prob=predict(fit, type=c("response"))
+ade.test.data$fit.test.prob=predict(fit, ade.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = ade.train.data)
+fit.test.roc <- roc(dx ~ fit.test.prob, data = ade.test.data)
+
+
+train.aucs <- c()
+test.aucs <- c()
+train.comb <- c()
+test.comb <- c()
+for(i in 1:20){
+  mod <- makeFormula(ade.otus[1:i])
+  fit <- glm(mod, data=ade.train.data, family=binomial('logit'))
+  ade.train.data$prob=predict(fit, type=c("response"))
+  ade.test.data$test.prob=predict(fit, ade.test.data, type=c("response"))
+  train.aucs[i] <- roc(dx ~ prob, data = ade.train.data)$auc
+  test.aucs[i] <- roc(dx ~ test.prob, data = ade.test.data)$auc
+  
+  comb.mod <- as.formula(paste('dx', paste(paste(ade.otus[1:i], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+  comb.fit <- glm(comb.mod, data=ade.train.data, family=binomial('logit'))
+  ade.train.data$comb.prob=predict(comb.fit, type=c("response"))
+  ade.test.data$test.comb.prob=predict(comb.fit, ade.test.data, type=c("response"))
+  train.comb[i] <- roc(dx ~ comb.prob, data = ade.train.data)$auc
+  test.comb[i] <- roc(dx ~ test.comb.prob, data = ade.test.data)$auc
+  }
+
+
+fit <- glm(dx ~ fit_result,  data=ade.train.data, family=binomial('logit'))
+ade.train.data$fit.prob=predict(fit, type=c("response"))
+ade.test.data$fit.test.prob=predict(fit, ade.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = ade.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = ade.test.data)
+
+plot(1:20, train.aucs, type='l', lwd=2, ylab='AUC', col='red',xlab='Number of OTUS', ylim=c(0.4,0.85), main='Adenoma vs Normal: Genera')
+points(1:20, test.aucs, type='l', col='red', lty=2, lwd=2)
+points(1:20, train.comb, type='l', col='green4', lwd=2)
+points(1:20, test.comb, type='l', col='green4', lty=2, lwd=2)
+abline(v=8, lty=3)
+abline(h=fit.roc$auc, col='blue')
+abline(h=test.fit.roc$auc, col='blue', lty=2)
+legend('bottomright', legend=c('FIT (training)','FIT (testing)','Microbiome (training)','Microbiome (test)','Combined (training)','Combined (testing)'), col=c('blue','blue','red','red','green4','green4'), lty=c(1,2), lwd=2)
+
+```
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, eval=F}
+#Microbiome Model
+mod <- makeFormula(ade.otus[1:8])
+fit <- glm(mod, data=ade.train.data, family=binomial('logit'))
+ade.train.data$prob=predict(fit, type=c("response"))
+ade.test.data$test.prob=predict(fit, ade.test.data, type=c("response"))
+train.roc <- roc(dx ~ prob, data = ade.train.data)
+test.roc <- roc(dx ~ test.prob, data = ade.test.data)
+  
+comb.mod <- as.formula(paste('dx', paste(paste(ade.otus[1:8], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+comb.fit <- glm(comb.mod, data=ade.train.data, family=binomial('logit'))
+ade.train.data$comb.prob=predict(comb.fit, type=c("response"))
+ade.test.data$test.comb.prob=predict(comb.fit, ade.test.data, type=c("response"))
+comb.roc <- roc(dx ~ comb.prob, data = ade.train.data)
+test.comb.roc <- roc(dx ~ test.comb.prob, data = ade.test.data)
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=ade.train.data, family=binomial('logit'))
+ade.train.data$fit.prob=predict(fit, type=c("response"))
+ade.test.data$fit.test.prob=predict(fit, ade.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = ade.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = ade.test.data)
+
+
+par(mar=c(5,5,4,1))
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Adenoma: Training/Testing')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(test.fit.roc, col='blue', lwd=2, add=T, lty=2)
+plot(train.roc, col='red', lwd=2, add=T)
+plot(test.roc, col='red', lwd=2, add=T, lty=2)
+plot(comb.roc, col='green4', lwd=2, add=T)
+plot(test.comb.roc, col='green4', lwd=2, add=T, lty=2)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('test FIT: %.3g', test.fit.roc$auc),
+       sprintf('8 genera: %.3g', train.roc$auc),sprintf('test 8 genera: %.3g', test.roc$auc),
+       sprintf('Combined: %.3g', comb.roc$auc),sprintf('test Combined: %.3g', test.comb.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','blue','red','red','green4','green4'), lwd=2, lty=c(1,2))
+```
+
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7}
+les.train.data <- all.train.data
+levels(les.train.data$dx)[1:2] <- 'lesion'
+les.train.data$dx <- factor(les.train.data$dx, levels=c('normal', 'lesion'))
+
+les.test.data <- all.test.data
+levels(les.test.data$dx)[1:2] <- 'lesion'
+les.test.data$dx <- factor(les.test.data$dx, levels=c('normal', 'lesion'))
+
+les.rf <- cbind(dx=les.train.data$dx, les.train.data[,grep('Otu[0123456789]', colnames(all.train.data))])
+les.rf.out <- randomForest(dx ~ ., data=les.rf, importance=TRUE, proximity=TRUE, ntree=2000)
+
+les.imp <- as.data.frame(importance(les.rf.out, scale=T)) #extracts OTU importance from RF output
+les.imp <- les.imp[order(les.imp[,3], decreasing=T),] #sorts by mean decrease accuracy
+les.otus <- row.names(les.imp) 
+les.otus<- les.otus[les.otus %in% colnames(les.test.data)]
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=les.train.data, family=binomial('logit'))
+les.train.data$fit.prob=predict(fit, type=c("response"))
+les.test.data$fit.test.prob=predict(fit, les.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = les.train.data)
+fit.test.roc <- roc(dx ~ fit.test.prob, data = les.test.data)
+
+train.aucs <- c()
+test.aucs <- c()
+train.comb <- c()
+test.comb <- c()
+for(i in 1:20){
+  mod <- makeFormula(les.otus[1:i])
+  fit <- glm(mod, data=les.train.data, family=binomial('logit'))
+  les.train.data$prob=predict(fit, type=c("response"))
+  les.test.data$test.prob=predict(fit, les.test.data, type=c("response"))
+  train.aucs[i] <- roc(dx ~ prob, data = les.train.data)$auc
+  test.aucs[i] <- roc(dx ~ test.prob, data = les.test.data)$auc
+  
+  comb.mod <- as.formula(paste('dx', paste(paste(les.otus[1:i], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+  comb.fit <- glm(comb.mod, data=les.train.data, family=binomial('logit'))
+  les.train.data$comb.prob=predict(comb.fit, type=c("response"))
+  les.test.data$test.comb.prob=predict(comb.fit, les.test.data, type=c("response"))
+  train.comb[i] <- roc(dx ~ comb.prob, data = les.train.data)$auc
+  test.comb[i] <- roc(dx ~ test.comb.prob, data = les.test.data)$auc
+  }
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=les.train.data, family=binomial('logit'))
+les.train.data$fit.prob=predict(fit, type=c("response"))
+les.test.data$fit.test.prob=predict(fit, les.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = les.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = les.test.data)
+
+plot(1:20, train.aucs, type='l', lwd=2, ylab='AUC', col='red',xlab='Number of OTUS', ylim=c(0.4,0.9), main='Lesion vs Normal: Genera')
+points(1:20, test.aucs, type='l', col='red', lty=2, lwd=2)
+points(1:20, train.comb, type='l', col='green4', lwd=2)
+points(1:20, test.comb, type='l', col='green4', lty=2, lwd=2)
+abline(v=6, lty=3)
+abline(h=fit.roc$auc, col='blue')
+abline(h=test.fit.roc$auc, col='blue', lty=2)
+legend('bottomright', legend=c('FIT (training)','FIT (testing)','Microbiome (training)','Microbiome (test)','Combined (training)','Combined (testing)'), col=c('blue','blue','red','red','green4','green4'), lty=c(1,2), lwd=2)
+
+```
+
+```{r, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, eval=F}
+#Microbiome Model
+mod2 <- makeFormula(les.otus[1:6])
+fit2 <- glm(mod2, data=les.train.data, family=binomial('logit'))
+les.train.data$prob2=predict(fit2, type=c("response"))
+les.test.data$test.prob2=predict(fit2, les.test.data, type=c("response"))
+roc2 <- roc(dx ~ prob2, data = les.train.data)
+test.roc2 <- roc(dx ~ test.prob2, data = les.test.data)
+
+#FIT ROC curve
+fit <- glm(dx ~ fit_result,  data=les.train.data, family=binomial('logit'))
+les.train.data$fit.prob=predict(fit, type=c("response"))
+les.test.data$fit.test.prob=predict(fit, les.test.data, type=c("response"))
+fit.roc <- roc(dx ~ fit.prob, data = les.train.data)
+test.fit.roc <- roc(dx ~ fit.test.prob, data = les.test.data)
+
+#Combined FIT and Microbiome
+comb.mod <- as.formula(paste('dx', paste(paste(les.otus[1:6], collapse=' + '),'fit_result', sep=' + '), sep=' ~ '))
+comb.fit <- glm(comb.mod, data=les.train.data, family=binomial('logit'))
+les.train.data$comb.prob=predict(comb.fit, type=c("response"))
+les.test.data$test.comb.prob=predict(comb.fit, les.test.data, type=c("response"))
+comb.roc <- roc(dx ~ comb.prob, data = les.train.data)
+test.comb.roc <- roc(dx ~ test.comb.prob, data = les.test.data)
+
+
+par(mar=c(5,5,4,1))
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity', main='Normal vs. Lesion: Training/Testing')
+plot(fit.roc, col='blue', lwd=2, add=T)
+plot(test.fit.roc, col='blue', lwd=2, add=T, lty=2)
+plot(roc2, col='red', lwd=2, add=T)
+plot(test.roc2, col='red', lwd=2, add=T, lty=2)
+plot(comb.roc, col='green4', lwd=2, add=T)
+plot(test.comb.roc, col='green4', lwd=2, add=T, lty=2)
+leg<-c(sprintf('FIT: %.3g', fit.roc$auc),sprintf('test FIT: %.3g', test.fit.roc$auc),
+       sprintf('6 genera: %.3g', roc2$auc),sprintf('test 6 genera: %.3g', test.roc2$auc),
+       sprintf('Combined: %.3g', comb.roc$auc),sprintf('test Combined: %.3g', test.comb.roc$auc))
+legend('bottomright', legend=leg, col=c('blue','blue','red','red','green4','green4'), lwd=2, lty=c(1,2))
+```
+
+
