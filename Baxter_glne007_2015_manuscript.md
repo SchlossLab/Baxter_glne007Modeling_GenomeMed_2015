@@ -143,11 +143,10 @@ individuals from those with any type of colonic lesion. The optimal
 model combining FIT and the microbiota used 21 OTUs and performed
 significantly better than FIT alone for detecting colonic lesions
 (p=3e-5), with an AUC of 0.817 compared to 0.749 for FIT. This
-differences was due in large part to improved detection of adenomas.
+difference was due in large part to improved detection of adenomas.
 When distinguishing normal from adenoma, the model had an AUC of 0.740,
 which was significantly higher than the AUC for FIT, 0.639 (p=3e-5). For
-comparing cancer and normal the model was slightly better FIT alone, but
-the difference was not statistically significant.
+comparing cancer and normal the model was not significantly better than FIT alone.
 
 Of the 21 OTUs used in the model, 14 were members of the Clostridia,
 including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60,
@@ -155,9 +154,22 @@ including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60,
 were associated with the genus *Bacteroides* (OTUs 3, 7, 2)*.* The
 remaining OTUs were associated with *Porphyromonas* (OTU105),
 *Parabacteroides* (OTU49), *Streptococcus* (OTU20), and
-Enterobacteriaceae (OTU28).
+Enterobacteriaceae (OTU28).  Interestingly the majority of OTUs used in the 
+model were enriched in normal patients.  
 
-To better compare our model to FIT, choose a set cutoff based on
+We defined an optimal cutoff for the RF model based on Youden's J statistic (Youden, 1950).
+The RF model detected 95.0% of cancers 61.1% of adenomas compared to 75.0% and 15.7% for 
+FIT (Table 1, Figure 2A, Figure 2B). The RF model had significantly improved sensitivity 
+for both advanced and non-advanced adenomas as well as stage I, II, and III cancers 
+(Figure 3).  The increased sensitivity of the RF model was accompanied by a decrease in 
+specificity compared to FIT (Table 1).  
+
+To better understand the relationship between the RF model and FIT, we compared the results
+of the two tests for each sample (Figure 2C). All samples that tested positive by FIT
+also tested positive in the RF model, meaning the RF model detected all of the lesions
+that FIT was able to detect.  However, many samples that with negative FIT results tested
+positive by the RF model.  The RF model detected 80.0% of cancers and 53.9% of adenomas 
+that FIT failed to detect, while maintaining a specificity of 78.4%.
 
 a.  Figures
 
@@ -170,7 +182,7 @@ a.  Figures
 
         c.  Barplot of adenoma vs normal OTUs
 
-        d.  ROC curve of anoma vs normal (microbiome, FIT, microbiome +
+        d.  ROC curve of adenoma vs normal (microbiome, FIT, microbiome +
             FIT)
 
         e.  Suppl 1 – AUCRF curves
