@@ -103,6 +103,7 @@ III. Methods
 
 IV. Results
 
+**Microbiome-based models distinguish healthy from cancer or adenoma**
 First we sought to confirm our previous findings that the microbiome
 could be used to distinguish healthy patients from those with carcinomas
 or adenomas and to identify discriminatory features. We chose to use the
@@ -137,6 +138,7 @@ were among the most abundant Clostridia in our samples. These data show
 that with only a few features from the microbiome, we can compliment FIT
 to significantly improve detection of both adenomas and carcinomas.
 
+**RF Model for Detecting Colonic Lesions**
 An ideal diagnostic model would be able to detect both adenomas and
 carcinomas, so we developed models that would differentiate normal
 individuals from those with any type of colonic lesion. The optimal
@@ -157,6 +159,7 @@ remaining OTUs were associated with *Porphyromonas* (OTU105),
 Enterobacteriaceae (OTU28).  Interestingly the majority of OTUs used in the 
 model were enriched in normal patients.  
 
+**Comparing RF model to FIT**
 We defined an optimal cutoff for the RF model based on Youden's J statistic (Youden, 1950).
 The RF model detected 95.0% of cancers 61.1% of adenomas compared to 75.0% and 15.7% for 
 FIT (Table 1, Figure 2A, Figure 2B). The RF model had significantly improved sensitivity 
@@ -170,6 +173,11 @@ also tested positive in the RF model, meaning the RF model detected all of the l
 that FIT was able to detect.  However, many samples that with negative FIT results tested
 positive by the RF model.  The RF model detected 80.0% of cancers and 53.9% of adenomas 
 that FIT failed to detect, while maintaining a specificity of 78.4%.
+
+**Extrapolation of predictive values**
+
+
+
 
 a.  Figures
 
