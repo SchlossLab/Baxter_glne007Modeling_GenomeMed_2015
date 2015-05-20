@@ -58,8 +58,30 @@ II. Introduction
 III. Methods
 
     a.  Study Design/Patient sampling
-
+		- subjects 18 y.o. or older, able to tolerate 58ml of blood removal.
+		From Joe's paper:
+			"Eligible patients were 18 years of age or older, able to tolerate 58 
+			mL of blood removal at 2 time points, willing to complete an gFOBT Kit, 
+			able to provide informed consent, and had colonoscopy and his- tologically 
+			confirmed colonic disease status. Patients were excluded if known HIV or 
+			chronic viral hepatitis, known HNPCC or FAP, inflammatory bowel disease, 
+			any surgery, radiation or chemotherapy for their current colorectal cancer
+			 or colonic adenoma. Colonoscopies were performed and fecal samples were 
+			 collected from subjects in 4 loca- tions: Toronto (Ontario, Canada), 
+			 Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor 
+			 (Michigan, USA). Following endoscopic examination, patients without 
+			 colonic abnormalities were designated as healthy. Exami- nations that 
+			 revealed the presence of lesions resulted in a biopsy and subsequence 
+			 diagnosis of adenoma or carcinoma."..."All participants collected a 
+			 whole evacuated stool in a hat with no preservatives after following 
+			 the usual dietary and medication restrictions for 24 hours. The whole 
+			 stool was then packaged in an insulated box with ice packs and shipped
+			  to the processing center along with the gFOBT cards via next day delivery. 
+			  Upon receipt, the feces were stored at !80C."
     b.  FITs
+Fecal material for FIT was collected from frozen stool aliquots using OC FIT-CHEK 
+sampling bottles (Polymedco Inc., cat no.?) and processed using an OC-Auto Micro 80 
+automated system (Polymedco Inc., cat no.?).
 
     c.  16S rRNA Sequencing
 
@@ -106,7 +128,7 @@ IV. Results
 **Microbiome-based models distinguish healthy from cancer or adenoma**
 First we sought to confirm our previous findings that the microbiome
 could be used to distinguish healthy patients from those with carcinomas
-or adenomas and to identify discriminatory features. We chose to use the
+or adenomas. We chose to use the
 Random Forest (RF) machine-learning algorithm because it works well for
 high-dimensional datasets and includes an internal cross-validation to
 prevent overfitting (RF sources). First we generated RF models for
@@ -128,19 +150,20 @@ Next we generated RF models for distinguishing normal individuals from
 those with colonic adenomas. The optimal model using only the microbiota
 contained 53 OTUs and performed comparably to FIT, with AUCs of 0.671
 and 0.639 respectively (Figure 1C, Fig S1C). When we combined the
-microbiota with FIT, our model significantly outperformed FIT alone
+microbiota with FIT, the model significantly outperformed FIT alone
 (AUC=0.727, p=0.00054) using only 4 OTUs. These OTUs included OTU29,
-which was enriched in normal patients as it was in the normal vs cancer
+which was enriched in normal patients like in the normal vs cancer
 models. The three other OTUs were assocaiated with Lachnospiraceae
 (OTU14), Ruminococcaceae (OTU11), and unclassified member of
 Clostridiales (OTU10). Interestingly all four OTUs in the combined model
 were among the most abundant Clostridia in our samples. These data show
-that with only a few features from the microbiome, we can compliment FIT
-to significantly improve detection of both adenomas and carcinomas.
+that models based on the fecal microbiota can be used to disriminate healthy 
+individuals from those with adenomas or cancer. Such models can also compliment FIT
+to significantly improve test performance.
 
 **RF Model for Detecting Colonic Lesions**
 An ideal diagnostic model would be able to detect both adenomas and
-carcinomas, so we developed models that would differentiate normal
+carcinomas, so we developed a single model that would differentiate normal
 individuals from those with any type of colonic lesion. The optimal
 model combining FIT and the microbiota used 21 OTUs and performed
 significantly better than FIT alone for detecting colonic lesions
@@ -153,7 +176,7 @@ comparing cancer and normal the model was not significantly better than FIT alon
 Of the 21 OTUs used in the model, 14 were members of the Clostridia,
 including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60,
 22, 9, 13, 87, 31) and 2 from Ruminococcaceae (OTU29, OTU11). Three OTUs
-were associated with the genus *Bacteroides* (OTUs 3, 7, 2)*.* The
+were associated with the genus *Bacteroides* (OTUs 3, 7, 2). The
 remaining OTUs were associated with *Porphyromonas* (OTU105),
 *Parabacteroides* (OTU49), *Streptococcus* (OTU20), and
 Enterobacteriaceae (OTU28).  Interestingly the majority of OTUs used in the 
