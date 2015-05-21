@@ -79,43 +79,17 @@ III. Methods
 			  to the processing center along with the gFOBT cards via next day delivery. 
 			  Upon receipt, the feces were stored at !80C."
     b.  FITs
-Fecal material for FIT was collected from frozen stool aliquots using OC FIT-CHEK 
-sampling bottles (Polymedco Inc., cat no.?) and processed using an OC-Auto Micro 80 
-automated system (Polymedco Inc., cat no.?).
+Fecal material for FIT was collected from frozen stool aliquots using OC FIT-CHEK sampling bottles (Polymedco Inc.) and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). Raw FIT results were used for generating ROC curves and for building RF models.  Sensitivities and specificities reported for FIT are based on a cutoff of 100ng/ml.
 
     c.  16S rRNA Sequencing
 
-        i.  DNA Extraction
-
-        ii. PCR / Primer design
-
-        iii. Cleanup/Normalization
-
-        iv. Sequencing
-
-            1.  3 runs
-
-            2.  MiSeq v2 2x250
+DNA was extracted from approximately 50mg of fecal material from each subject using the PowerSoil-htp 96 Well Soil DNA isolation kit (MO BIO Laboratories) and an epMotion 5075 automated pipetting system (Eppendorf).  The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer (citation). The 490 samples were divided into three sequencing runs to maximize sequencing depth.
 
     d.  Sequence Curation
-
-        i.  Quality Trimming
-
-        ii. Alignment
-
-        iii. Chimera checking
-
-        iv. Classification/Remove lineage
-
-        v.  Clustering
+The 16S rRNA gene sequences were curated using the mothur software package, as described previously (citation). Briefly, paired-end reads were merged into contigs, screened for quality, aligned to SILVA 16S rRNA sequence database, and screened for chimeras.  Curated sequences were clustered in to operationall taxonomic units (OTUs)  using a 97% similarity cutoff. The number of sequences in each sample was rarefied to 10,000 per sample to minimize the effects of uneven sampling.
 
     e.  Statistical Methods
-
-        i.  AUCRF optimal model selection
-
-        ii. ROC curves, AUC tests, optimal accuracy calculations
-
-        iii. McNemar Test
+All statistical analyses were performed using the R software package(citation).  Random Forest models were generated using the AUCRF package.  ROC curves were generated and analyzed using the pROC package. The AUC of ROC curves was compared using the method described by DeLong et al. (citation). The optimal cutoff for the RF model was determined using Youden's J statistic as implemented in the pROC package in R (Youden, 1950). The sensitivities of FIT and the RF model were compared using McNemar's chi-squared test.
 
     f.  Data Availability
 
@@ -126,52 +100,12 @@ automated system (Polymedco Inc., cat no.?).
 IV. Results
 
 **Microbiome-based models distinguish healthy from cancer or adenoma**
-First we sought to confirm our previous findings that the microbiome
-could be used to distinguish healthy patients from those with carcinomas
-or adenomas. We chose to use the
-Random Forest (RF) machine-learning algorithm because it works well for
-high-dimensional datasets and includes an internal cross-validation to
-prevent overfitting (RF sources). First we generated RF models for
-distinguishing normal individuals from those with colorectal cancer
-using only the microbiota or the microbiota combined with FIT. The
-optimal model for the microbiome only model used 38 OTUs and had an AUC
-of 0.845, while the model that included FIT used only 11 OTUs and had an
-AUC of 0.967 (Figure 1A, Fig S1A, Fig S1B). The model using both the
-microbiota and FIT performed significantly better than FIT alone
-(p=0.0024), which had an AUC of 0.929. The bacterial populations that
-were most indicative of cancer were associated with the genera
-*Porphyromonas* (OTU105, OTU260), *Peptostreptococcus* (OTU310),
-*Parvimonas* (OTU281), *Fusobacterium* (OTU264), *Prevotella* (OTU57),
-and *Gemella* (OTU356) (Figure 1B). Those that were most predictive of
-normal colons belonged to Ruminococcaceae (OTU29) and *Anaerostipes*
-(OTU8).
+First we sought to confirm our previous findings that the microbiome could be used to distinguish healthy patients from those with carcinomas or adenomas. We chose to use the Random Forest (RF) machine-learning algorithm because it works well for high-dimensional datasets and includes an internal cross-validation to prevent overfitting (RF sources). First we generated RF models for distinguishing normal individuals from those with colorectal cancer using only the microbiota or the microbiota combined with FIT. The optimal model for the microbiome only model used 38 OTUs and had an AUC of 0.845, while the model that included FIT used only 11 OTUs and had an AUC of 0.967 (Figure 1A, Fig S1A, Fig S1B). The model using both the microbiota and FIT performed significantly better than FIT alone (p=0.0024), which had an AUC of 0.929. The bacterial populations that were most indicative of cancer were associated with the genera *Porphyromonas* (OTU105, OTU260), *Peptostreptococcus* (OTU310), *Parvimonas* (OTU281), *Fusobacterium* (OTU264), *Prevotella* (OTU57), and *Gemella* (OTU356) (Figure 1B). Those that were most predictive of normal colons belonged to Ruminococcaceae (OTU29) and *Anaerostipes* (OTU8).
 
-Next we generated RF models for distinguishing normal individuals from
-those with colonic adenomas. The optimal model using only the microbiota
-contained 53 OTUs and performed comparably to FIT, with AUCs of 0.671
-and 0.639 respectively (Figure 1C, Fig S1C). When we combined the
-microbiota with FIT, the model significantly outperformed FIT alone
-(AUC=0.727, p=0.00054) using only 4 OTUs. These OTUs included OTU29,
-which was enriched in normal patients like in the normal vs cancer
-models. The three other OTUs were assocaiated with Lachnospiraceae
-(OTU14), Ruminococcaceae (OTU11), and unclassified member of
-Clostridiales (OTU10). Interestingly all four OTUs in the combined model
-were among the most abundant Clostridia in our samples. These data show
-that models based on the fecal microbiota can be used to disriminate healthy 
-individuals from those with adenomas or cancer. Such models can also compliment FIT
-to significantly improve test performance.
+Next we generated RF models for distinguishing normal individuals from those with colonic adenomas. The optimal model using only the microbiota contained 53 OTUs and performed comparably to FIT, with AUCs of 0.671 and 0.639 respectively (Figure 1C, Fig S1C). When we combined the microbiota with FIT, the model significantly outperformed FIT alone (AUC=0.727, p=0.00054) using only 4 OTUs. These OTUs included OTU29, which was enriched in normal patients like in the normal vs cancer models. The three other OTUs were assocaiated with Lachnospiraceae (OTU14), Ruminococcaceae (OTU11), and unclassified member of Clostridiales (OTU10). Interestingly all four OTUs in the combined model were among the most abundant Clostridia in our samples. These data show that models based on the fecal microbiota can be used to discriminate healthy  individuals from those with adenomas or cancer. Such models can also compliment FIT to significantly improve test performance.
 
 **RF Model for Detecting Colonic Lesions**
-An ideal diagnostic model would be able to detect both adenomas and
-carcinomas, so we developed a single model that would differentiate normal
-individuals from those with any type of colonic lesion. The optimal
-model combining FIT and the microbiota used 21 OTUs and performed
-significantly better than FIT alone for detecting colonic lesions
-(p=3e-5), with an AUC of 0.817 compared to 0.749 for FIT. This
-difference was due in large part to improved detection of adenomas.
-When distinguishing normal from adenoma, the model had an AUC of 0.740,
-which was significantly higher than the AUC for FIT, 0.639 (p=3e-5). For
-comparing cancer and normal the model was not significantly better than FIT alone.
+An ideal diagnostic model would be able to detect both adenomas and carcinomas, so we developed a single model that would differentiate normal individuals from those with any type of colonic lesion. The optimal model combining FIT and the microbiota used 21 OTUs and performed significantly better than FIT alone for detecting colonic lesions (p=3e-5), with an AUC of 0.817 compared to 0.749 for FIT. This difference was due in large part to improved detection of adenomas. When distinguishing normal from adenoma, the model had an AUC of 0.740, which was significantly higher than the AUC for FIT, 0.639 (p=3e-5). For comparing cancer and normal the model was not significantly better than FIT alone.
 
 Of the 21 OTUs used in the model, 14 were members of the Clostridia,
 including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60,
@@ -325,3 +259,9 @@ I.  Discussion
             2.  Microbiome predictive of remission/relapse
 
             3.  Dysbiosis the cause or effect of tumors
+            
+            
+            
+References
+
+Elisabeth R. DeLong, David M. DeLong and Daniel L. Clarke-Pearson (1988) “Comparing the areas under two or more correlated receiver operating characteristic curves: a nonparametric approach”. Biometrics 44, 837–845.
