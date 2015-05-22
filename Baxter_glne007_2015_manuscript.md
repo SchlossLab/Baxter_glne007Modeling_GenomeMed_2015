@@ -5,51 +5,13 @@ II. Introduction
     a.  Importance
 Colorectal cancer (CRC) is the third most common cancer among men and women in the United States and the second leading cause of cancer-related deaths (citation). Fortunately CRC incidence and mortality have steadily declined in recent decades, due in large part to increased screening.  Further progress is possible by increasing access to and accuracy of diagnostic tests.
 
+Structural exams like colonoscopy and sigmoidoscopy are able to detect both cancer and adenomas, however their high cost and invasive nature are barriers for many people. The large disparity in screening rates between those with and without insurance highlights the need for less expensive screen methods.  Unfortunately the cheaper, less invasive stool based tests like FOBT and FIT are unable to reliably detect adenomas.  Thus there is need for novel screening methods that are both inexpensive and capable of detect both cancer and adenomas.
 
-        i.  Structural exams
+The gut microbiota, the collection of microorganisms that inhabit the gastrointestinal tract, are one potential source of biomarkers for detecting colonic lesions.  Numerous studies have observed alterations in the gut bacterial communities of patients with CRC.  Experiments in animal models have demonstrated that such alterations have the potential to accelerate tumorigenesis.  Furthermore several members of the gut microbiota have been shown to potentiate both the development and progression of CRC by a variety of mechanisms.  While each of these organisms may play a role in certain cases of CRC, none of them is present in every case of CRC. Thus no one organism is an effective biomarker on its own. 
 
-            1.  Expensive
+We have perviously shown that statistical models that take into account the abundances of multiple bacteria species can be used to distinguish healthy individuals from those with colonic lesions (citation).  In the present study we expanded upon those findings by demonstrating the potential for microbiome analysis to compliment FIT for improved detection of colonic lesions.  We did so using the largest patient cohort ever used for studying differences in the microbiomes of patients with adenomas and carcinomas.  We also improved upon previous studies by utilizing random forest (RF), a decision tree-based machine algorithm for classification, which includes and internal cross-validation to prevent overfitting. By incorporating both FIT and bacterial abundances into a single RF model, we were able to improve the sensitivity for adenomas and most stages of cancer.
 
-            2.  Invasive
 
-            3.  Poor patient compliance
-
-        ii. Stool-based tests
-
-            1.  FOBT/FIT
-
-                a.  Poor specificity
-
-                b.  Bad at adenomas
-
-            2.  sDNA/Exact Test
-
-                a.  expensive
-
-                b.  Bad at adenomas
-
-    c.  Potential for microbiome screening
-
-        i.  Reasons microbiome can help address shortcomings
-
-            1.  Inexpensive
-
-            2.  Non-invasive
-
-            3.  Early detection?
-
-                a.  Studies have found enrichment on pre-cancerous
-                    adenomas (i.e. – Garrett fuso studies)
-
-        ii. Problems with past microbiome-based studies
-
-            1.  Small n
-
-            2.  Focused on single bugs, not community as a whole
-
-            3.  No cross-validation or validation set
-
-    d.  What we did/set out to do
 
 III. Methods
 
