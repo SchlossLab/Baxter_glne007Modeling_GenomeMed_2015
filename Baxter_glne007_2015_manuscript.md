@@ -3,12 +3,8 @@ I.  Abstract
 II. Introduction
 
     a.  Importance
+Colorectal cancer (CRC) is the third most common cancer among men and women in the United States and the second leading cause of cancer-related deaths (citation). Fortunately CRC incidence and mortality have steadily declined in recent decades, due in large part to increased screening.  Further progress is possible by increasing access to and accuracy of diagnostic tests.
 
-        i.  Body count figures
-
-        ii. Preventability by screening
-
-    b.  Current screening methods
 
         i.  Structural exams
 
@@ -58,7 +54,6 @@ II. Introduction
 III. Methods
 
     a.  Study Design/Patient sampling
-		- subjects 18 y.o. or older, able to tolerate 58ml of blood removal.
 		From Joe's paper:
 			"Eligible patients were 18 years of age or older, able to tolerate 58 
 			mL of blood removal at 2 time points, willing to complete an gFOBT Kit, 
@@ -194,10 +189,6 @@ a.  Figures
 
         vi. Bugs associated with adenoma – lots of butyrate producers –
             Lachno- and Rumincoccus
-
-
-
-e.  Add figure with Metadata?
 
 
 
