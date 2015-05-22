@@ -3,7 +3,7 @@ I.  Abstract
 II. Introduction
 
     a.  Importance
-Colorectal cancer (CRC) is the third most common cancer among men and women in the United States and the second leading cause of cancer-related deaths (citation). Fortunately CRC incidence and mortality have steadily declined in recent decades, due in large part to increased screening.  Further progress is possible by increasing access to and accuracy of diagnostic tests.
+Colorectal cancer (CRC) is the third most common cancer among men and women in the United States and the second(third?) leading cause of cancer-related deaths (citation). Fortunately CRC incidence and mortality have steadily declined in recent decades, due in large part to increased screening.  Further progress is possible by increasing access to and accuracy of diagnostic tests.
 
 Structural exams like colonoscopy and sigmoidoscopy are able to detect both cancer and adenomas, however their high cost and invasive nature are barriers for many people. The large disparity in screening rates between those with and without insurance highlights the need for less expensive screen methods.  Unfortunately the cheaper, less invasive stool based tests like FOBT and FIT are unable to reliably detect adenomas.  Thus there is need for novel screening methods that are both inexpensive and capable of detect both cancer and adenomas.
 
@@ -194,7 +194,4 @@ I.  Discussion
             3.  Dysbiosis the cause or effect of tumors
             
             
-            
-References
 
-Elisabeth R. DeLong, David M. DeLong and Daniel L. Clarke-Pearson (1988) “Comparing the areas under two or more correlated receiver operating characteristic curves: a nonparametric approach”. Biometrics 44, 837–845.
