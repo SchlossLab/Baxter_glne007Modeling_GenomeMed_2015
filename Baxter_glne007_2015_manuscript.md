@@ -97,6 +97,7 @@ All statistical analyses were performed using the R software package(citation). 
 
         ii. Github
 
+
 IV. Results
 
 **Microbiome-based models distinguish healthy from cancer or adenoma**
@@ -134,6 +135,8 @@ that FIT failed to detect, while maintaining a specificity of 78.4%.
 **Extrapolation of predictive values**
 
 
+**Demographic differences in test performance?*
+Male vs Female
 
 
 a.  Figures
@@ -192,40 +195,11 @@ a.  Figures
         vi. Bugs associated with adenoma – lots of butyrate producers –
             Lachno- and Rumincoccus
 
-b.  A single model combining Adenoma and Cancer (Lesion) vs Normal
 
-    i.  Model performance – better than FIT for adenoma, lesion, and
-        cancer
-
-    ii. Most OTUs are predictive of adenomas, only one (Porphyromonas)
-        is for cancer
-
-c.  Set cutoff for highest accuracy compare model to fit
-
-    i.  Much higher sensitivity, but lower specificity. Overall accuracy
-        is higher.
-
-        1.  Significantly better for detecting all stages of cancer
-
-        2.  Way better at detecting adenomas
-
-    ii. Discus scatter plot – when FIT is negative
-
-        1.  Detect X% of cancers that FIT misses
-
-        2.  Detect X% of adenomas that FIT misses
-
-        3.  Some specificity lost compared to FIT
-
-d.  Extrapolate to normal population calculate PPV and NPV
-
-    i.  Our PPV is much lower than FIT
-
-    ii. Our NPV is amazing
 
 e.  Add figure with Metadata?
 
-<!-- -->
+
 
 I.  Discussion
 
@@ -234,23 +208,29 @@ I.  Discussion
     b.  Majority of predictive OTUs are enriched in normal individuals.
         Suggests a loss of good bugs could be just as important as the
         arrival of potentially pathogenic bugs.
+        
+    c. 	Bugs associated with cancer
+            1.  Oral pathogens? – Porphyromonas (x2), Parvimonas,
+                Fusobacterium, Gemella
 
-    c.  Better to sacrifice specificity for better sensitivity?
+            2.  Butyrate producers? – Clostridium XIVa, Anaerostipes
+
+    d.  Better to sacrifice specificity for better sensitivity?
 
         i.  Positive test colonoscopy (not so bad)
 
         ii. Would decreased cost of cancer treatment offset increased
             cost of colonoscopies?
 
-    d.  Incorporate other risk factors like diet, BMI, age?
+    e.  Incorporate other risk factors like diet, BMI, age?
 
-    e.  Feasibility?
+    f.  Feasibility?
 
         i.  Decreasing cost of sequencing and microbiome analysis
 
         ii. PCR-based approach. Coupled to FIT?
 
-    f.  New type of personalized medicine?
+    g.  New type of personalized medicine?
 
         i.  Need for longitudinal studies
 
