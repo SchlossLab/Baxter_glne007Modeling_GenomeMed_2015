@@ -65,16 +65,25 @@ An ideal diagnostic model would be able to detect both adenomas and carcinomas, 
 
 Of the 21 OTUs used in the model, 14 were members of the Clostridia, including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60, 22, 9, 13, 87, 31) and 2 from Ruminococcaceae (OTU29, OTU11). Three OTUs were associated with the genus *Bacteroides* (OTUs 3, 7, 2). The remaining OTUs were associated with *Porphyromonas* (OTU105), *Parabacteroides* (OTU49), *Streptococcus* (OTU20), and Enterobacteriaceae (OTU28).  Interestingly the majority of OTUs used in the model were enriched in normal patients.  
 
-**Comparing RF model to FIT**  
-We defined an optimal cutoff for the RF model based on Youden's J statistic (Youden, 1950). The RF model detected 95.0% of cancers 61.1% of adenomas compared to 75.0% and 15.7% for FIT (Table 1, Figure 2A, Figure 2B). The RF model had significantly improved sensitivity for both advanced and non-advanced adenomas as well as stage I, II, and III cancers (Figure 3).  The increased sensitivity of the RF model was accompanied by a decrease in specificity compared to FIT (Table 1).  
+**RF model Performance**
+We defined an optimal cutoff for the RF model based on Youden's J statistic (Youden, 1950). Add sens/spec for different tumors (+/- 95% CI)
+
+
+**Comparing with FIT**  
+ The RF model detected 95.0% of cancers 61.1% of adenomas compared to 75.0% and 15.7% for FIT (Table 1, Figure 2A, Figure 2B). The RF model had significantly improved sensitivity for both advanced and non-advanced adenomas as well as stage I, II, and III cancers (Figure 3).  The increased sensitivity of the RF model was accompanied by a decrease in specificity compared to FIT (Table 1).  
 
 To better understand the relationship between the RF model and FIT, we compared the results of the two tests for each sample (Figure 2C). All samples that tested positive by FIT also tested positive in the RF model, meaning the RF model detected all of the lesions that FIT was able to detect.  However, many samples that with negative FIT results tested positive by the RF model.  The RF model detected 80.0% of cancers and 53.9% of adenomas that FIT failed to detect, while maintaining a specificity of 78.4%.
 
 **Extrapolation of predictive values**  
-
+View Exact paper section like this.
+- number of positive tests from RF/FIT that would require colonoscopy
+- of those positives, how many would be false positives
+- number of negative tests from RF/FIT
+- of those negatives, how many would be false negatives.  what kind of tumor gets missed
 
 **Demographic differences in test performance?**  
 Male vs Female
+- probably just put this in the discussion
 
 
 	Figures
@@ -151,10 +160,9 @@ Male vs Female
 
     d.  Better to sacrifice specificity for better sensitivity?
 
-        i.  Positive test colonoscopy (not so bad)
-
-        ii. Would decreased cost of cancer treatment offset increased
-            cost of colonoscopies?
+        i.  High NPV makes test ideal for determine patients who don't need a colonocopy.
+        
+        ii. should result in fewer colonoscopies and reduction in healthcare costs
 
     e.  Incorporate other risk factors like diet, BMI, age?
 
