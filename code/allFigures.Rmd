@@ -202,6 +202,7 @@ points(coords(ade_fit_roc, x=100, input='threshold', ret='specificity'),coords(a
 
 cutoff <- coords(roc=les_roc, x='best', best.method='y', ret=c('threshold'))
 
+
 points(coords(canc_roc, x=cutoff, input='threshold', ret='specificity'),coords(canc_roc, x=cutoff, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=16)
 points(coords(les_roc, x=cutoff, input='threshold', ret='specificity'),coords(les_roc, x=cutoff, input='threshold', ret='sensitivity'), col='green4', cex=1.5, pch=16)
 points(coords(ade_roc, x=cutoff, input='threshold', ret='specificity'),coords(ade_roc, x=cutoff, input='threshold', ret='sensitivity'), col='blue', cex=1.5, pch=16)
@@ -330,35 +331,35 @@ legend('bottomright', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blu
 
 ```{r sensitivity_barplots, echo=F, fig.width=9, fig.height=6}
 
-adenoma_probs <- all_probs[all.data$Dx_Bin=='Adenoma',2]
+nonAdv_probs <- all_probs[all.data$Dx_Bin=='Adenoma',2]
 advAde_probs <- all_probs[all.data$Dx_Bin=='adv Adenoma',2]
 s1_probs <- all_probs[all.data$stage==1,2]
 s2_probs <- all_probs[all.data$stage==2,2]
 s3_probs <- all_probs[all.data$stage==3,2]
 s4_probs <- all_probs[all.data$stage==4,2]
 
-adenoma_sens <- length(adenoma_probs[adenoma_probs>=cutoff]) / length(adenoma_probs)
+nonAdv_sens <- length(nonAdv_probs[nonAdv_probs>=cutoff]) / length(nonAdv_probs)
 advAde_sens <- length(advAde_probs[advAde_probs>=cutoff]) / length(advAde_probs)
 s1_sens <- length(s1_probs[s1_probs>=cutoff]) / length(s1_probs)
 s2_sens <- length(s2_probs[s2_probs>=cutoff]) / length(s2_probs)
 s3_sens <- length(s3_probs[s3_probs>=cutoff]) / length(s3_probs)
 s4_sens <- length(s4_probs[s4_probs>=cutoff]) / length(s4_probs)
 
-adenoma_fit <- all.data[all.data$Dx_Bin=='Adenoma','fit_result']
+nonAdv_fit <- all.data[all.data$Dx_Bin=='Adenoma','fit_result']
 advAde_fit <- all.data[all.data$Dx_Bin=='adv Adenoma','fit_result']
 s1_fit <- all.data[all.data$stage==1,'fit_result']
 s2_fit <- all.data[all.data$stage==2,'fit_result']
 s3_fit <- all.data[all.data$stage==3,'fit_result']
 s4_fit <- all.data[all.data$stage==4,'fit_result']
 
-adenoma_fit_sens <- length(adenoma_fit[adenoma_fit>=1]) / length(adenoma_fit)
-advAde_fit_sens <- length(advAde_fit[advAde_fit>=1]) / length(advAde_fit)
-s1_fit_sens <- length(s1_fit[s1_fit>=1]) / length(s1_fit)
-s2_fit_sens <- length(s2_fit[s2_fit>=1]) / length(s2_fit)
-s3_fit_sens <- length(s3_fit[s3_fit>=1]) / length(s3_fit)
-s4_fit_sens <- length(s4_fit[s4_fit>=1]) / length(s4_fit)
+nonAdv_fit_sens <- length(nonAdv_fit[adenoma_fit>=100]) / length(nonAdv_fit)
+advAde_fit_sens <- length(advAde_fit[advAde_fit>=100]) / length(advAde_fit)
+s1_fit_sens <- length(s1_fit[s1_fit>=100]) / length(s1_fit)
+s2_fit_sens <- length(s2_fit[s2_fit>=100]) / length(s2_fit)
+s3_fit_sens <- length(s3_fit[s3_fit>=100]) / length(s3_fit)
+s4_fit_sens <- length(s4_fit[s4_fit>=100]) / length(s4_fit)
 
-sens_matrix <- matrix(c(adenoma_sens,adenoma_fit_sens,advAde_sens,advAde_fit_sens,s1_sens,s1_fit_sens,s2_sens,s2_fit_sens,s3_sens,s3_fit_sens,s4_sens,s4_fit_sens), byrow=F, nrow=2) 
+sens_matrix <- matrix(c(nonAdv_sens,nonAdv_fit_sens,advAde_sens,advAde_fit_sens,s1_sens,s1_fit_sens,s2_sens,s2_fit_sens,s3_sens,s3_fit_sens,s4_sens,s4_fit_sens), byrow=F, nrow=2) 
 rownames(sens_matrix) <- c('RF Model','FIT')
 
 par(mar=c(4,4,2,2))
@@ -371,10 +372,10 @@ legend('topleft', legend=c('RF Model','FIT (1ng/ml cutoff)'), col=c('grey25','gr
 
 #McNemar test
 getMcnemarP <- function(model, fit){
-  square <- matrix(c(length(model[model>=cutoff & fit >=1]),
-                     length(model[model>=cutoff & fit<1]),
-                     length(model[model<cutoff & fit >=1]),
-                     length(model[model<cutoff & fit <1])), ncol=2, byrow=T)
+  square <- matrix(c(length(model[model>=cutoff & fit >=100]),
+                     length(model[model>=cutoff & fit<100]),
+                     length(model[model<cutoff & fit >=100]),
+                     length(model[model<cutoff & fit <100])), ncol=2, byrow=T)
   return(mcnemar.test(square)$p.value)
   }
 
@@ -392,7 +393,7 @@ text(17,sens_matrix[1,6]+0.05, sprintf('p=%.1g',getMcnemarP(s4_probs, s4_fit)))
 ```
 
 
-```{r stats_table, echo=F}
+```{r stats_table, echo=F, cache=T}
 
 #Numbers of each diagnosis by colonoscopy
 les_mod <- all_probs[all.data$dx!='normal',2]
@@ -459,14 +460,44 @@ stats_table[,5] <- c('Positive Results','no.',canc_fit_obs,ade_fit_obs,les_fit_o
 stats_table[,6] <- c('Sensitivity (95% CI)','%',canc_fit_sens,ade_fit_sens,les_fit_sens,'Specificity (95% CI)',fit_spec)
 
 #stats_table
-pdf(file='stats_table.pdf', width=8, height=5)
-kable(stats_table, format='latex')
-dev.off()
+#pdf(file='stats_table.pdf', width=8, height=5)
+kable(stats_table)
+#dev.off()
 
 ```
 
 
-```{r male_vs_female, echo=F, fig.width=9, fig.height=6}
+```{r predictive_values, echo=F}
+getPV <- function(sens, spec, prev){
+  ppv <- signif((sens*prev) / (sens*prev + (1-spec)*(1-prev)), 4)
+    
+  npv <- signif((spec*(1-prev)) / ( (1-sens)*prev + spec*(1-prev) ),4) 
+  
+  return(list(PPV=ppv, NPV=npv))
+}
+
+advAde_pv <- getPV(advAde_sens,mod_spec_ci[2],0.057)
+nonAdv_pv <- getPV(nonAdv_sens,mod_spec_ci[2],0.177)
+canc_pv <- getPV(canc_sens_ci[2],mod_spec_ci[2],0.003)
+les_pv<- getPV(les_sens_ci[2],mod_spec_ci[2],0.302)
+
+advAde_fit_pv <- getPV(advAde_fit_sens,fit_spec_ci[2],0.057)
+nonAdv_fit_pv <- getPV(nonAdv_fit_sens,fit_spec_ci[2],0.177)
+canc_fit_pv <- getPV(canc_fit_sens_ci[2],fit_spec_ci[2],0.003)
+les_fit_pv<- getPV(les_fit_sens_ci[2],fit_spec_ci[2],0.302)
+
+pv_table <- matrix(NA, ncol=5, nrow=5)
+colnames(pv_table) <- c('Prevalence','PPV','','NPV','')
+rownames(pv_table) <- c('','Cancer','Adv. Adenoma','Nonadv. Ade.','All Lesions')
+pv_table[1,] <- c('','RF Model','FIT','RF Model','FIT')
+pv_table[2,] <- c('0.3%', canc_pv$PPV, canc_fit_pv$PPV, canc_pv$NPV, canc_fit_pv$NPV)
+pv_table[3,] <- c('5.7%', advAde_pv$PPV, advAde_fit_pv$PPV, advAde_pv$NPV, advAde_fit_pv$NPV)
+pv_table[4,] <- c('17.7%', nonAdv_pv$PPV, nonAdv_fit_pv$PPV, nonAdv_pv$NPV, nonAdv_fit_pv$NPV)
+pv_table[5,] <- c('30.2%', les_pv$PPV, les_fit_pv$PPV, les_pv$NPV, les_fit_pv$NPV)
+```
+
+
+```{r male_vs_female, echo=F, results='hide', fig.width=9, fig.height=6}
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
 
@@ -506,7 +537,7 @@ table(all_probs[all.data$dx=='normal' & all.data$Gender == 'm', 2] >= cutoff)
 ```
 
 
-```{r nsaids, echo=F, fig.width=9, fig.height=6}
+```{r nsaids, echo=F, fig.width=9, results='hide', fig.height=6}
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
 
@@ -557,16 +588,4 @@ legend('bottomleft', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue
 
 
 
-```{r predictive_values, echo=F}
-getPV <- function(sens, spec, prev){
-  ppv <- (sens*prev) / (sens*prev + (1-spec)*(1-prev))
-    
-  npv <- (spec*(1-prev)) / ( (1-sens)*prev + spec*(1-prev) ) 
-  
-  return(list(PPV=ppv, NPV=npv))
-}
 
-
-
-
-```
