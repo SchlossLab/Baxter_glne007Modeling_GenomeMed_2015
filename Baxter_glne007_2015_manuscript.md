@@ -66,24 +66,26 @@ An ideal diagnostic model would be able to detect both adenomas and carcinomas, 
 Of the 21 OTUs used in the model, 14 were members of the Clostridia, including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60, 22, 9, 13, 87, 31) and 2 from Ruminococcaceae (OTU29, OTU11). Three OTUs were associated with the genus *Bacteroides* (OTUs 3, 7, 2). The remaining OTUs were associated with *Porphyromonas* (OTU105), *Parabacteroides* (OTU49), *Streptococcus* (OTU20), and Enterobacteriaceae (OTU28).  Interestingly the majority of OTUs used in the model were enriched in normal patients.  
 
 **RF model Performance**
-We defined an optimal cutoff for the RF model based on Youden's J statistic (Youden, 1950). Add sens/spec for different tumors (+/- 95% CI)
+We defined an optimal cutoff for the RF model based on Youden's J statistic (Youden, 1950). At this cutoff, the RF model had a sensitivity of 95.0(90.8-98.3) for cancers.  The model's performance was not significantly different across cancer stages with sensitivities of 89.7, 97.1, 97.2, and 100 for stages I, II, III, and IV, respectively (Figure 3). The RF model had a specificity of 61.1(54.6-67.7) for all adenomas with no significant difference between advanced and nonadvanced adenomas.
+
+Previous studies have identified differences in diagnostic test performance for certain demographic groups or for people taking certain medications (find citations).  Therefore we tested whether the RF model performance differed for certain patient populations. The model performed significantly better for females than males (p=0.027). We suspected that the difference could be due to having more adenoma samples from males (n=118) than females (n=80).  When we normalized samples such that male and female groups contained equal numbers of adenomas, cancers, and normal samples, the differences in model performance was no longer significant (p=0.062).  Likewise, we found no difference in model performance according to age, BMI, NSAID usage, diabetes, smoking, or previous history of polyps. 
+
+As a final metric of our model's performance we estimated the positive predictive value (PPV) and negative predictive value (NPV) of the RF model by extrapolating its performance on an average-risk population using previously published values for CRC prevalence (@heitman2009prevalence).  Based on a prevalence of 0.3% for CRC, the model would have a relatively low PPV of 1.19%, but a high NPV of 99.98%.  For advanced adenomas the model would have PPV of 13.83% and NPV of 97.17% assuming a prevalence of 5.7%.  With a prevalence of 17.7% for nonadvanced adenomas, the PPV for the model would be 34.52% and the NPV would be 89.49%.
 
 
 **Comparing with FIT**  
- The RF model detected 95.0% of cancers 61.1% of adenomas compared to 75.0% and 15.7% for FIT (Table 1, Figure 2A, Figure 2B). The RF model had significantly improved sensitivity for both advanced and non-advanced adenomas as well as stage I, II, and III cancers (Figure 3).  The increased sensitivity of the RF model was accompanied by a decrease in specificity compared to FIT (Table 1).  
+Next we compared the performance of the RF model to using FIT alone. The AUC for the RF model was significantly higher than FIT for distinguishing adenoma from normal or all lesions from normal, but cancer from normal (Figure 2A). Examination of the ROC curves for the two tests shows that the RF model does not outperform FIT until the specificity drops below approximately 0.9. Below a specificity of approximately 0.8 the sensitivity of the RF model greatly excedes that of FIT.
 
-To better understand the relationship between the RF model and FIT, we compared the results of the two tests for each sample (Figure 2C). All samples that tested positive by FIT also tested positive in the RF model, meaning the RF model detected all of the lesions that FIT was able to detect.  However, many samples that with negative FIT results tested positive by the RF model.  The RF model detected 80.0% of cancers and 53.9% of adenomas that FIT failed to detect, while maintaining a specificity of 78.4%.
+At the defined cutoffs (0.602 for the RF model, 100ng/ml for FIT) The RF model detected 95.0% of cancers 61.1% of adenomas compared to 75.0% and 15.7% for FIT (Table 1, Figure 2A, Figure 2B). When adenomas and cancers were pooled together, the RF model 73.9% of lesions, while FIT only detected 38.1%.  The RF model had significantly improved sensitivity for both advanced and non-advanced adenomas as well as stage I, II, and III cancers (Figure 3).  The increased sensitivity of the RF model was accompanied by a decrease in specificity (76.2%) compared to FIT (97.1%).  
 
-**Extrapolation of predictive values**  
+To better understand the relationship between the RF model and FIT, we compared the results of the two tests for each sample (Figure 2C). All samples that tested positive by FIT also tested positive in the RF model, meaning the RF model detected all of the lesions that FIT was able to detect.  However, many samples with negative FIT results tested positive by the RF model.  The RF model detected 80.0% of cancers and 53.9% of adenomas that FIT failed to detect, while maintaining a specificity of 78.4%.
+
+Extrapolation of performance to population of 100,000 patients?  
 View Exact paper section like this.
 - number of positive tests from RF/FIT that would require colonoscopy
 - of those positives, how many would be false positives
 - number of negative tests from RF/FIT
 - of those negatives, how many would be false negatives.  what kind of tumor gets missed
-
-**Demographic differences in test performance?**  
-Male vs Female
-- probably just put this in the discussion
 
 
 	Figures
@@ -117,9 +119,6 @@ Male vs Female
 
     5.  Table 2: Positive and Negative Predictive values
 
-    <!-- -->
-
-    a.  Text:
 
     b.  We can use microbiome data to distinguish normal from
         cancer/adenoma.
