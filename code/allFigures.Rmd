@@ -18,26 +18,27 @@ for (dep in deps){
 meta <- read.delim('data/metadata.tsv', header=T, sep='\t')
 shared <- read.delim('data/glne007.final.an.unique_list.0.03.subsample.0.03.filter.shared', header=T, sep='\t')
 
-all.data <- merge(meta, shared, by.x='sample', by.y='Group')
-all.data$lesion <- factor(NA, levels=c(0,1))
-all.data$lesion[all.data$dx=='adenoma' | all.data$dx=='cancer'] <- 1
-all.data$lesion[all.data$dx=='normal'] <- 0
+all_data <- merge(meta, shared, by.x='sample', by.y='Group')
+all_data$lesion <- factor(NA, levels=c(0,1))
+all_data$lesion[all_data$dx=='adenoma' | all_data$dx=='cancer'] <- 1
+all_data$lesion[all_data$dx=='normal'] <- 0
 ```
 
+<br>
 
 ###Cancer vs. Normal
 ```{r cancer_ROC, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
-canc_data <- all.data[all.data$dx != 'adenoma',c('lesion',colnames(all.data)[grep('Otu[0123456789]', colnames(all.data))])]
-canc_fit_data <- all.data[all.data$dx != 'adenoma',c('lesion','fit_result',colnames(all.data)[grep('Otu[0123456789]', colnames(all.data))])]
+canc_data <- all_data[all_data$dx != 'adenoma',c('lesion',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
+canc_fit_data <- all_data[all_data$dx != 'adenoma',c('lesion','fit_result',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
 #generate RF models with AUCRF
 set.seed(042215)
 canc_model <- AUCRF(lesion ~ ., data=canc_data, ntree=1000, pdel=0.05)
-plot(canc_model, main='AUC-RF: Microbiome Only')
+#plot(canc_model, main='AUC-RF: Microbiome Only')
 opt_canc_model <- canc_model$RFopt
 set.seed(042215)
 canc_fit_model <- AUCRF(lesion ~ ., data=canc_fit_data, ntree=1000, pdel=0.05)
-plot(canc_fit_model, main='AUC-RF: Microbiome + FIT')
+#plot(canc_fit_model, main='AUC-RF: Microbiome + FIT')
 opt_canc_fit_model <- canc_fit_model$RFopt
 
 #generate ROC curves
@@ -73,8 +74,8 @@ kable(cbind(signif(canc_imps,3), canc_tax), col.names=c('Importance (MDA)', 'Tax
 canc_otus <- canc_otus[canc_otus!='fit_result']
 canc_otus <- rev(canc_otus)
 
-norm_abunds <- all.data[all.data$dx=='normal', canc_otus]/10547 + 1e-4
-canc_abunds <- all.data[all.data$dx=='cancer', canc_otus]/10547 + 1e-4
+norm_abunds <- all_data[all_data$dx=='normal', canc_otus]/10547 + 1e-4
+canc_abunds <- all_data[all_data$dx=='cancer', canc_otus]/10547 + 1e-4
 
 par(mar=c(5, 8, 0.5, 0.5))
 plot(1, type="n", ylim=c(0,length(canc_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
@@ -89,21 +90,21 @@ axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
 legend('bottomright', legend=c("Cancer", "Normal"), pch=c(21, 21), pt.bg=c("red","black"), bty='n')
 ```
 
-
+<br>
 
 ###Adenoma vs. Normal
 ```{r adenoma_ROC, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
-ade_data <- all.data[all.data$dx != 'cancer',c('lesion',colnames(all.data)[grep('Otu[0123456789]', colnames(all.data))])]
-ade_fit_data <- all.data[all.data$dx != 'cancer',c('lesion','fit_result',colnames(all.data)[grep('Otu[0123456789]', colnames(all.data))])]
+ade_data <- all_data[all_data$dx != 'cancer',c('lesion',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
+ade_fit_data <- all_data[all_data$dx != 'cancer',c('lesion','fit_result',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
 #generate RF models with AUCRF
-set.seed(042215)
+set.seed(04215)
 ade_model <- AUCRF(lesion ~ ., data=ade_data, ntree=1000, pdel=0.05)
-plot(ade_model, main='AUC-RF: Microbiome Only')
+#plot(ade_model, main='AUC-RF: Microbiome Only')
 opt_ade_model <- ade_model$RFopt
 set.seed(042215)
 ade_fit_model <- AUCRF(lesion ~ ., data=ade_fit_data, ntree=1000, pdel=0.05)
-plot(ade_fit_model, main='AUC-RF: Microbiome + FIT')
+#plot(ade_fit_model, main='AUC-RF: Microbiome + FIT')
 opt_ade_fit_model <- ade_fit_model$RFopt
 
 #generate ROC curves
@@ -139,8 +140,8 @@ kable(cbind(signif(ade_imps,3), ade_tax), col.names=c('Importance (MDA)', 'Taxon
 ade_otus <- ade_otus[ade_otus!='fit_result']
 ade_otus <- rev(ade_otus)
 
-norm_abunds <- all.data[all.data$dx=='normal', ade_otus]/10547 + 1e-4
-ade_abunds <- all.data[all.data$dx=='adenoma', ade_otus]/10547 + 1e-4
+norm_abunds <- all_data[all_data$dx=='normal', ade_otus]/10547 + 1e-4
+ade_abunds <- all_data[all_data$dx=='adenoma', ade_otus]/10547 + 1e-4
 
 
 par(mar=c(5, 8, 0.5, 0.5))
@@ -156,28 +157,29 @@ axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
 legend('bottomright', legend=c("Adenoma", "Normal"), pch=c(21, 21), pt.bg=c("red","black"), bty='n')
 ```
 
-
+<br>
+ 
 ###Lesion vs. Normal
-```{r lesion_ROC_FIT, warning=F, results='hold', echo=F, fig.width=7, fig.height=7, cache=T}
-les_data <- all.data[,c('lesion','fit_result',colnames(all.data)[grep('Otu[0123456789]', colnames(all.data))])]
+```{r lesion_ROC_FIT, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
+les_data <- all_data[,c('lesion','fit_result',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
 #generate lesion vs normal model
 set.seed(042215)
 les_model <- AUCRF(lesion ~ ., data=les_data, ntree=1000, pdel=0.05)
-plot(les_model, main='AUC-RF Model: Microbiome + FIT')
+#plot(les_model, main='AUC-RF Model: Microbiome + FIT')
 opt_model <- les_model$RFopt
 all_probs <- predict(opt_model, type='prob')
 les_roc <- roc(les_data$lesion~all_probs[,2])
 les_fit_roc <- roc(les_data$lesion~les_data$fit_result)
 
 #test model on cancer
-canc_data <- les_data[all.data$dx!='adenoma',]
-canc_probs <- all_probs[all.data$dx!='adenoma',]
+canc_data <- les_data[all_data$dx!='adenoma',]
+canc_probs <- all_probs[all_data$dx!='adenoma',]
 canc_roc <- roc(canc_data$lesion ~ canc_probs[,2])
 canc_fit_roc <- roc(canc_data$lesion ~ canc_data$fit_result)
 
-ade_data <- les_data[all.data$dx!='cancer',]
-ade_probs <- all_probs[all.data$dx!='cancer',]
+ade_data <- les_data[all_data$dx!='cancer',]
+ade_probs <- all_probs[all_data$dx!='cancer',]
 ade_roc <-  roc(ade_data$lesion ~ ade_probs[,2])
 ade_fit_roc <- roc(ade_data$lesion ~ ade_data$fit_result)
 
@@ -221,8 +223,8 @@ kable(cbind(signif(les_imps,3), les_tax), col.names=c('Importance (MDA)', 'Taxon
 les_otus <- les_otus[les_otus!='fit_result']
 les_otus <- rev(les_otus)
 
-norm_abunds <- all.data[all.data$dx=='normal', les_otus]/10547 + 1e-4
-les_abunds <- all.data[all.data$dx!='normal', les_otus]/10547 + 1e-4
+norm_abunds <- all_data[all_data$dx=='normal', les_otus]/10547 + 1e-4
+les_abunds <- all_data[all_data$dx!='normal', les_otus]/10547 + 1e-4
 
 par(mar=c(5, 8, 0.5, 0.5))
 plot(1, type="n", ylim=c(0,length(les_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
@@ -242,16 +244,16 @@ legend('topright', legend=c("Adenoma", "Normal"), pch=c(21, 21), pt.bg=c("red","
 #pdf(file='model_StripCharts.pdf', height=7, width=9)
 par(mfrow=c(1,2), mar=c(3, 5, 0.5, 0.5))
 plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0.2,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
-stripchart(at=1, all_probs[all.data$dx=='normal',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=2, all_probs[all.data$dx=='adenoma',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=3, all_probs[all.data$dx=='cancer',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+stripchart(at=1, all_probs[all_data$dx=='normal',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=2, all_probs[all_data$dx=='adenoma',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=3, all_probs[all_data$dx=='cancer',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 axis(1, at=c(1,2,3), labels=c('Normal','Adenoma','Cancer'))
 abline(h=cutoff, lty=2)
 
 plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0.07,5000), log="y", ylab="FIT Result (ng/ml)", xlab="", xaxt="n", yaxt="n")
-stripchart(at=1, jitter(all.data[all.data$dx=='normal','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=2, jitter(all.data[all.data$dx=='adenoma','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=3, jitter(all.data[all.data$dx=='cancer','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+stripchart(at=1, jitter(all_data[all_data$dx=='normal','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=2, jitter(all_data[all_data$dx=='adenoma','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=3, jitter(all_data[all_data$dx=='cancer','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 axis(1, at=c(1,2,3), labels=c('Normal','Adenoma','Cancer'))
 axis(2, at=c(0.1,1.1,10.1,100.1,1000.1), labels=c(0,1,10,100,1000))
 abline(h=100, lty=2)
@@ -266,14 +268,14 @@ par(mfrow=c(1,1))
 par(mar=c(3, 5, 0.5, 0.5))
 plot(1, type="n", xlim=c(0.5,7), ylim=c(0.2,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
 
-stripchart(at=1, all_probs[all.data$dx=='normal' & all.data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=2, all_probs[all.data$dx=='adenoma' & all.data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=3, all_probs[all.data$dx=='cancer' & all.data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+stripchart(at=1, all_probs[all_data$dx=='normal' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=2, all_probs[all_data$dx=='adenoma' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=3, all_probs[all_data$dx=='cancer' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 
 
-stripchart(at=4.5, all_probs[all.data$dx=='normal' & all.data$fit_result < 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=5.5, all_probs[all.data$dx=='adenoma' & all.data$fit_result < 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=6.6, all_probs[all.data$dx=='cancer' & all.data$fit_result < 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+stripchart(at=4.5, all_probs[all_data$dx=='normal' & all_data$fit_result < 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=5.5, all_probs[all_data$dx=='adenoma' & all_data$fit_result < 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=6.6, all_probs[all_data$dx=='cancer' & all_data$fit_result < 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 
 axis(1, at=c(2,5), labels=c('Positive FIT','Negative FIT'))
 abline(h=cutoff, lty=2)
@@ -283,10 +285,10 @@ legend('bottomleft', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue
 
 ```{r fit_neg_stats, echo=F}
 
-neg_les_mod <- all_probs[all.data$dx!='normal' & all.data$fit_result < 100,2]
-neg_ade_mod <- all_probs[all.data$dx=='adenoma' & all.data$fit_result < 100,2]
-neg_canc_mod <- all_probs[all.data$dx=='cancer' & all.data$fit_result < 100,2]
-neg_norm_mod <-  all_probs[all.data$dx=='normal' & all.data$fit_result < 100,2]
+neg_les_mod <- all_probs[all_data$dx!='normal' & all_data$fit_result < 100,2]
+neg_ade_mod <- all_probs[all_data$dx=='adenoma' & all_data$fit_result < 100,2]
+neg_canc_mod <- all_probs[all_data$dx=='cancer' & all_data$fit_result < 100,2]
+neg_norm_mod <-  all_probs[all_data$dx=='normal' & all_data$fit_result < 100,2]
 
 neg_les_mod_sens <- length(neg_les_mod[neg_les_mod>=cutoff]) / length(neg_les_mod)
 neg_ade_mod_sens <- length(neg_ade_mod[neg_ade_mod>=cutoff]) / length(neg_ade_mod)
@@ -294,10 +296,10 @@ neg_canc_mod_sens <- length(neg_canc_mod[neg_canc_mod>=cutoff]) / length(neg_can
 neg_mod_spec <- length(neg_norm_mod[neg_norm_mod<cutoff]) / length(neg_norm_mod)
 neg_mod_acc <- (length(neg_norm_mod[neg_norm_mod<cutoff]) + length(neg_les_mod[neg_les_mod>=cutoff])) / (length(neg_les_mod) + length(neg_norm_mod))
 
-pos_les_mod <- all_probs[all.data$dx!='normal' & all.data$fit_result >= 100,2]
-pos_ade_mod <- all_probs[all.data$dx=='adenoma' & all.data$fit_result >= 100,2]
-pos_canc_mod <- all_probs[all.data$dx=='cancer' & all.data$fit_result >= 100,2]
-pos_norm_mod <-  all_probs[all.data$dx=='normal' & all.data$fit_result >= 100,2]
+pos_les_mod <- all_probs[all_data$dx!='normal' & all_data$fit_result >= 100,2]
+pos_ade_mod <- all_probs[all_data$dx=='adenoma' & all_data$fit_result >= 100,2]
+pos_canc_mod <- all_probs[all_data$dx=='cancer' & all_data$fit_result >= 100,2]
+pos_norm_mod <-  all_probs[all_data$dx=='normal' & all_data$fit_result >= 100,2]
 
 pos_les_mod_sens <- length(pos_les_mod[pos_les_mod>=cutoff]) / length(pos_les_mod)
 pos_ade_mod_sens <- length(pos_ade_mod[pos_ade_mod>=cutoff]) / length(pos_ade_mod)
@@ -318,8 +320,8 @@ par(mar=c(5, 5, 0.5, 0.5))
 plot(1, type="n", xlim=c(0.1,10000), ylim=c(0.2,1), log='x',ylab="Model Probability of Lesion", xlab="FIT (ng/ml)", xaxt='n')
 
 palette(c('blue','red','grey'))
-points(all.data[,'fit_result'], all_probs[,2], pch=21, bg=all.data$dx)
-points(jitter(rep(0.15,length(all_probs[all.data$fit_result==0,2])), factor=20), all_probs[all.data$fit_result==0,2], pch=21, bg=all.data[all.data$fit_result==0, 'dx'])
+points(all_data[,'fit_result'], all_probs[,2], pch=21, bg=all_data$dx)
+points(jitter(rep(0.15,length(all_probs[all_data$fit_result==0,2])), factor=20), all_probs[all_data$fit_result==0,2], pch=21, bg=all_data[all_data$fit_result==0, 'dx'])
 
 axis(1, at=c(0.15,1.1,10.1,100.1,1000.1), labels=c(0,1,10,100,1000))
 abline(h=cutoff, lty=2)
@@ -331,12 +333,12 @@ legend('bottomright', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blu
 
 ```{r sensitivity_barplots, echo=F, fig.width=9, fig.height=6}
 
-nonAdv_probs <- all_probs[all.data$Dx_Bin=='Adenoma',2]
-advAde_probs <- all_probs[all.data$Dx_Bin=='adv Adenoma',2]
-s1_probs <- all_probs[all.data$stage==1,2]
-s2_probs <- all_probs[all.data$stage==2,2]
-s3_probs <- all_probs[all.data$stage==3,2]
-s4_probs <- all_probs[all.data$stage==4,2]
+nonAdv_probs <- all_probs[all_data$Dx_Bin=='Adenoma',2]
+advAde_probs <- all_probs[all_data$Dx_Bin=='adv Adenoma',2]
+s1_probs <- all_probs[all_data$stage==1,2]
+s2_probs <- all_probs[all_data$stage==2,2]
+s3_probs <- all_probs[all_data$stage==3,2]
+s4_probs <- all_probs[all_data$stage==4,2]
 
 nonAdv_sens <- length(nonAdv_probs[nonAdv_probs>=cutoff]) / length(nonAdv_probs)
 advAde_sens <- length(advAde_probs[advAde_probs>=cutoff]) / length(advAde_probs)
@@ -345,14 +347,14 @@ s2_sens <- length(s2_probs[s2_probs>=cutoff]) / length(s2_probs)
 s3_sens <- length(s3_probs[s3_probs>=cutoff]) / length(s3_probs)
 s4_sens <- length(s4_probs[s4_probs>=cutoff]) / length(s4_probs)
 
-nonAdv_fit <- all.data[all.data$Dx_Bin=='Adenoma','fit_result']
-advAde_fit <- all.data[all.data$Dx_Bin=='adv Adenoma','fit_result']
-s1_fit <- all.data[all.data$stage==1,'fit_result']
-s2_fit <- all.data[all.data$stage==2,'fit_result']
-s3_fit <- all.data[all.data$stage==3,'fit_result']
-s4_fit <- all.data[all.data$stage==4,'fit_result']
+nonAdv_fit <- all_data[all_data$Dx_Bin=='Adenoma','fit_result']
+advAde_fit <- all_data[all_data$Dx_Bin=='adv Adenoma','fit_result']
+s1_fit <- all_data[all_data$stage==1,'fit_result']
+s2_fit <- all_data[all_data$stage==2,'fit_result']
+s3_fit <- all_data[all_data$stage==3,'fit_result']
+s4_fit <- all_data[all_data$stage==4,'fit_result']
 
-nonAdv_fit_sens <- length(nonAdv_fit[adenoma_fit>=100]) / length(nonAdv_fit)
+nonAdv_fit_sens <- length(nonAdv_fit[nonAdv_fit>=100]) / length(nonAdv_fit)
 advAde_fit_sens <- length(advAde_fit[advAde_fit>=100]) / length(advAde_fit)
 s1_fit_sens <- length(s1_fit[s1_fit>=100]) / length(s1_fit)
 s2_fit_sens <- length(s2_fit[s2_fit>=100]) / length(s2_fit)
@@ -363,11 +365,11 @@ sens_matrix <- matrix(c(nonAdv_sens,nonAdv_fit_sens,advAde_sens,advAde_fit_sens,
 rownames(sens_matrix) <- c('RF Model','FIT')
 
 par(mar=c(4,4,2,2))
-x_labels <- c(sprintf(' \nNonadvanced\nAdenoma\n(n=%i)',length(adenoma_probs)),sprintf('Advanced\nAdenomas\n(n=%i)',length(advAde_probs)),sprintf('Cancer\nStage I\n(n=%i)',length(s1_probs)), sprintf('Cancer\nStage II\n(n=%i)',length(s2_probs)), sprintf('Cancer\nStage III\n(n=%i)',length(s3_probs)), sprintf('Cancer\nStage IV\n(n=%i)',length(s4_probs)))
+x_labels <- c(sprintf(' \nNonadvanced\nAdenoma\n(n=%i)',length(nonAdv_probs)),sprintf('Advanced\nAdenomas\n(n=%i)',length(advAde_probs)),sprintf('Cancer\nStage I\n(n=%i)',length(s1_probs)), sprintf('Cancer\nStage II\n(n=%i)',length(s2_probs)), sprintf('Cancer\nStage III\n(n=%i)',length(s3_probs)), sprintf('Cancer\nStage IV\n(n=%i)',length(s4_probs)))
 bp<-barplot(sens_matrix, beside=T, ylab='Sensitvity (%)', ylim=c(0,1.1), axisnames=F, col=c('grey25','grey90'),axis.lty=1, yaxt='n')
 axis(2, at=seq(0,1,0.1), labels=seq(0,100,10))
 mtext(text=x_labels, side=1, at=c(2,5,8,11,14,17), line=2)
-legend('topleft', legend=c('RF Model','FIT (1ng/ml cutoff)'), col=c('grey25','grey90'), pch=15, bty='n', pt.cex=2)
+legend('topleft', legend=c('RF Model','FIT (100ng/ml cutoff)'), col=c('grey25','grey90'), pch=15, bty='n', pt.cex=2)
 
 
 #McNemar test
@@ -380,7 +382,7 @@ getMcnemarP <- function(model, fit){
   }
 
 
-text(2,sens_matrix[1,1]+0.05, sprintf('p=%.1g',getMcnemarP(adenoma_probs, adenoma_fit)))
+text(2,sens_matrix[1,1]+0.05, sprintf('p=%.1g',getMcnemarP(nonAdv_probs, nonAdv_fit)))
 text(5,sens_matrix[1,2]+0.05, sprintf('p=%.1g',getMcnemarP(advAde_probs, advAde_fit)))
 text(8,sens_matrix[1,3]+0.05, sprintf('p=%.1g',getMcnemarP(s1_probs, s1_fit)))
 text(11,sens_matrix[1,4]+0.05, sprintf('p=%.1g',getMcnemarP(s2_probs, s2_fit)))
@@ -394,20 +396,22 @@ text(17,sens_matrix[1,6]+0.05, sprintf('p=%.1g',getMcnemarP(s4_probs, s4_fit)))
 
 
 ```{r stats_table, echo=F, cache=T}
-
 #Numbers of each diagnosis by colonoscopy
-les_mod <- all_probs[all.data$dx!='normal',2]
-ade_mod <- all_probs[all.data$dx=='adenoma',2]
-canc_mod <- all_probs[all.data$dx=='cancer',2]
-norm_mod <- all_probs[all.data$dx=='normal',2]
+les_mod <- all_probs[all_data$dx!='normal',2]
+advAde_mod <- all_probs[all_data$Dx_Bin=='adv Adenoma',2]
+nonAdv_mod <- all_probs[all_data$Dx_Bin=='Adenoma',2]
+canc_mod <- all_probs[all_data$dx=='cancer',2]
+norm_mod <- all_probs[all_data$dx=='normal',2]
 num_les <- length(les_mod)
-num_ade <- length(ade_mod)
+num_advAde <- length(advAde_mod)
+num_nonAdv <- length(nonAdv_mod)
 num_canc <- length(canc_mod)
 num_norm <- length(norm_mod)
 
 #Numbers of diagnoses observed by our model
 les_obs <- length(les_mod[les_mod>=cutoff])
-ade_obs <- length(ade_mod[ade_mod>=cutoff])
+advAde_obs <- length(advAde_mod[advAde_mod>=cutoff])
+nonAdv_obs <- length(nonAdv_mod[nonAdv_mod>=cutoff])
 canc_obs <- length(canc_mod[canc_mod>=cutoff])
 norm_obs <- length(norm_mod[norm_mod<cutoff])
 
@@ -415,8 +419,14 @@ norm_obs <- length(norm_mod[norm_mod<cutoff])
 les_sens_ci <- ci.coords(les_roc, x=cutoff, input='threshold', ret='sensitivity')
 les_mod_sens <- sprintf('%.3g (%.3g-%.3g)',100*les_sens_ci[2],100*les_sens_ci[1],100*les_sens_ci[3])
 
-ade_sens_ci<-ci.coords(ade_roc, x=cutoff, input='threshold', ret='sensitivity')
-ade_mod_sens <- sprintf('%.3g (%.3g-%.3g)',100*ade_sens_ci[2],100*ade_sens_ci[1],100*ade_sens_ci[3])
+advAde_roc <- roc(les_data$lesion[all_data$Dx_Bin=='adv Adenoma' | all_data$Dx_Bin=='Normal'] ~ all_probs[all_data$Dx_Bin=='adv Adenoma' | all_data$Dx_Bin=='Normal',2])
+nonAdv_roc <- roc(les_data$lesion[all_data$Dx_Bin=='Adenoma' | all_data$Dx_Bin=='Normal'] ~ all_probs[all_data$Dx_Bin=='Adenoma' | all_data$Dx_Bin=='Normal',2])
+
+advAde_sens_ci<-ci.coords(advAde_roc, x=cutoff, input='threshold', ret='sensitivity')
+advAde_mod_sens <- sprintf('%.3g (%.3g-%.3g)',100*advAde_sens_ci[2],100*advAde_sens_ci[1],100*advAde_sens_ci[3])
+
+nonAdv_sens_ci<-ci.coords(nonAdv_roc, x=cutoff, input='threshold', ret='sensitivity')
+nonAdv_mod_sens <- sprintf('%.3g (%.3g-%.3g)',100*nonAdv_sens_ci[2],100*nonAdv_sens_ci[1],100*nonAdv_sens_ci[3])
 
 canc_sens_ci<-ci.coords(canc_roc, x=cutoff, input='threshold', ret='sensitivity')
 canc_mod_sens <- sprintf('%.3g (%.3g-%.3g)',100*canc_sens_ci[2],100*canc_sens_ci[1],100*canc_sens_ci[3])
@@ -426,21 +436,29 @@ mod_spec <- sprintf('%.3g (%.3g-%.3g)',100*mod_spec_ci[2],100*mod_spec_ci[1],100
 
 
 #Numbers of diagnoses observed by FIT
-les_fit <- all.data[all.data$dx!='normal','fit_result']
-ade_fit <- all.data[all.data$dx=='adenoma','fit_result']
-canc_fit <- all.data[all.data$dx=='cancer','fit_result']
-norm_fit <- all.data[all.data$dx=='normal','fit_result']
+les_fit <- all_data[all_data$dx!='normal','fit_result']
+advAde_fit <- all_data[all_data$Dx_Bin=='adv Adenoma','fit_result']
+nonAdv_fit <- all_data[all_data$Dx_Bin=='Adenoma','fit_result']
+canc_fit <- all_data[all_data$dx=='cancer','fit_result']
+norm_fit <- all_data[all_data$dx=='normal','fit_result']
 les_fit_obs <- length(les_fit[les_fit>=100])
-ade_fit_obs <- length(ade_fit[ade_fit>=100])
+advAde_fit_obs <- length(advAde_fit[advAde_fit>=100])
+nonAdv_fit_obs <- length(nonAdv_fit[nonAdv_fit>=100])
 canc_fit_obs <- length(canc_fit[canc_fit>=100])
 norm_fit_obs <- length(norm_fit[norm_fit<100])
 
-# sensitivity and 95% CI calculations for model
+# sensitivity and 95% CI calculations for FIT
 les_fit_sens_ci <- ci.coords(les_fit_roc, x=100, input='threshold', ret='sensitivity')
 les_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*les_fit_sens_ci[2],100*les_fit_sens_ci[1],100*les_fit_sens_ci[3])
 
-ade_fit_sens_ci<-ci.coords(ade_fit_roc, x=100, input='threshold', ret='sensitivity')
-ade_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*ade_fit_sens_ci[2],100*ade_fit_sens_ci[1],100*ade_fit_sens_ci[3])
+advAde_fit_roc <- roc(les_data$lesion[all_data$Dx_Bin=='adv Adenoma' | all_data$Dx_Bin=='Normal'] ~ all_data[all_data$Dx_Bin=='adv Adenoma' | all_data$Dx_Bin=='Normal', 'fit_result'])
+nonAdv_fit_roc <- roc(les_data$lesion[all_data$Dx_Bin=='Adenoma' | all_data$Dx_Bin=='Normal'] ~ all_data[all_data$Dx_Bin=='Adenoma' | all_data$Dx_Bin=='Normal', 'fit_result'])
+
+advAde_fit_sens_ci<-ci.coords(advAde_fit_roc, x=100, input='threshold', ret='sensitivity')
+advAde_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*advAde_fit_sens_ci[2],100*advAde_sens_ci[1],100*advAde_sens_ci[3])
+
+nonAdv_fit_sens_ci<-ci.coords(nonAdv_fit_roc, x=100, input='threshold', ret='sensitivity')
+nonAdv_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*nonAdv_fit_sens_ci[2],100*nonAdv_sens_ci[1],100*nonAdv_sens_ci[3])
 
 canc_fit_sens_ci<-ci.coords(canc_fit_roc, x=100, input='threshold', ret='sensitivity')
 canc_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*canc_fit_sens_ci[2],100*canc_fit_sens_ci[1],100*canc_fit_sens_ci[3])
@@ -450,14 +468,17 @@ fit_spec <- sprintf('%.3g (%.3g-%.3g)',100*fit_spec_ci[2],100*fit_spec_ci[1],100
 
 #Build Output table
 
-stats_table <- matrix(NA, ncol=6, nrow=7)
+stats_table <- matrix(NA, ncol=6, nrow=8)
 colnames(stats_table) <- c('Most Advanced Finding','Colonoscopy','RF Model','','FIT','')
-stats_table[,1] <- c('','','Colorectal Cancer','Adenoma','Any Lesion','','Negative Colonosopies')
-stats_table[,2] <- c('','no.',num_canc,num_ade,num_les,'',num_norm)
-stats_table[,3] <- c('Positive Results','no.',canc_obs,ade_obs,les_obs,'Negative Results',norm_obs)
-stats_table[,4] <- c('Sensitivity (95% CI)','%',canc_mod_sens,ade_mod_sens,les_mod_sens,'Specificity (95% CI)',mod_spec)
-stats_table[,5] <- c('Positive Results','no.',canc_fit_obs,ade_fit_obs,les_fit_obs,'Negative Results',norm_fit_obs)
-stats_table[,6] <- c('Sensitivity (95% CI)','%',canc_fit_sens,ade_fit_sens,les_fit_sens,'Specificity (95% CI)',fit_spec)
+stats_table[1,] <- c('','','Positive Results','Sensitivity (95% CI)','Positive Results','Sensitivity (95% CI)')
+stats_table[2,] <- c('','no.','no.','%','no.','%')
+stats_table[3,] <- c('Cancer', num_canc, canc_obs, canc_mod_sens, canc_fit_obs, canc_fit_sens)
+stats_table[4,] <- c('Advanced Adenoma', num_advAde, advAde_obs, advAde_mod_sens, advAde_fit_obs, advAde_fit_sens)
+stats_table[5,] <- c('Nonadvanced Adenoma', num_nonAdv, nonAdv_obs, nonAdv_mod_sens, nonAdv_fit_obs, nonAdv_fit_sens)
+stats_table[6,] <- c('Any Lesion', num_les, les_obs, les_mod_sens, les_fit_obs, les_fit_sens)
+stats_table[7,] <- c('','','Negative Results','Specificity (95% CI)','Negative Results','Specificity (95% CI)')
+stats_table[8,] <- c('Negative Colonosopies', num_norm, norm_obs, mod_spec, norm_fit_obs, fit_spec)
+
 
 #stats_table
 #pdf(file='stats_table.pdf', width=8, height=5)
@@ -476,13 +497,13 @@ getPV <- function(sens, spec, prev){
   return(list(PPV=ppv, NPV=npv))
 }
 
-advAde_pv <- getPV(advAde_sens,mod_spec_ci[2],0.057)
-nonAdv_pv <- getPV(nonAdv_sens,mod_spec_ci[2],0.177)
+advAde_pv <- getPV(advAde_sens_ci[2],mod_spec_ci[2],0.057)
+nonAdv_pv <- getPV(nonAdv_sens_ci[2],mod_spec_ci[2],0.177)
 canc_pv <- getPV(canc_sens_ci[2],mod_spec_ci[2],0.003)
 les_pv<- getPV(les_sens_ci[2],mod_spec_ci[2],0.302)
 
-advAde_fit_pv <- getPV(advAde_fit_sens,fit_spec_ci[2],0.057)
-nonAdv_fit_pv <- getPV(nonAdv_fit_sens,fit_spec_ci[2],0.177)
+advAde_fit_pv <- getPV(advAde_fit_sens_ci[2],fit_spec_ci[2],0.057)
+nonAdv_fit_pv <- getPV(nonAdv_fit_sens_ci[2],fit_spec_ci[2],0.177)
 canc_fit_pv <- getPV(canc_fit_sens_ci[2],fit_spec_ci[2],0.003)
 les_fit_pv<- getPV(les_fit_sens_ci[2],fit_spec_ci[2],0.302)
 
@@ -494,6 +515,8 @@ pv_table[2,] <- c('0.3%', canc_pv$PPV, canc_fit_pv$PPV, canc_pv$NPV, canc_fit_pv
 pv_table[3,] <- c('5.7%', advAde_pv$PPV, advAde_fit_pv$PPV, advAde_pv$NPV, advAde_fit_pv$NPV)
 pv_table[4,] <- c('17.7%', nonAdv_pv$PPV, nonAdv_fit_pv$PPV, nonAdv_pv$NPV, nonAdv_fit_pv$NPV)
 pv_table[5,] <- c('30.2%', les_pv$PPV, les_fit_pv$PPV, les_pv$NPV, les_fit_pv$NPV)
+
+kable(pv_table)
 ```
 
 
@@ -501,8 +524,8 @@ pv_table[5,] <- c('30.2%', les_pv$PPV, les_fit_pv$PPV, les_pv$NPV, les_fit_pv$NP
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
 
-m_roc <- roc(all.data$lesion[all.data$Gender == 'm'] ~ all_probs[all.data$Gender == 'm',2])
-f_roc <- roc(all.data$lesion[all.data$Gender == 'f'] ~ all_probs[all.data$Gender == 'f',2])
+m_roc <- roc(all_data$lesion[all_data$Gender == 'm'] ~ all_probs[all_data$Gender == 'm',2])
+f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender == 'f',2])
 plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
 plot(les_roc, col='green3', lwd=2, add=T)
 plot(m_roc, col='blue', lwd=2, add=T)
@@ -519,33 +542,57 @@ legend('bottomright', legend=c(sprintf('All Subjects: %.3g',les_roc$auc),
 
 
 plot(1, type="n", xlim=c(0.5,7), ylim=c(0,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
-stripchart(at=1, all_probs[all.data$dx=='normal' & all.data$Gender == 'm', 2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=2, all_probs[all.data$dx=='adenoma' & all.data$Gender == 'm',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=3, all_probs[all.data$dx=='cancer' & all.data$Gender == 'm',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+stripchart(at=1, all_probs[all_data$dx=='normal' & all_data$Gender == 'm', 2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=2, all_probs[all_data$dx=='adenoma' & all_data$Gender == 'm',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=3, all_probs[all_data$dx=='cancer' & all_data$Gender == 'm',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 
-stripchart(at=4.5, all_probs[all.data$dx=='normal' & all.data$Gender == 'f',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=5.5, all_probs[all.data$dx=='adenoma' & all.data$Gender == 'f',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=6.6, all_probs[all.data$dx=='cancer' & all.data$Gender == 'f',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+stripchart(at=4.5, all_probs[all_data$dx=='normal' & all_data$Gender == 'f',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=5.5, all_probs[all_data$dx=='adenoma' & all_data$Gender == 'f',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=6.6, all_probs[all_data$dx=='cancer' & all_data$Gender == 'f',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 
 axis(1, at=c(2,5), labels=c('Males','Females'))
 abline(h=cutoff, lty=2)
 legend('bottomleft', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue','red'), pch=21, bty='n', pt.cex=1.5)
 
-m_spec <- coords(m_roc, x=cutoff, input='threshold', ret='specificity')
-m_sens <- coords(m_roc, x=cutoff, input='threshold', ret='sensitivity')
-table(all_probs[all.data$dx=='normal' & all.data$Gender == 'm', 2] >= cutoff)
 ```
+
+
+```{r gender_normalized, echo=F, results='hide', fig.width=9, fig.height=6}
+
+row_nums <- 1:nrow(all_data)
+pvals <- numeric()
+for(i in 1:1000){
+  m_norm <- sample(row_nums[all_data$Gender=='m' & all_data$dx=='normal'], 61)
+  m_ade <- sample(row_nums[all_data$Gender=='m' & all_data$dx=='adenoma'], 80)
+  m_canc <- sample(row_nums[all_data$Gender=='m' & all_data$dx=='cancer'], 52)
+  f_norm <- sample(row_nums[all_data$Gender=='f' & all_data$dx=='normal'], 61)
+  f_ade <- sample(row_nums[all_data$Gender=='f' & all_data$dx=='adenoma'], 80)
+  f_canc <- sample(row_nums[all_data$Gender=='f' & all_data$dx=='cancer'], 52)
+
+  m_rows <- c(m_norm,m_ade,m_canc)
+  f_rows <- c(f_norm,f_ade,f_canc)
+
+  m_roc <- roc(all_data$lesion[m_rows] ~ all_probs[m_rows,2])
+  f_roc <- roc(all_data$lesion[f_rows] ~ all_probs[f_rows,2])
+
+  pvals[i] <- roc.test(m_roc,f_roc)$p.value
+}
+
+cat('Male vs Female\n % of tests with p-value < 0.05:', length(pvals[pvals<0.05])/length(pvals))
+
+```
+
 
 
 ```{r nsaids, echo=F, fig.width=9, results='hide', fig.height=6}
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
 
-nsaid_roc <- roc(all.data$lesion[all.data$NSAID == 1] ~ all_probs[all.data$NSAID == 1,2])
-no_nsaid_roc <- roc(all.data$lesion[all.data$NSAID == 0] ~ all_probs[all.data$NSAID == 0,2])
+nsaid_roc <- roc(all_data$lesion[all_data$NSAID == 1] ~ all_probs[all_data$NSAID == 1,2])
+no_nsaid_roc <- roc(all_data$lesion[all_data$NSAID == 0] ~ all_probs[all_data$NSAID == 0,2])
 
-nsaid_fit <- roc(all.data$lesion[all.data$NSAID == 1] ~ all.data$fit_result[all.data$NSAID == 1])
-no_nsaid_fit <- roc(all.data$lesion[all.data$NSAID == 0] ~ all.data$fit_result[all.data$NSAID == 0])
+nsaid_fit <- roc(all_data$lesion[all_data$NSAID == 1] ~ all_data$fit_result[all_data$NSAID == 1])
+no_nsaid_fit <- roc(all_data$lesion[all_data$NSAID == 0] ~ all_data$fit_result[all_data$NSAID == 0])
 
 plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
 plot(les_roc, col='green3', lwd=2, add=T)
@@ -570,13 +617,13 @@ legend('bottomright', legend=c(sprintf('All Subjects: %.3g',les_roc$auc),
 
 
 plot(1, type="n", xlim=c(0.5,7), ylim=c(0,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
-stripchart(at=1, all_probs[all.data$dx=='normal' & all.data$NSAID == 1, 2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=2, all_probs[all.data$dx=='adenoma' & all.data$NSAID == 1,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=3, all_probs[all.data$dx=='cancer' & all.data$NSAID == 1,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+stripchart(at=1, all_probs[all_data$dx=='normal' & all_data$NSAID == 1, 2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=2, all_probs[all_data$dx=='adenoma' & all_data$NSAID == 1,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=3, all_probs[all_data$dx=='cancer' & all_data$NSAID == 1,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 
-stripchart(at=4.5, all_probs[all.data$dx=='normal' & all.data$NSAID == 0,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=5.5, all_probs[all.data$dx=='adenoma' & all.data$NSAID == 0,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=6.6, all_probs[all.data$dx=='cancer' & all.data$NSAID == 0,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+stripchart(at=4.5, all_probs[all_data$dx=='normal' & all_data$NSAID == 0,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=5.5, all_probs[all_data$dx=='adenoma' & all_data$NSAID == 0,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=6.6, all_probs[all_data$dx=='cancer' & all_data$NSAID == 0,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 
 axis(1, at=c(2,5), labels=c('NSAID','No NSAID'))
 abline(h=cutoff, lty=2)
