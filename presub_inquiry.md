@@ -1,13 +1,12 @@
-During cell division, mitotic spindles are assembled by microtubulebased motor proteins1,2.
+Colorectal cancer is the third most common and third leading cause of death among cancers in the united states.  Patients diagnosed at the earliest stages of tumor development have greater than 90% chance of survival, however, less than half of individuals for whom screening is recommended receive age appropriate screening. Structural exams like colonoscopies and sigmoidoscopies expensive and somewhat invasive, while more convenient, inexpensive stool-based diagnostics fail to detect precancerous lesions, called adenomas. 
 
-The bipolar organization of spindles is essential for proper segregation of chromosomes, and requires plusend-directed homotetrameric motor proteins of the widely conserved kinesin-5 (BimC) family3 . Hypotheses for bipolar spindle formation include the ‘push−pull mitotic muscle’ model, in which kinesin-5 and opposing motor proteins act between overlapping microtubules2,4,5.
+Thus, there is a need for novel diagnostic methods that are inexpensive, non-invasive, and capable of detecting both adenomas and cancer.
 
-However, the precise roles of kinesin-5 during this process are unknown.
+Here we demonstrate that a incorporating both the abundance of fecal bacteria and fecal occult blood can significantly improve the detection of colonic lesions.
 
-Here we show that the vertebrate kinesin-5 Eg5 drives the sliding of microtubules depending on their relative orientation.
+Using stool samples from 490 patients we developed a random forest classification model for detecting colonic lesions based on the abundances of certain bacterial populations and the concentration of human globin as measured by a fecal immunochemical test (FIT). The model significantly outperformed FIT alone, detecting 95% of cancers and 61.1% of adenomas compared to 75.0% and 15.7% for FIT. The model had significantly higher sensitivity for nonadvanced and advanced adenomas, as well as stage I, II, and III cancers.  Of the colonic lesions missed by FIT, the model detected 80.0% of cancers and 53.9% of adenomas.
 
-We found in controlled in vitro assays that Eg5 has the remarkable capability of simultaneously moving at ~20 nm s–1 towards the plusends of each of the two microtubules it crosslinks. For anti-parallel microtubules, this results in relative sliding at ~40 nm s–1, comparable to spindle pole separation rates in vivo6 . Furthermore, we found that Eg5 can tether microtubule plus-ends, suggesting an additional microtubule-binding mode for Eg5.
+Our results show that analysis of the fecal microbial community can compliment other noninvasive screening methods to improve detection of colonic lesion, especially at early stages of tumor development.
 
-Our results demonstrate how members of the kinesin-5 family are likely to function in mitosis, pushing apart interpolar microtubules as well as recruiting microtubules into bundles that are subsequently polarized by relative sliding.
-
-We anticipate our assay to be a starting point for more sophisticated in vitro models of mitotic spindles. For example, the individual and combined action of multiple mitotic motors could be tested, including minus-end-directed motors opposing Eg5 motility. Furthermore, Eg5 inhibition is a major target of anti-cancer drug development, and a well-defined and quantitative assay for motor function will be relevant for such developments.
+With a negative predictive value of 99.98%, our model could be used to accurately identify those patients for whom a colonoscopy is unnecessary, drastically reducing healthcare costs and complications due to invasive screening. By incorporating other biomarkers, like 
+those used in multitarget stool DNA tests, we can further improve the accuracy of noninvasive tests leading to a decrease in the incidence and mortalility of colorectal cancer.
