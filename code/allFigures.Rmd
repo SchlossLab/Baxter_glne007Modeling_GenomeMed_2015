@@ -63,7 +63,7 @@ text(0.3,0.05,sprintf('Microbiome+FIT vs FIT Only: p=%.2g',roc.test(canc_fit_roc
 
 
 
-```{r canc_OTUs, warning=F, echo=F, fig.width=7, fig.height=7}
+```{r canc_OTUs, warning=F, echo=F, fig.width=7, fig.height=7, eval=FALSE}
 taxonomy <- read.delim('data/glne007.final.an.unique_list.0.03.cons.taxonomy', sep='\t', header=T, row.names=1)
 
 canc_otus <- canc_fit_model$Xopt
@@ -129,7 +129,7 @@ text(0.3,0.05,sprintf('Microbiome Only vs FIT Only: p=%.2g',roc.test(ade_roc,ade
 ```
 
 
-```{r ade_OTUs, warning=F, echo=F, fig.width=7, fig.height=7}
+```{r ade_OTUs, warning=F, echo=F, fig.width=7, fig.height=7, eval=FALSE}
 taxonomy <- read.delim('data/glne007.final.an.unique_list.0.03.cons.taxonomy', sep='\t', header=T, row.names=1)
 
 ade_otus <- ade_fit_model$Xopt
@@ -155,6 +155,42 @@ for(i in ade_otus){
 axis(2, at=seq(1,index-2,2), labels=ade_otus, las=1, tick=F, cex.axis=1)
 axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
 legend('bottomright', legend=c("Adenoma", "Normal"), pch=c(21, 21), pt.bg=c("red","black"), bty='n')
+```
+
+
+```{r combined_OTUs, warning=F, echo=F, fig.width=7, fig.height=8}
+canc_otus <- canc_fit_model$Xopt
+canc_otus <- canc_otus[canc_otus!='fit_result']
+canc_otus <- rev(canc_otus)
+
+ade_otus <- ade_fit_model$Xopt
+ade_otus <- ade_otus[ade_otus!='fit_result']
+ade_otus <- rev(ade_otus)
+
+c_norm_abunds <- all_data[all_data$dx=='normal', canc_otus]/10547 + 1e-4
+canc_abunds <- all_data[all_data$dx=='cancer', canc_otus]/10547 + 1e-4
+
+a_norm_abunds <- all_data[all_data$dx=='normal', ade_otus]/10547 + 1e-4
+ade_abunds <- all_data[all_data$dx=='adenoma', ade_otus]/10547 + 1e-4
+
+
+par(mar=c(5, 8, 0.5, 0.5))
+plot(1, type="n", ylim=c(0,length(c(ade_otus,canc_otus))*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
+index <- 1
+for(i in ade_otus){
+  stripchart(at=index-0.3, a_norm_abunds[,i], pch=21, bg="grey", method="jitter", jitter=0.2, add=T, cex=1)
+  stripchart(at=index+0.3, ade_abunds[,i], pch=21, bg="blue", method="jitter", jitter=0.2, add=T, cex=1)
+  index <- index + 2
+}
+for(i in canc_otus){
+  stripchart(at=index-0.3, c_norm_abunds[,i], pch=21, bg="grey", method="jitter", jitter=0.2, add=T, cex=1)
+  stripchart(at=index+0.3, canc_abunds[,i], pch=21, bg="red", method="jitter", jitter=0.2, add=T, cex=1)
+  index <- index + 2
+}
+
+axis(2, at=seq(1,index-2,2), labels=c(ade_otus, canc_otus), las=1, tick=F, cex.axis=1)
+axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
+legend('topright', legend=c('Cancer','Adenoma', 'Normal'), pch=21, pt.bg=c('red','blue','grey'))
 ```
 
 <br>
@@ -214,7 +250,9 @@ cat('RF model vs FIT alone\n','Lesion vs Normal: p=', roc.test(les_roc, les_fit_
 
 ```
 
-```{r les_OTUs, warning=F, echo=F, fig.width=7, fig.height=7}
+```{r les_OTUs, warning=F, echo=F, fig.width=7, fig.height=8}
+taxonomy <- read.delim('data/glne007.final.an.unique_list.0.03.cons.taxonomy', sep='\t', header=T, row.names=1)
+
 les_otus <- les_model$Xopt
 les_imps <- les_model$ranking[1:length(les_otus)]
 les_tax <- as.character(taxonomy[les_otus, 'Taxonomy'])
@@ -230,13 +268,13 @@ par(mar=c(5, 8, 0.5, 0.5))
 plot(1, type="n", ylim=c(0,length(les_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
 index <- 1
 for(i in les_otus){
-  stripchart(at=index-0.3, norm_abunds[,i], pch=21, bg="black", method="jitter", jitter=0.2, add=T, cex=1)
-  stripchart(at=index+0.3, les_abunds[,i], pch=21, bg="red", method="jitter", jitter=0.2, add=T, cex=1)
+  stripchart(at=index-0.3, norm_abunds[,i], pch=21, bg="grey", method="jitter", jitter=0.2, add=T, cex=1)
+  stripchart(at=index+0.3, les_abunds[,i], pch=21, bg="green4", method="jitter", jitter=0.2, add=T, cex=1)
   index <- index + 2
 }
 axis(2, at=seq(1,index-2,2), labels=les_otus, las=1, tick=F, cex.axis=1)
 axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
-legend('topright', legend=c("Adenoma", "Normal"), pch=c(21, 21), pt.bg=c("red","black"), bty='n')
+legend('topright', legend=c("Lesion", "Normal"), pch=c(21, 21), pt.bg=c("green4","grey"))
 ```
 
 
