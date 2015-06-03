@@ -4,11 +4,11 @@
 
 Colorectal cancer (CRC) is the third most common cancer among men and women in the United States and the second(third?) leading cause of cancer-related deaths (citation). Fortunately CRC incidence and mortality have steadily declined in recent decades, due in large part to increased screening.  Further progress is possible by increasing access to and accuracy of diagnostic tests.
 
-Structural exams like colonoscopy and sigmoidoscopy are able to detect both cancer and adenomas, however their high cost and invasive nature are barriers for many people. The large disparity in screening rates between those with and without insurance highlights the need for less expensive screen methods.  Unfortunately the cheaper, less invasive stool based tests like FOBT and FIT are unable to reliably detect adenomas.  Thus there is need for novel screening methods that are both inexpensive and capable of detect both cancer and adenomas.
+Structural exams like colonoscopy and sigmoidoscopy are able to detect both cancer and adenomas, however their high cost and invasive nature are barriers for many people. The large disparity in screening rates between those with and without insurance highlights the need for less expensive screen methods.  Unfortunately the cheaper, less invasive stool based tests like FOBT and FIT are unable to reliably detect adenomas.  Thus there is need for novel screening methods that are inexpensive and capable of detecting both cancer and adenomas.
 
 The gut microbiota, the collection of microorganisms that inhabit the gastrointestinal tract, are one potential source of biomarkers for detecting colonic lesions.  Numerous studies have observed alterations in the gut bacterial communities of patients with CRC.  Experiments in animal models have demonstrated that such alterations have the potential to accelerate tumorigenesis.  Furthermore several members of the gut microbiota have been shown to potentiate both the development and progression of CRC by a variety of mechanisms.  While each of these organisms may play a role in certain cases of CRC, none of them is present in every case of CRC. Thus no one organism is an effective biomarker on its own. 
 
-We have perviously shown that statistical models that take into account the abundances of multiple bacteria species can be used to distinguish healthy individuals from those with colonic lesions (citation).  In the present study we expanded upon those findings by demonstrating the potential for microbiome analysis to compliment FIT for improved detection of colonic lesions.  We did so using the largest patient cohort ever used for studying differences in the microbiomes of patients with adenomas and carcinomas.  We also improved upon previous studies by utilizing random forest (RF), a decision tree-based machine algorithm for classification, which includes and internal cross-validation to prevent overfitting. By incorporating both FIT and bacterial abundances into a single RF model, we were able to improve the sensitivity for adenomas and most stages of cancer.
+We have perviously shown that statistical models that take into account the abundances of multiple bacteria species can be used to distinguish healthy individuals from those with colonic lesions (@zackularCancPrev).  In the present study we expanded upon those findings by demonstrating the potential for microbiome analysis to compliment FIT for improved detection of colonic lesions.  We did so using the largest patient cohort ever used for studying differences in the microbiomes of patients with adenomas and carcinomas.  We also improved upon previous studies by utilizing random forest (RF), a decision tree-based machine algorithm for classification, which includes an internal cross-validation to prevent overfitting. By incorporating both FIT and bacterial abundances into a single RF model, we were able to improve the sensitivity for adenomas and most stages of cancer.
 
 
 
@@ -61,20 +61,20 @@ First we sought to confirm our previous findings that the microbiome could be us
 Next we generated RF models for distinguishing normal individuals from those with colonic adenomas. The optimal model using only the microbiota contained 53 OTUs and performed comparably to FIT, with AUCs of 0.671 and 0.639 respectively (Figure 1C, Fig S1C). When we combined the microbiota with FIT, the model significantly outperformed FIT alone (AUC=0.727, p=0.00054) using only 4 OTUs. These OTUs included OTU29, which was enriched in normal patients like in the normal vs cancer models. The three other OTUs were assocaiated with Lachnospiraceae (OTU14), Ruminococcaceae (OTU11), and unclassified member of Clostridiales (OTU10). Interestingly all four OTUs in the combined model were among the most abundant Clostridia in our samples. These data show that models based on the fecal microbiota can be used to discriminate healthy  individuals from those with adenomas or cancer. Such models can also compliment FIT to significantly improve test performance.
 
 **RF Model for Detecting Colonic Lesions**  
-An ideal diagnostic model would be able to detect both adenomas and carcinomas, so we developed a single model that would differentiate normal individuals from those with any type of colonic lesion. The optimal model combining FIT and the microbiota used 21 OTUs and performed significantly better than FIT alone for detecting colonic lesions (p=3e-5), with an AUC of 0.817 compared to 0.749 for FIT. This difference was due in large part to improved detection of adenomas. When distinguishing normal from adenoma, the model had an AUC of 0.740, which was significantly higher than the AUC for FIT, 0.639 (p=3e-5). For comparing cancer and normal the model was not significantly better than FIT alone.
+An ideal diagnostic model would be able to detect both adenomas and carcinomas, so we developed a single model that would differentiate normal individuals from those with any type of colonic lesion. The optimal model combining FIT and the microbiota used 21 OTUs and performed significantly better than FIT alone for detecting colonic lesions (p=3e-5), with an AUC of 0.817 compared to 0.749 for FIT. This difference was due in large part to improved detection of adenomas. When distinguishing normal from adenoma, the model had an AUC of 0.740, which was significantly higher than the AUC for FIT, 0.639 (p=3e-5). When comparing cancer and normal the AUC of the model was not significantly higher than FIT alone.
 
-Of the 21 OTUs used in the model, 14 were members of the Clostridia, including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60, 22, 9, 13, 87, 31) and 2 from Ruminococcaceae (OTU29, OTU11). Three OTUs were associated with the genus *Bacteroides* (OTUs 3, 7, 2). The remaining OTUs were associated with *Porphyromonas* (OTU105), *Parabacteroides* (OTU49), *Streptococcus* (OTU20), and Enterobacteriaceae (OTU28).  Interestingly the majority of OTUs used in the model were enriched in normal patients.  
+Of the 21 OTUs used in the model, 14 were members of the Clostridia, including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60, 22, 9, 13, 87, 31) and 2 from the Ruminococcaceae family (OTU29, OTU11). Three OTUs were associated with the genus *Bacteroides* (OTUs 3, 7, 2). The remaining OTUs were associated with *Porphyromonas* (OTU105), *Parabacteroides* (OTU49), *Streptococcus* (OTU20), and Enterobacteriaceae (OTU28).  Interestingly the majority of OTUs used in the model were enriched in normal patients.  
 
 **RF model Performance**
-We defined an optimal cutoff for the RF model based on Youden's J statistic (Youden, 1950). At this cutoff, the RF model had a sensitivity of 95.0(90.8-98.3) for cancers.  The model's performance was not significantly different across cancer stages with sensitivities of 89.7, 97.1, 97.2, and 100 for stages I, II, III, and IV, respectively (Figure 3). The RF model had a specificity of 61.1(54.6-67.7) for all adenomas with no significant difference between advanced and nonadvanced adenomas.
+We defined an optimal cutoff for the RF model based on Youden's J statistic (Youden, 1950). At this cutoff, the RF model had a sensitivity of 95.0(90.8-98.3) for cancers.  The model's performance was not significantly different across cancer stages with sensitivities of 89.7, 97.1, 97.2, and 100 for stages I, II, III, and IV, respectively (Figure 3). The RF model had a sensitivity of 61.1(54.6-67.7) for all adenomas with no significant difference between advanced and nonadvanced adenomas.
 
 Previous studies have identified differences in diagnostic test performance for certain demographic groups or for people taking certain medications (find citations).  Therefore we tested whether the RF model performance differed for certain patient populations. The model performed significantly better for females than males (p=0.027). We suspected that the difference could be due to having more adenoma samples from males (n=118) than females (n=80).  To correct for this we normalized samples such that male and female groups contained equal numbers of adenomas, cancers, and normal samples.  We resampled 1000 times and tested for a significant difference in AUC between males and females. Of the 1000 iterations 46% of tests resulted in a p-value less than 0.05, making it unclear whether gender truly affects the performance of the model.  Additionally, we found no difference in model performance according to age, BMI, NSAID usage, diabetes, smoking, or previous history of polyps. 
 
-As a final metric of our model's performance we estimated the positive predictive value (PPV) and negative predictive value (NPV) of the RF model by extrapolating its performance on an average-risk population using previously published values for CRC prevalence (@heitman2009prevalence).  Based on a prevalence of 0.3% for CRC, the model would have a relatively low PPV of 1.19%, but a high NPV of 99.98%.  For advanced adenomas the model would have PPV of 13.83% and NPV of 97.17% assuming a prevalence of 5.7%.  With a prevalence of 17.7% for nonadvanced adenomas, the PPV for the model would be 34.52% and the NPV would be 89.49%.
+As a final metric of our model's performance we estimated the positive predictive value (PPV) and negative predictive value (NPV) by extrapolating its performance on an average-risk population using previously published values for CRC prevalence (@heitman2009prevalence).  Based on a prevalence of 0.3% for CRC, the model would have a relatively low PPV of 1.19%, but a high NPV of 99.98%.  For advanced adenomas the model would have PPV of 13.83% and NPV of 97.17% assuming a prevalence of 5.7%.  With a prevalence of 17.7% for nonadvanced adenomas, the PPV for the model would be 34.52% and the NPV would be 89.49%.
 
 
 **Comparing with FIT**  
-Next we compared the performance of the RF model to using FIT alone. The AUC for the RF model was significantly higher than FIT for distinguishing adenoma from normal or all lesions from normal, but cancer from normal (Figure 2A). Examination of the ROC curves for the two tests shows that the RF model does not outperform FIT until the specificity drops below approximately 0.9. Below a specificity of approximately 0.8 the sensitivity of the RF model greatly excedes that of FIT.
+Next we compared the performance of the RF model to using FIT alone. The AUC for the RF model was significantly higher than FIT for distinguishing adenoma from normal or all lesions from normal, but not cancer from normal (Figure 2A). Examination of the ROC curves for the two tests shows that the RF model does not outperform FIT until the specificity drops below approximately 0.9. Below a specificity of approximately 0.8 the sensitivity of the RF model greatly excedes that of FIT.
 
 At the defined cutoffs (0.602 for the RF model, 100ng/ml for FIT) The RF model detected 95.0% of cancers 61.1% of adenomas compared to 75.0% and 15.7% for FIT (Table 1, Figure 2A, Figure 2B). When adenomas and cancers were pooled together, the RF model 73.9% of lesions, while FIT only detected 38.1%.  The RF model had significantly improved sensitivity for both advanced and non-advanced adenomas as well as stage I, II, and III cancers (Figure 3).  The increased sensitivity of the RF model was accompanied by a decrease in specificity (76.2%) compared to FIT (97.1%).  
 
@@ -111,36 +111,14 @@ View Exact paper section like this.
         b.  Strip Chart (Norm, Ade, & Canc for FIT and Model)
 
         c.  FIT vs Model scatter plot
+        
+        d. Sensitivity Barplot
 
     3.  Table 1: Table of sensitivities and specificities for model and
-        FIT
 
-    4.  Figure 3: Sensitivity Barplot
-
-    5.  Table 2: Positive and Negative Predictive values
-
-
-    b.  We can use microbiome data to distinguish normal from
-        cancer/adenoma.
-
-        i.  Performance of Cancer RF model (fig 1b ROC)
-
-        ii. Microbiome alone isn’t as good as FIT but compliments
-
-        iii. Bugs associated with cancer
-
-            1.  Oral pathogens? – Porphyromonas (x2), Parvimonas,
-                Fusobacterium, Gemella
-
-            2.  Butyrate producers? – Clostridium XIVa, Anaerostipes
-
-        iv. Adenoma RF model – not as good as cancer
-
-        v.  Better than FIT, compliments FIT with only 5 OTUs
-
-        vi. Bugs associated with adenoma – lots of butyrate producers –
-            Lachno- and Rumincoccus
-
+    4.	Supp Fig. 1: AUCRF curves
+    
+    5.  Supp Table 1: Positive and Negative Predictive values
 
 
 ### Discussion
