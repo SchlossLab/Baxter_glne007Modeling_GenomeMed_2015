@@ -127,23 +127,15 @@ View Exact paper section like this.
 
 ### Discussion
 
-    a.  Talk about findings.
+Our findings demonstrate the potential for combining microbioime analysis with conventional stool-based tests to improve CRC detection. Using the random forest algorithm made it possible to interpret FIT results in the context of the microbiome and vice versa.
 
-    b.  Majority of predictive OTUs are enriched in normal individuals.
-        Suggests a loss of good bugs could be just as important as the
-        arrival of potentially pathogenic bugs.
-        
-    c. 	Bugs associated with cancer
-            1.  Oral pathogens? – Porphyromonas (x2), Parvimonas,
-                Fusobacterium, Gemella
 
-            2.  Butyrate producers? – Clostridium XIVa, Anaerostipes
+Interestingly the majority of the most predictive OTUs were enriched in normal individuals, suggesting that a loss of beneficial organisms rather than the emergence of pathogens may play a role in colorectal cancer development and/or progression.  For example, several of the OTUs that were depleted in patients with lesions were associated with bacterial taxa that produce butyrate. As in earlier studies, an OTU associated with *Fusobacterium nucleatum* was enriched in patients with CRC.  Other OTUs enriched in CRC samples were associated with *Porphyromonas*, *Gemella*, *Parvimonas*, and *Prevotella*. Along with *Fusobacterium*, members of these genera are often associated periodontal disease. This observation may warrant further investigation into a potential link between inflammatory disease of the mouth and those of the gut. 
 
-    d.  Better to sacrifice specificity for better sensitivity?
+The major shortcomings of the RF model were its lack of specificity and low PPV.  In other systems, such flaws would result in potentially dangerous overtreatment.  However in the case of CRC, patients are already recommended to receive regular colonoscopies.  Thus potential value of the RF model is in its high sensitivity and NPV. With an NPV of 99.98%, the model could be used to determine the patients for whom regular colonoscopies are unnecessary. This strategy could result in a decrease in the number of colonosopies, thereby reducing both the financial costs and potential health risks of colonosopic screening.
 
-        i.  High NPV makes test ideal for determine patients who don't need a colonocopy.
-        
-        ii. should result in fewer colonoscopies and reduction in healthcare costs
+
+
 
     f.  Feasibility?
 
