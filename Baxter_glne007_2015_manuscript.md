@@ -1,4 +1,9 @@
 ### Abstract
+Colorectal cancer is the third most common and third leading cause of death among cancers in the United States. Patients diagnosed at the earliest stages of tumor development have greater than 90% chance of survival, however, less than half of individuals for whom screening is recommended receive appropriate screening. Structural exams like colonoscopies and sigmoidoscopies are expensive and relatively invasive, while stool-based diagnostics, though convenient and inexpensive, fail to detect precancerous lesions, called adenomas. Thus there is a need for improved diagnostic methods that are inexpensive, non-invasive, and capable of detecting both adenomas and cancer. Here we demonstrate that a diagnostic model incorporating both fecal bacterial community profiling and fecal occult blood can significantly improve the detection of colonic lesions.
+
+Using stool samples from 490 patients we developed a cross-validated random forest classification model for detecting colonic lesions based on the abundances of certain bacterial populations and the concentration of human globin as measured by a fecal immunochemical test (FIT). We compared this model to using FIT alone, one of the most accurate and widely used noninvasive methods for colorectal cancer screening. The random forest model significantly outperformed FIT, detecting 95% of cancers and 61.1% of adenomas compared to 75.0% and 15.7% for FIT. The model had significantly higher sensitivity for nonadvanced and advanced adenomas, as well as stage I, II, and III cancers. Of the colonic lesions missed by FIT, the model detected 80.0% of cancers and 53.9% of adenomas. This increase in sensitivity was accompanied by a relatively low specificity of 76.2%.
+
+Our results show that analysis of the fecal microbial community can compliment existing noninvasive screening methods to improve detection of colonic lesion, especially at early stages of tumor development. With a negative predictive value of 99.98%, our model could be used to accurately identify those patients for whom a colonoscopy is unnecessary, drastically reducing healthcare costs and complications due to invasive screening. By incorporating other biomarkers, like those used in multitarget stool DNA tests, we can further improve the accuracy of noninvasive tests leading to a decrease in the incidence and mortality of colorectal cancer.
 
 ### Introduction
 
@@ -70,7 +75,7 @@ Previous studies have identified differences in diagnostic test performance for 
 As a final metric of our model's performance we estimated the positive predictive value (PPV) and negative predictive value (NPV) by extrapolating its performance on an average-risk population using previously published values for CRC prevalence (@heitman2009prevalence).  Based on a prevalence of 0.3% for CRC, the model would have a relatively low PPV of 1.19%, but a high NPV of 99.98%.  For advanced adenomas the model would have PPV of 13.83% and NPV of 97.17% assuming a prevalence of 5.7%.  With a prevalence of 17.7% for nonadvanced adenomas, the PPV for the model would be 34.52% and the NPV would be 89.49%.
 
 
-**Comparing with FIT**  
+**Comparison with FIT**  
 Next we compared the performance of the RF model to using FIT alone. The AUC for the RF model was significantly higher than FIT for distinguishing adenoma from normal or all lesions from normal, but not cancer from normal (Figure 2A). Examination of the ROC curves for the two tests shows that the RF model does not outperform FIT until the specificity drops below approximately 0.9. Below a specificity of approximately 0.8 the sensitivity of the RF model greatly excedes that of FIT.
 
 At the defined cutoffs (0.602 for the RF model, 100ng/ml for FIT) The RF model detected 95.0% of cancers 61.1% of adenomas compared to 75.0% and 15.7% for FIT (Table 1, Figure 2A, Figure 2B). When adenomas and cancers were pooled together, the RF model 73.9% of lesions, while FIT only detected 38.1%.  The RF model had significantly improved sensitivity for both advanced and non-advanced adenomas as well as stage I, II, and III cancers (Figure 3).  The increased sensitivity of the RF model was accompanied by a decrease in specificity (76.2%) compared to FIT (97.1%).  
@@ -89,38 +94,40 @@ View Exact paper section like this.
 
     1.  Figure 1: Normal vs Cancer, Normal vs Adenoma
 
-        a.  Barplot of cancer vs normal OTUs
-
-        b.  ROC curve of cancer vs normal (microbiome, FIT, microbiome +
+        a.  ROC curve of cancer vs normal (microbiome, FIT, microbiome +
+            FIT)
+        b.  ROC curve of adenoma vs normal (microbiome, FIT, microbiome +
             FIT)
 
-        c.  Barplot of adenoma vs normal OTUs
-
-        d.  ROC curve of adenoma vs normal (microbiome, FIT, microbiome +
-            FIT)
-
-        e.  Suppl 1 – AUCRF curves
+        c.  Stripchart of cancer/adenoma vs normal OTUs
 
     2.  Figure 2: Lesion Model
 
         a.  ROC curve
+        
+        b.	OTU abundance stripchart? OR table of OTU classifications?
 
+    3.  Table 1: Table of sensitivities and specificities for model and FIT
+
+	4.	Figure 3: Model vs FIT
+	
         b.  Strip Chart (Norm, Ade, & Canc for FIT and Model)
 
         c.  FIT vs Model scatter plot
         
-        d. Sensitivity Barplot
+        d.  Sensitivity Barplot
 
-    3.  Table 1: Table of sensitivities and specificities for model and
 
-    4.	Supp Fig. 1: AUCRF curves
+    4.	Supp Fig. 1: AUCRF curves (AUC vs Number of Features)
     
     5.  Supp Table 1: Positive and Negative Predictive values
+    
+    6.	Table of OTUs used for each model and their classification
 
 
 ### Discussion
 
-    a.  Talk about findings, implications, etc.
+    a.  Talk about findings.
 
     b.  Majority of predictive OTUs are enriched in normal individuals.
         Suggests a loss of good bugs could be just as important as the
@@ -138,17 +145,21 @@ View Exact paper section like this.
         
         ii. should result in fewer colonoscopies and reduction in healthcare costs
 
-    e.  Incorporate other risk factors like diet, BMI, age?
-
     f.  Feasibility?
 
         i.  Decreasing cost of sequencing and microbiome analysis
 
         ii. PCR-based approach. Coupled to FIT?
+        
+	g.	Combine with other tests like sDNA or Exact
 
     g.  New type of personalized medicine?
+    
+    	i.	Use each individual as their own control
+    
+        ii.  Incorporate other risk factors like diet, BMI, age?
 
-        i.  Need for longitudinal studies
+        iii.  Need for longitudinal studies
 
             1.  How does microbiome change after treatment
 
