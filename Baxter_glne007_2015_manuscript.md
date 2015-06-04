@@ -1,3 +1,7 @@
+##Microbiome analysis complements fecal occult blood test for improved detection of colonic lesions
+
+Nielson T. Baxter, Mack T. Ruffin IV, Mary A.M. Rogers, and Patrick D. Schloss
+
 ### Abstract
 Colorectal cancer is the third most common and third leading cause of death among cancers in the United States. Patients diagnosed at the earliest stages of tumor development have greater than 90% chance of survival, however, less than half of individuals for whom screening is recommended receive appropriate screening. Structural exams like colonoscopies and sigmoidoscopies are expensive and relatively invasive, while stool-based diagnostics, though convenient and inexpensive, fail to detect precancerous lesions, called adenomas. Thus there is a need for improved diagnostic methods that are inexpensive, non-invasive, and capable of detecting both adenomas and cancer. Here we demonstrate that a diagnostic model incorporating both fecal bacterial community profiling and fecal occult blood can significantly improve the detection of colonic lesions.
 
