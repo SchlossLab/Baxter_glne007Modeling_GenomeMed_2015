@@ -20,32 +20,14 @@ We have perviously shown that statistical models that take into account the abun
 ### Methods
 
 *Study Design/Patient sampling*  
-		From Joe's paper:
-			"Eligible patients were 18 years of age or older, able to tolerate 58 
-			mL of blood removal at 2 time points, willing to complete an gFOBT Kit, 
-			able to provide informed consent, and had colonoscopy and his- tologically 
-			confirmed colonic disease status. Patients were excluded if known HIV or 
-			chronic viral hepatitis, known HNPCC or FAP, inflammatory bowel disease, 
-			any surgery, radiation or chemotherapy for their current colorectal cancer
-			 or colonic adenoma. Colonoscopies were performed and fecal samples were 
-			 collected from subjects in 4 loca- tions: Toronto (Ontario, Canada), 
-			 Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor 
-			 (Michigan, USA). Following endoscopic examination, patients without 
-			 colonic abnormalities were designated as healthy. Exami- nations that 
-			 revealed the presence of lesions resulted in a biopsy and subsequence 
-			 diagnosis of adenoma or carcinoma."..."All participants collected a 
-			 whole evacuated stool in a hat with no preservatives after following 
-			 the usual dietary and medication restrictions for 24 hours. The whole 
-			 stool was then packaged in an insulated box with ice packs and shipped
-			  to the processing center along with the gFOBT cards via next day delivery. 
-			  Upon receipt, the feces were stored at !80C."
+Elligible patients for this study were at least 18 years old, willing to sign informed consent, able to tolerate removal of 58ml of blood, and willing to collect a stool sample. Patients were excluded if they had undergone surgery, radiation, or chemotherapy for current CRC prior to baseline samples or had inflammatory bowel disease, known hereditary nonpolyposis CRC, or familial adenomatous polyposis. Colonoscopies were performed and fecal samples were collected from subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopic examination. Lesions were biopsied and diagnosed as adenoma or cancer based on subsequent histopathological examination. Whole evacuated stool was collected from each patient into hat, packed on ice, shipped to a processing center via next day delivery, and stored at -80˚C.
 			  
 **Fecal Immunochemical Tests**  
 Fecal material for FIT was collected from frozen stool aliquots using OC FIT-CHEK sampling bottles (Polymedco Inc.) and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). Raw FIT results were used for generating ROC curves and for building RF models.  Sensitivities and specificities reported for FIT are based on a cutoff of 100ng/ml.
 
 
 **16S rRNA Sequencing**  
-DNA was extracted from approximately 50mg of fecal material from each subject using the PowerSoil-htp 96 Well Soil DNA isolation kit (MO BIO Laboratories) and an epMotion 5075 automated pipetting system (Eppendorf).  The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer (citation). The 490 samples were divided into three sequencing runs to maximize sequencing depth.
+DNA was extracted from roughly 50mg of fecal material from each subject using the PowerSoil-htp 96 Well Soil DNA isolation kit (MO BIO Laboratories) and an epMotion 5075 automated pipetting system (Eppendorf).  The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer (citation). The 490 samples were divided into three sequencing runs to increase sequencing depth.
 
 **Sequence Curation**  
 The 16S rRNA gene sequences were curated using the mothur software package, as described previously (citation). Briefly, paired-end reads were merged into contigs, screened for quality, aligned to SILVA 16S rRNA sequence database, and screened for chimeras.  Curated sequences were clustered in to operationall taxonomic units (OTUs)  using a 97% similarity cutoff. The number of sequences in each sample was rarefied to 10,000 per sample to minimize the effects of uneven sampling.
@@ -54,8 +36,7 @@ The 16S rRNA gene sequences were curated using the mothur software package, as d
 All statistical analyses were performed using the R software package(citation).  Random Forest models were generated using the AUCRF package.  ROC curves were generated and analyzed using the pROC package. The AUC of ROC curves was compared using the method described by DeLong et al. (citation). The optimal cutoff for the RF model was determined using Youden's J statistic as implemented in the pROC package in R (Youden, 1950). The sensitivities of FIT and the RF model were compared using McNemar's chi-squared test.
 
 **Data Availability**  
--SRA
--Github
+Raw fastq files and MIMARKS file are available through the NCBI Sequence Read Archive.  A data analysis pipeline and all necessary scripts are available at github.com/SchlossLab/Baxter\_glne007Modeling_2015.
 
 
 ### Results
@@ -129,12 +110,9 @@ View Exact paper section like this.
 
 Our findings demonstrate the potential for combining microbioime analysis with conventional stool-based tests to improve CRC detection. Using the random forest algorithm made it possible to interpret FIT results in the context of the microbiome and vice versa.
 
-
 Interestingly the majority of the most predictive OTUs were enriched in normal individuals, suggesting that a loss of beneficial organisms rather than the emergence of pathogens may play a role in colorectal cancer development and/or progression.  For example, several of the OTUs that were depleted in patients with lesions were associated with bacterial taxa that produce butyrate. As in earlier studies, an OTU associated with *Fusobacterium nucleatum* was enriched in patients with CRC.  Other OTUs enriched in CRC samples were associated with *Porphyromonas*, *Gemella*, *Parvimonas*, and *Prevotella*. Along with *Fusobacterium*, members of these genera are often associated periodontal disease. This observation may warrant further investigation into a potential link between inflammatory disease of the mouth and those of the gut. 
 
 The major shortcomings of the RF model were its lack of specificity and low PPV.  In other systems, such flaws would result in potentially dangerous overtreatment.  However in the case of CRC, patients are already recommended to receive regular colonoscopies.  Thus potential value of the RF model is in its high sensitivity and NPV. With an NPV of 99.98%, the model could be used to determine the patients for whom regular colonoscopies are unnecessary. This strategy could result in a decrease in the number of colonosopies, thereby reducing both the financial costs and potential health risks of colonosopic screening.
-
-
 
 
     f.  Feasibility?
