@@ -71,30 +71,30 @@ View Exact paper section like this.
 - of those negatives, how many would be false negatives. what kind of tumor gets missed
 
 
-	Figures
+	*Figures*
 
-  1. Figure 1: Normal vs Cancer, Normal vs Adenoma
+	1. Figure 1: Normal vs Cancer, Normal vs Adenoma
+    	a. ROC curve of cancer vs normal (microbiome, FIT, microbiome + FIT)
+    	b. ROC curve of adenoma vs normal (microbiome, FIT, microbiome + FIT)
+    	c. Stripchart of cancer/adenoma vs normal OTUs
 
-    a. ROC curve of cancer vs normal (microbiome, FIT, microbiome + FIT)
-    b. ROC curve of adenoma vs normal (microbiome, FIT, microbiome + FIT)
-    c. Stripchart of cancer/adenoma vs normal OTUs
+	2. Figure 2: Lesion Model
+    	a. ROC curve
+    	b. OTU abundance stripchart? OR table of OTU classifications?
 
-  2. Figure 2: Lesion Model
-    a. ROC curve
-    b.	OTU abundance stripchart? OR table of OTU classifications?
+	3. Table 1: Table of sensitivities and specificities for model and FIT
 
-  3. Table 1: Table of sensitivities and specificities for model and FIT
+	4. Figure 3: Model vs FIT
+    	a. Strip Chart (Norm, Ade, & Canc for FIT and Model)
+    	b. FIT vs Model scatter plot
+    	c. Sensitivity Barplot
 
-	4.	Figure 3: Model vs FIT
-    b. Strip Chart (Norm, Ade, & Canc for FIT and Model)
-    c. FIT vs Model scatter plot
-    d. Sensitivity Barplot
-
-  4.	Supp Fig. 1: AUCRF curves (AUC vs Number of Features)
-  
-  5. Supp Table 1: Positive and Negative Predictive values
-  
-  6.	Table of OTUs used for each model and their classification
+	*Supplementary Figures*
+	1. AUCRF curves (AUC vs Number of Features)
+	
+	2. Supp Table 1: Positive and Negative Predictive values
+	
+	3. Table of OTUs used for each model and their classification?
 
 
 ### Discussion
