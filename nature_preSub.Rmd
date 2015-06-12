@@ -3,7 +3,7 @@ title: Microbiome analysis complements fecal occult blood test for improved dete
   of colonic lesions
 author: "Nielson T. Baxter, Mack T. Ruffin IV, Mary A.M. Rogers, and Patrick D. Schloss"
 csl: nature.csl
-output: word_document
+output: html_document
 bibliography: references.bibtex
 ---
 
