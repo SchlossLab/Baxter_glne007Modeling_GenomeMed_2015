@@ -501,10 +501,10 @@ advAde_fit_roc <- roc(les_data$lesion[all_data$Dx_Bin=='adv Adenoma' | all_data$
 nonAdv_fit_roc <- roc(les_data$lesion[all_data$Dx_Bin=='Adenoma' | all_data$Dx_Bin=='Normal'] ~ all_data[all_data$Dx_Bin=='Adenoma' | all_data$Dx_Bin=='Normal', 'fit_result'])
 
 advAde_fit_sens_ci<-ci.coords(advAde_fit_roc, x=100, input='threshold', ret='sensitivity')
-advAde_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*advAde_fit_sens_ci[2],100*advAde_sens_ci[1],100*advAde_sens_ci[3])
+advAde_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*advAde_fit_sens_ci[2],100*advAde_fit_sens_ci[1],100*advAde_fit_sens_ci[3])
 
 nonAdv_fit_sens_ci<-ci.coords(nonAdv_fit_roc, x=100, input='threshold', ret='sensitivity')
-nonAdv_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*nonAdv_fit_sens_ci[2],100*nonAdv_sens_ci[1],100*nonAdv_sens_ci[3])
+nonAdv_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*nonAdv_fit_sens_ci[2],100*nonAdv_fit_sens_ci[1],100*nonAdv_fit_sens_ci[3])
 
 canc_fit_sens_ci<-ci.coords(canc_fit_roc, x=100, input='threshold', ret='sensitivity')
 canc_fit_sens <- sprintf('%.3g (%.3g-%.3g)',100*canc_fit_sens_ci[2],100*canc_fit_sens_ci[1],100*canc_fit_sens_ci[3])
