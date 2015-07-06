@@ -98,7 +98,8 @@ ade_data <- all_data[all_data$dx != 'cancer',c('lesion',colnames(all_data)[grep(
 ade_fit_data <- all_data[all_data$dx != 'cancer',c('lesion','fit_result',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
 #generate RF models with AUCRF
-set.seed(04215)
+#set.seed(04215)
+set.seed(53015)
 ade_model <- AUCRF(lesion ~ ., data=ade_data, ntree=1000, pdel=0.05)
 #plot(ade_model, main='AUC-RF: Microbiome Only')
 opt_ade_model <- ade_model$RFopt
