@@ -28,7 +28,6 @@ all_data$lesion[all_data$dx=='adenoma' | all_data$dx=='cancer'] <- 1
 all_data$lesion[all_data$dx=='normal'] <- 0
 ```
 
-
 ```{r lesion_ROC_FIT, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
 les_data <- all_data[,c('lesion','fit_result',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
@@ -113,7 +112,6 @@ legend('topright', legend=c("Lesion", "Normal"), pch=c(21, 21), pt.bg=c("green4"
 dev.off()
 ```
 
-
 ```{r model_stripCharts, warning=F, echo=F, fig.width=8, fig.height=6, results='hide'}
 pdf(file='results/figures/fig?_stripCharts.pdf', height=7, width=9)
 par(mfrow=c(1,2), mar=c(3, 5, 0.5, 0.5))
@@ -135,8 +133,6 @@ dev.off()
 par(mfrow=c(1,1))
 
 ```
-
-
 
 ```{r neg_fit_stripchart, echo=F, fig.width=8, fig.height=6, results='hide'}
 par(mar=c(3, 5, 0.5, 0.5))
@@ -189,7 +185,6 @@ rownames(output_matrix)<-c('Positive FIT','Negative FIT')
 #kable(output_matrix, digits=1)
 ```
 
-
 ```{r fit_vs_model, echo=F, fig.width=8, fig.height=7, results='hide'}
 pdf('results/figures/fig?_FITvsRF.pdf', width=7, height=6)
 par(mar=c(5, 5, 0.5, 0.5))
@@ -205,7 +200,6 @@ abline(v=100.1, lty=2)
 legend('bottomright', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue','red'), pch=21, bty='n', pt.cex=1.5)
 dev.off()
 ```
-
 
 ```{r sensitivity_barplots, echo=F, fig.width=9, fig.height=6, results='hide'}
 nonAdv_probs <- all_probs[all_data$Dx_Bin=='Adenoma',2]
@@ -269,7 +263,6 @@ text(17,sens_matrix[1,6]+0.05, sprintf('p=%.1g',getMcnemarP(s4_probs, s4_fit)))
 dev.off()
 
 ```
-
 
 ```{r stats_table, echo=F, cache=T}
 
@@ -362,9 +355,6 @@ write(kable(stats_table), file='results/tables/table.md')
 
 ```
 
-
-
-
 ```{r predictive_values, echo=F, results='hide'}
 getPV <- function(sens, spec, prev){
   ppv <- signif((sens*prev) / (sens*prev + (1-spec)*(1-prev)), 4)
@@ -395,7 +385,6 @@ pv_table[5,] <- c('30.2%', les_pv$PPV, les_fit_pv$PPV, les_pv$NPV, les_fit_pv$NP
 
 #kable(pv_table)
 ```
-
 
 ```{r male_vs_female, echo=F, results='hide', fig.width=9, fig.height=6}
 pdf('supp_maleFemale.pdf', height=6, width=9)
@@ -434,7 +423,6 @@ legend('bottomleft', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue
 dev.off()
 ```
 
-
 ```{r gender_normalized, echo=F, fig.width=9, fig.height=6, results='hide'}
 
 row_nums <- 1:nrow(all_data)
@@ -471,11 +459,7 @@ The gut microbiota, the collection of microorganisms that inhabit the gastrointe
 
 We have perviously shown that statistical models that take into account the abundances of multiple bacteria species can be used to distinguish healthy individuals from those with colonic lesions [zackular2014human]. In the present study we expanded upon those findings by demonstrating the potential for microbiome analysis to complement FIT for improved detection of colonic lesions. We did so using the largest patient cohort to date for studying differences in the microbiomes of patients with adenomas and carcinomas. We also improved upon previous studies by utilizing random forest (RF), a decision tree-based machine algorithm for classification, which includes an internal cross-validation to prevent overfitting. By incorporating both FIT and bacterial abundances into a single RF model, we were able to improve the sensitivity for adenomas and most stages of cancer.
  
-First we sought to confirm our previous findings that the microbiome could be used to distinguish healthy patients from those with carcinomas or adenomas. We chose to use the Random Forest (RF) machine-learning algorithm because it works well for high-dimensional datasets and includes an internal cross-validation to prevent overfitting (RF sources). First we generated RF models for distinguishing normal individuals from those with colorectal cancer using only the microbiota or the microbiota combined with FIT. The optimal model for the microbiome only model used 38 OTUs and had an AUC of 0.845, while the model that included FIT used only 11 OTUs and had an AUC of 0.967 (Figure 1A, Fig S1A, Fig S1B). The model using both the microbiota and FIT performed significantly better than FIT alone (p=0.0024), which had an AUC of 0.929. The bacterial populations that were most indicative of cancer were associated with the genera *Porphyromonas* (OTU105, OTU260), *Peptostreptococcus* (OTU310), *Parvimonas* (OTU281), *Fusobacterium* (OTU264), *Prevotella* (OTU57), and *Gemella* (OTU356) (Figure 1B). Those that were most predictive of normal colons belonged to Ruminococcaceae (OTU29) and *Anaerostipes* (OTU8).
-
-Next we generated RF models for distinguishing normal individuals from those with colonic adenomas. The optimal model using only the microbiota contained 53 OTUs and performed comparably to FIT, with AUCs of 0.671 and 0.639 respectively (Figure 1C, Fig S1C). When we combined the microbiota with FIT, the model significantly outperformed FIT alone (AUC=0.727, p=0.00054) using only 4 OTUs. These OTUs included OTU29, which was enriched in normal patients as it was in the normal vs cancer models. The three other OTUs were assocaiated with Lachnospiraceae (OTU14), Ruminococcaceae (OTU11), and unclassified member of Clostridiales (OTU10). Interestingly all four OTUs in the combined model were among the most abundant Clostridia in our samples. These data show that models based on the fecal microbiota can be used to discriminate healthy individuals from those with adenomas or cancer. Such models can also complement FIT to significantly improve test performance.
-
-An ideal diagnostic model would be able to detect both adenomas and carcinomas, so we developed a single model that would differentiate normal individuals from those with any type of colonic lesion. The optimal model combining FIT and the microbiota used 21 OTUs. Of those OTUs, 14 were members of the Clostridia, including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60, 22, 9, 13, 87, 31) and 2 from the Ruminococcaceae family (OTU29, OTU11). Three OTUs were associated with the genus *Bacteroides* (OTUs 3, 7, 2). The remaining OTUs were associated with *Porphyromonas* (OTU105), *Parabacteroides* (OTU49), *Streptococcus* (OTU20), and Enterobacteriaceae (OTU28). Interestingly the majority of OTUs used in the model were enriched in normal patients. 
+First we sought to develope a single model that would differentiate normal individuals from those with any type of colonic lesion. We determined the optimal model using the AUC-RF algorithm for maximizing the area under the curve (AUC) of the RF model [@calle2011auc]. The optimal model combining FIT and the microbiota used 21 OTUs. Of those OTUs, 14 were members of the Clostridia, including 10 from the Lachnospiraceae family (OTUs 14, 44, 8, 88, 60, 22, 9, 13, 87, 31) and 2 from the Ruminococcaceae family (OTU29, OTU11). Three OTUs were associated with the genus *Bacteroides* (OTUs 3, 7, 2). The remaining OTUs were associated with *Porphyromonas* (OTU105), *Parabacteroides* (OTU49), *Streptococcus* (OTU20), and Enterobacteriaceae (OTU28). Interestingly the majority of OTUs used in the model were enriched in normal patients. 
 
 The model had an AUC of 0.943 for comparing cancer to normal, 0.740 for adenoma to normal, and 0.817 for all lesions to normal (Figure 2?). We defined an optimal cutoff for the RF model based on Youden's J statistic (Youden, 1950). At this cutoff, the RF model had a sensitivity of 95.0(90.8-98.3) for cancers. The model's performance was not significantly different across cancer stages with sensitivities of 89.7, 97.1, 97.2, and 100 for stages I, II, III, and IV, respectively (Figure 3). The RF model had a sensitivity of 61.1(54.6-67.7) for all adenomas with no significant difference between advanced and nonadvanced adenomas.
 
