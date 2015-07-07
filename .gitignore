@@ -1,7 +1,8 @@
 .Rproj.user
 .Rhistory
 .RData
-
+*_cache
+*_files
 
 data/
 *.Rout
