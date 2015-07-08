@@ -1,0 +1,23 @@
+% Please add the following required packages to your document preamble:
+% \usepackage[table,xcdraw]{xcolor}
+% If you use beamer only pass "xcolor=table" option, i.e. \documentclass[xcolor=table]{beamer}
+\begin{table}[]
+\centering
+\caption{My caption}
+\label{my-label}
+\begin{tabular}{llllll}
+\hline
+\multicolumn{1}{c}{{\bf Most Advanced Finding}} & \multicolumn{1}{c}{{\bf Colonoscopy}} & \multicolumn{2}{c}{{\bf RF Model}}                                                                                            & \multicolumn{2}{c}{{\bf FIT}}                                                                                                \\ \hline
+                                                &                                       & \begin{tabular}[c]{@{}l@{}}Positive\\ Results\end{tabular} & \begin{tabular}[c]{@{}l@{}}Sensitivity \\ (95\% CI)\end{tabular} & \begin{tabular}[c]{@{}l@{}}Positive\\ Results\end{tabular} & \begin{tabular}[c]{@{}l@{}}Sensitivity\\ (95\% CI)\end{tabular} \\
+\rowcolor[HTML]{EFEFEF} 
+Cancer                                          & 120                                   & 114                                                        & 95 (90.8-98.3)                                                   & 90                                                         & 75 (67.5-82.5)                                                  \\
+Advanced Adenoma                                & 109                                   & 64                                                         & 58.7 (49.5-67.9)                                                 & 21                                                         & 19.3 (11.9-26.6)                                                \\
+\rowcolor[HTML]{EFEFEF} 
+Nonadvanced Adenoma                             & 89                                    & 49                                                         & 55.1 (43.8-65.2)                                                 & 10                                                         & 11.2 (5.62-18)                                                  \\
+Any Lesion                                      & 318                                   & 227                                                        & 71.7 (66.4-76.4)                                                 & 121                                                        & 38.1 (32.7-43.1)                                                \\
+                                                &                                       &                                                            &                                                                  &                                                            &                                                                 \\
+                                                &                                       & Negative Results                                           & Specificity (95\% CI)                                            & Negative Results                                           & Specificity (95\% CI)                                           \\
+\rowcolor[HTML]{EFEFEF} 
+Negative Colonosopies                           & 172                                   & 144                                                        & 83.7 (78.5-89)                                                   & 167                                                        & 97.1 (94.2-99.4)                                                \\ \hline
+\end{tabular}
+\end{table}
