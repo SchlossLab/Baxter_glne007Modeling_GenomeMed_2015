@@ -28,6 +28,38 @@ all_data$lesion[all_data$dx=='adenoma' | all_data$dx=='cancer'] <- 1
 all_data$lesion[all_data$dx=='normal'] <- 0
 ```
 
+```{r otu_stripchart, echo=F, results='hide'}
+otus <- c('Otu000057','Otu000105','Otu000260','Otu000264','Otu000281','Otu000310','Otu000356')
+
+norm_abunds <- all_data[all_data$dx=='normal', otus]/10000 + 1e-4
+canc_abunds <- all_data[all_data$dx=='cancer', otus]/10000 + 1e-4
+ade_abunds <- all_data[all_data$dx=='adenoma', otus]/10000 + 1e-4
+
+tax_file <- read.delim('data/glne007.0.03.trim.tax', sep='\t', header=T, row.names=1)
+tax <- paste(tax_file[otus, 'Classification'], '\n(', tax_file[otus, 'OTU'], ')', sep='')
+
+pdf('results/figures/fig?_otuStripchart.pdf', height=8, width=6)
+par(mar=c(5, 9, 0.5, 0.5))
+plot(1, type="n", ylim=c(0,length(otus)*3-1), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
+index <- 1
+for(x in otus){
+  stripchart(at=index-0.7, jitter(norm_abunds[,x], amount=1e-5), pch=21, bg="grey", method="jitter", jitter=0.2, add=T, cex=1)
+  stripchart(at=index, jitter(ade_abunds[,x], amount=1e-5), pch=21, bg="blue", method="jitter", jitter=0.2, add=T, cex=1)
+  stripchart(at=index+0.7, jitter(canc_abunds[,x], amount=1e-5), pch=21, bg="red", method="jitter", jitter=0.2, add=T, cex=1)
+  segments(mean(norm_abunds[,x]),index-1,mean(norm_abunds[,x]),index-0.4, lwd=3)
+  segments(mean(ade_abunds[,x]),index-0.3 ,mean(ade_abunds[,x]),index+0.3, lwd=3)
+  segments(mean(canc_abunds[,x]),index+1,mean(canc_abunds[,x]),index+0.4, lwd=3)
+  index <- index + 3
+}
+
+axis(2, at=seq(1,index-2,3), labels=c(tax), las=1, tick=F, cex.axis=1)
+axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
+legend('topright', legend=c('Cancer','Adenoma', 'Normal'), pch=21, pt.bg=c('red','blue','grey'))
+dev.off()
+
+```
+
+
 ```{r lesion_ROC_FIT, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
 les_data <- all_data[,c('lesion','fit_result',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
