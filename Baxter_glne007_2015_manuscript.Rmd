@@ -87,28 +87,28 @@ ade_fit_roc <- roc(ade_data$lesion ~ ade_data$fit_result)
 par(mar=c(4.5,4.5,1,1))
 pdf(file='results/figures/fig?_ROCcurve.pdf', height=6, width=6)
 plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
-plot(les_roc, col='green3', lwd=2, add=T)
+plot(les_roc, col='purple2', lwd=2, add=T)
 plot(canc_roc, col='red', lwd=2, add=T)
 plot(ade_roc, col='blue', lwd=2, add=T)
 plot(ade_fit_roc, col='blue', lwd=2, add=T, lty=2)
 plot(canc_fit_roc, col='red', lwd=2, add=T, lty=2)
-plot(les_fit_roc, col='green3', lwd=2, add=T, lty=2)
+plot(les_fit_roc, col='purple2', lwd=2, add=T, lty=2)
 legend('bottomright', legend=c(sprintf('Lesion: %.3g',les_roc$auc),
                                sprintf('Les. FIT: %.3g',les_fit_roc$auc),
                                sprintf('Cancer: %.3g',canc_roc$auc),
                                sprintf('Canc. FIT: %.3g',canc_fit_roc$auc),
                                sprintf('Adenoma: %.3g',ade_roc$auc),
-                               sprintf('Ade. FIT: %.3g',ade_fit_roc$auc)),lty=c(1,2,1,2,1,2), lwd=2, col=c('green3','green3','red','red','blue','blue'), bty='n')
+                               sprintf('Ade. FIT: %.3g',ade_fit_roc$auc)),lty=c(1,2,1,2,1,2), lwd=2, col=c('purple2','purple2','red','red','blue','blue'), bty='n')
 
 points(coords(canc_fit_roc, x=100, input='threshold', ret='specificity'),coords(canc_fit_roc, x=100, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=10)
-points(coords(les_fit_roc, x=100, input='threshold', ret='specificity'),coords(les_fit_roc, x=100, input='threshold', ret='sensitivity'), col='green4', cex=1.5, pch=10)
+points(coords(les_fit_roc, x=100, input='threshold', ret='specificity'),coords(les_fit_roc, x=100, input='threshold', ret='sensitivity'), col='purple', cex=1.5, pch=10)
 points(coords(ade_fit_roc, x=100, input='threshold', ret='specificity'),coords(ade_fit_roc, x=100, input='threshold', ret='sensitivity'), col='blue', cex=1.5, pch=10)
 
 cutoff <- coords(roc=les_roc, x='best', best.method='y', ret=c('threshold'))
 
 
 points(coords(canc_roc, x=cutoff, input='threshold', ret='specificity'),coords(canc_roc, x=cutoff, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=16)
-points(coords(les_roc, x=cutoff, input='threshold', ret='specificity'),coords(les_roc, x=cutoff, input='threshold', ret='sensitivity'), col='green4', cex=1.5, pch=16)
+points(coords(les_roc, x=cutoff, input='threshold', ret='specificity'),coords(les_roc, x=cutoff, input='threshold', ret='sensitivity'), col='purple', cex=1.5, pch=16)
 points(coords(ade_roc, x=cutoff, input='threshold', ret='specificity'),coords(ade_roc, x=cutoff, input='threshold', ret='sensitivity'), col='blue', cex=1.5, pch=16)
 
 cat('RF model vs FIT alone\n','Lesion vs Normal: p=', roc.test(les_roc, les_fit_roc)$p.value, '\nAdenoma vs Normal: p=',roc.test(ade_roc, ade_fit_roc)$p.value,'\nCancer vs Normal: p=',roc.test(canc_roc, canc_fit_roc)$p.value)
@@ -132,15 +132,15 @@ par(mar=c(5, 10, 0.5, 0.5))
 plot(1, type="n", ylim=c(0,length(les_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
 index <- 1
 for(i in les_otus){
-  stripchart(at=index-0.35, jitter(norm_abunds[,i], amount=1e-5), pch=21, bg="grey", method="jitter", jitter=0.2, add=T, cex=1)
-  stripchart(at=index+0.35, jitter(les_abunds[,i], amount=1e-5), pch=21, bg="green4", method="jitter", jitter=0.2, add=T, cex=1)
+  stripchart(at=index-0.35, jitter(norm_abunds[,i], amount=1e-5), pch=21, bg="grey90", method="jitter", jitter=0.2, add=T, cex=1)
+  stripchart(at=index+0.35, jitter(les_abunds[,i], amount=1e-5), pch=21, bg="grey30", method="jitter", jitter=0.2, add=T, cex=1)
   segments(mean(norm_abunds[,i]),index-0.7,mean(norm_abunds[,i]),index, lwd=3)
   segments(mean(les_abunds[,i]),index+0.7,mean(les_abunds[,i]),index, lwd=3)
   index <- index + 2
 }
 axis(2, at=seq(1,index-2,2), labels=les_tax, las=1, tick=F, cex.axis=1)
 axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
-legend('topright', legend=c("Lesion", "Normal"), pch=c(21, 21), pt.bg=c("green4","grey"))
+legend('topright', legend=c("Lesion", "Normal"), pch=c(21, 21), pt.bg=c("grey30","grey90"))
 dev.off()
 ```
 
@@ -187,7 +187,6 @@ dev.off()
 ```
 
 ```{r fit_neg_stats, echo=F}
-
 neg_les_mod <- all_probs[all_data$dx!='normal' & all_data$fit_result < 100,2]
 neg_ade_mod <- all_probs[all_data$dx=='adenoma' & all_data$fit_result < 100,2]
 neg_canc_mod <- all_probs[all_data$dx=='cancer' & all_data$fit_result < 100,2]
@@ -437,10 +436,10 @@ par(mar=c(4.5,4.5,1,1))
 m_roc <- roc(all_data$lesion[all_data$Gender == 'm'] ~ all_probs[all_data$Gender == 'm',2])
 f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender == 'f',2])
 plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
-plot(les_roc, col='green3', lwd=2, add=T)
+plot(les_roc, col='purple', lwd=2, add=T)
 plot(m_roc, col='blue', lwd=2, add=T)
 plot(f_roc, col='red', lwd=2, add=T)
-points(coords(les_roc, x=cutoff, input='threshold', ret='specificity'),coords(les_roc, x=cutoff, input='threshold', ret='sensitivity'), col='green4', cex=1.5, pch=16)
+points(coords(les_roc, x=cutoff, input='threshold', ret='specificity'),coords(les_roc, x=cutoff, input='threshold', ret='sensitivity'), col='purple', cex=1.5, pch=16)
 points(coords(m_roc, x=cutoff, input='threshold', ret='specificity'),coords(m_roc, x=cutoff, input='threshold', ret='sensitivity'), col='blue', cex=1.5, pch=16)
 points(coords(f_roc, x=cutoff, input='threshold', ret='specificity'),coords(f_roc, x=cutoff, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=16)
 
@@ -448,7 +447,7 @@ legend('bottomright', legend=c(sprintf('All Subjects: %.3g',les_roc$auc),
                                sprintf('Males: %.3g',m_roc$auc),
                                sprintf('Females: %.3g',f_roc$auc),
                                sprintf('Male vs Female: p=%.3g',roc.test(m_roc,f_roc)$p.value)
-                               ),lty=c(1,1,1,0), lwd=2, col=c('green3','blue','red'), bty='n')
+                               ),lty=c(1,1,1,0), lwd=2, col=c('purple','blue','red'), bty='n')
 
 
 plot(1, type="n", xlim=c(0.5,7), ylim=c(0,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
