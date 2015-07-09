@@ -1,12 +1,24 @@
 ---
 title: Microbiome analysis complements fecal immunochemical test for detection of colonic lesions #must be 90 characters or less  (including spaces)
-author: "Nielson T. Baxter, Mack T. Ruffin IV, Mary A.M. Rogers, and Patrick D. Schloss"
 csl: nature.csl
 output:
   word_document:
     reference_docx: manuscript_format.docx
 bibliography: references.bibtex
 ---
+  
+  
+  
+  
+  
+Nielson T. Baxter^1^, Mack T. Ruffin IV^2^, Mary A.M. Rogers^3^, and Patrick D. Schloss^1\*^
+  
+  
+  
+^1^Department of Microbiology and Immunology, University of Michigan, Ann Arbor, Michigan.  
+^2^Department of Family Medicine, University of Michigan, Ann Arbor, Michigan.  
+^3^Department of Internal Medicine, University of Michigan, Ann Arbor, Michigan.  
+^\*^Correspondence to: pschloss@umich.edu
 
 
 ```{r startup, echo=F, message=F, warning=F}
@@ -57,7 +69,6 @@ legend('topright', legend=c('Cancer','Adenoma', 'Normal'), pch=21, pt.bg=c('red'
 dev.off()
 
 ```
-
 
 ```{r lesion_ROC_FIT, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
 les_data <- all_data[,c('lesion','fit_result',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
@@ -491,7 +502,6 @@ for(i in 1:1000){
 
 ```
 
-
 ```{r figures, echo=F}
 
 ROC <- 'Fig. 1'
@@ -510,7 +520,6 @@ OTUs <- 'Extended Data Fig. 4'
 
 
 ```
-
 
 **Colorectal cancer is the second leading cause of death among cancers in the United States [@siegel2014colorectal]. Although individuals diagnosed early have a greater than 90% chance of survival, more than one-third of individuals do not adhere to screening recommendations partly because the standard diagnostics, colonoscopy and sigmoidocsopy, are expensive and invasive [@siegel2014colorectal;@centers2010vital;@hsia2000importance;@jones2010barriers]. Thus, there is a great need to improve the sensitivity of non-invasive tests to detect early stage cancers and adenomas. Numerous studies have demonstrated a causal link between the formation of colonic lesions and the activity of the gut microbiota in tissue culture and animal models [@zackularMbio;@kostic2013fusobacterium;@wu2009human;@arthur2012intestinal]. These findings have been complemented by studies in human populations identifying shifts in the composition of the gut microbiota associated with the progression of colorectal cancer [@wang2012structural;@chen2013decreased;@chen2012human;@shen2010molecular]. These results suggest that the gut microbiota may represent a reservoir of biomarkers that would complement existing non-invasive methods such as the widely used fecal immunochemical test (FIT). Using stool samples from 490 patients we developed a cross-validated random forest classification model that detects colonic lesions using the relative abundance of gut microbiota and the concentration of hemoglobin in stool. The microbiome-based random forest model detected 95.0% of cancers and 61.1% of adenomas while FIT detected 75.0% and 15.7%, respectively. Of the colonic lesions missed by FIT, the model detected 80.0% of cancers and 53.9% of adenomas. To date this is the largest study to characterize alterations in the microbiota associated with colorectal cancer and the first to demonstrate a method by which microbiome analysis improves upon existing screening methods. With a negative predictive value of 99.98%, our model could be used to accurately identify those patients for whom a colonoscopy is unnecessary, potentially reducing healthcare costs and complications due to invasive screening.**
 
@@ -536,11 +545,9 @@ Our findings demonstrate the potential for combining microbioime analysis with c
 
 The accuracy of the RF model could potentially be improved by incorporating additional biomarkers. For example several bacterial toxins are capable of exacerbating tumorigeneisis, and there is evidence that methanogenic archaea are associated with CRC [@mira2014microbial]. These microbial biomarkers could be combined with 16S rRNA sequencing for a more comprehensive analysis of the microbiome. Likewise host-associated biomakers, such as those used in sDNA tests could add to the our model [@imperiale2014multitarget]. We have shown previously that patient demographic information can strengthen microbiome-based models for distinguishing healthy patients from those with CRC [@zackular2014human]. Thus combining host and microbial biomarkers in the context of an individual's risk could further improve screening accuracy. 
 
-### Methods Summary
-FIT was performed using OC FIT-CHEK sampling bottles and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer [@miseq].
+**Methods Summary.** Fecal samples were collected from 490 subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopy and subsequent histopathological examination. FIT was performed using OC FIT-CHEK sampling bottles and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer [@miseq]. A data analysis pipeline and all necessary scripts are available at github.com/SchlossLab/Baxter_glne007Modeling_2015.
 
-### Methods
-
+### Methods  
 **Study Design/Patient sampling** 
 Elligible patients for this study were at least 18 years old, willing to sign informed consent, able to tolerate removal of 58ml of blood, and willing to collect a stool sample. Patients were excluded if they had undergone surgery, radiation, or chemotherapy for current CRC prior to baseline samples or had inflammatory bowel disease, known hereditary nonpolyposis CRC, or familial adenomatous polyposis. Colonoscopies were performed and fecal samples were collected from subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopic examination. Lesions were biopsied and diagnosed as adenoma or cancer based on subsequent histopathological examination. Whole evacuated stool was collected from each patient into hat, packed on ice, shipped to a processing center via next day delivery, and stored at -80˚C.
 			 
