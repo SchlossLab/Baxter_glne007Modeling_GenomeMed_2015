@@ -1,6 +1,5 @@
 ---
-title: Microbiome analysis complements fecal occult blood test for improved detection
-  of colonic lesions
+title: Microbiome analysis complements fecal immunochemical test for detection of colonic lesions #must be 90 characters or less  (including spaces)
 author: "Nielson T. Baxter, Mack T. Ruffin IV, Mary A.M. Rogers, and Patrick D. Schloss"
 csl: nature.csl
 output:
