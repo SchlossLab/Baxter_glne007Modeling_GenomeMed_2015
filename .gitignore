@@ -4,10 +4,8 @@
 *_cache
 *_files
 
-data/
 *.Rout
-*.pbs*
 *.qsub*
 mothur*logfile
 *temp*
-*.docx
+
