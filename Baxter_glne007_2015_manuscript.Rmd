@@ -415,14 +415,15 @@ m_roc <- roc(all_data$lesion[all_data$Gender == 'm'] ~ all_probs[all_data$Gender
 f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender == 'f',2])
 gender_pval <- roc.test(m_roc,f_roc)$p.value
 
+pdf('results/figures/supp4_maleFemale.pdf', height=6, width=9)
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
-#pdf('results/figures/supp4_maleFemale.pdf', height=6, width=9)
 
 plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
 plot(les_roc, col='purple', lwd=2, add=T)
 plot(m_roc, col='blue', lwd=2, add=T)
 plot(f_roc, col='red', lwd=2, add=T)
+
 points(coords(les_roc, x=cutoff, input='threshold', ret='specificity'),coords(les_roc, x=cutoff, input='threshold', ret='sensitivity'), col='purple', cex=1.5, pch=16)
 points(coords(m_roc, x=cutoff, input='threshold', ret='specificity'),coords(m_roc, x=cutoff, input='threshold', ret='sensitivity'), col='blue', cex=1.5, pch=16)
 points(coords(f_roc, x=cutoff, input='threshold', ret='specificity'),coords(f_roc, x=cutoff, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=16)
@@ -446,7 +447,19 @@ stripchart(at=6.6, all_probs[all_data$dx=='cancer' & all_data$Gender == 'f',2], 
 axis(1, at=c(2,5), labels=c('Males','Females'))
 abline(h=cutoff, lty=2)
 legend('bottomleft', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue','red'), pch=21, bty='n', pt.cex=1.5)
-#dev.off()
+dev.off()
+
+m_sens <- coords(m_roc, x=cutoff, input='threshold', ret='sensitivity')
+m_spec <- coords(m_roc, x=cutoff, input='threshold', ret='specificity')
+f_sens <- coords(f_roc, x=cutoff, input='threshold', ret='sensitivity')
+f_spec <- coords(f_roc, x=cutoff, input='threshold', ret='specificity')
+
+m_canc_probs <- all_probs[all_data$Gender=='m' & all_data$dx=='cancer', 2]
+f_canc_probs <- all_probs[all_data$Gender=='f' & all_data$dx=='cancer', 2]
+
+m_canc_sens <- length(m_canc_probs[m_canc_probs > cutoff])/length(m_canc_probs)
+f_canc_sens <- length(f_canc_probs[f_canc_probs > cutoff])/length(f_canc_probs)
+
 ```
 
 ```{r gender_normalized, echo=F, fig.width=9, fig.height=6, cache=T, results='hide'}
@@ -511,20 +524,7 @@ To better understand the relationship between the RF model and FIT, we compared 
 
 As a final metric of our model's performance, we estimated the positive predictive value (PPV) and negative predictive value (NPV) by extrapolating its performance on an average-risk population using previously published values for CRC prevalence [@heitman2009prevalence] (`r pred_values`). Based on a prevalence of 0.3% for CRC, the model would have a relatively low PPV of `r 100*signif(canc_pv$PPV, 3)`%, but a high NPV of `r 100*signif(canc_pv$NPV, 4)`%. For advanced adenomas the model would have a PPV of `r 100*signif(advAde_pv$PPV, 3)`% and NPV of `r 100*signif(advAde_pv$NPV, 3)`% assuming a prevalence of 5.7%. With a prevalence of 17.7% for nonadvanced adenomas, the PPV for the model would be `r 100*signif(nonAdv_pv$PPV, 3)`% and the NPV would be `r 100*signif(nonAdv_pv$NPV, 3)`%. Although the PPV is quite low relative to FIT, its NPV was significantly higher than that of FIT.
 
-Previous studies have identified differences in diagnostic test performance for certain demographic groups or for people taking certain medications [@symonds2015factors;@kapidzic2015gender;@levi2009sensitivity]. Therefore we tested whether the RF model performance differed between patient populations. The model performed significantly better for females than males (`r sprintf('p=%.2g',gender_pval)`; `r gender`).
-
-Questions...
-* Does [FIT] differ significantly between M and F?
-* Can you differentitate microbiota of M and F?
-
-[remove from here...]
-We suspected that the difference could be due to having more adenoma samples from males (n=118) than females (n=80). To correct for this we normalized samples such that male and female groups contained equal numbers of adenomas, cancers, and normal samples. We resampled 1000 times and tested for a significant difference in AUC between males and females. With this method `r 100*length(pvals[pvals<0.05])/length(pvals)`% of the iterations resulted in a p-value less than 0.05, making it unclear whether gender truly affects the performance of the model.
-[... to here]
-
-[ Race? / Ethnicity? ]
-
-We found no difference in model performance according to age, BMI, NSAID usage, diabetes, smoking, or previous history of polyps.
-
+Previous studies have identified differences in diagnostic test performance for certain demographic groups or for people taking certain medications [@symonds2015factors;@kapidzic2015gender;@levi2009sensitivity]. Therefore we tested whether the RF model performance differed between patient populations. We found no difference in model performance according to age, BMI, NSAID usage, diabetes, smoking, or previous history of polyps. However the model was significantly better at differentiating normal from lesion for females than for males (`r sprintf('p=%.2g',gender_pval)`; `r gender`). For females the model detected `r 100*signif(f_sens, 3)`% of lesions with a specificity of `r 100*signif(f_spec, 3)`%. For males the model detected `r 100*signif(m_sens, 3)`% of lesions with a specificity of `r 100*signif(m_spec, 3)`%. However the model did have a higher sensitivity for cancer among males (`r 100*signif(m_canc_sens, 3)`%) than females (`r 100*signif(f_canc_sens, 3)`%). 
 
 Similar to our results, it has recently been shown that when FIT was combined with host-associated DNA biomarkers the ability to detect adenomas and carcinomas was significantly improved over FIT alone [@imperiale2014multitarget]. Such results support the assertion that because of the large interpersonal variation in markers for adenomas and carcinomas, it is necessary to employ a panel of biomarkers and to use a model that integrates across the biomarkers. The accuracy of our model may be further improved by incorporating additional biomarkers such as the host-associated biomarkers or those targeting specific genes that encode for toxins [@wu2009human;@arthur2012intestinal]  [cite ETBF, PKS, and Bork metagenomics papers]. More generally, predictive and diagnostic models for other diseases with a microbial etiology may benefit from a similar approach. For example, we recently demonstrated the ability to detect *Clostridium difficile* infection based on the composition of the microbiota [schubert]. Such models are likely to be useful as microbiota sequencing gains traction as a tool for characterizing health.
 
