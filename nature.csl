@@ -67,7 +67,7 @@
   <macro name="container-title">
     <choose>
       <if type="article-journal">
-        <text variable="container-title" font-style="italic" form="short"/>
+        <text variable="container-title" font-style="italic" form="short" text-case="title"/>
       </if>
       <else>
         <text variable="container-title" font-style="italic"/>
