@@ -46,7 +46,7 @@ les_data <- all_data[,c('lesion','fit_result',colnames(all_data)[grep('Otu[01234
 #generate lesion vs normal model
 set.seed(53015)
 les_model <- AUCRF(lesion ~ ., data=les_data, ntree=500, pdel=0.05)
-pdf('results/figures/supp1_aucrf.pdf', height=5, width=5)
+pdf('results/figures/Schloss_EDfig1.pdf', height=5, width=5)
 plot(les_model, main='AUC-RF Model: Microbiota + FIT')
 dev.off()
 opt_model <- les_model$RFopt
@@ -65,21 +65,23 @@ ade_probs <- all_probs[all_data$dx!='cancer',]
 ade_roc <-  roc(ade_data$lesion ~ ade_probs[,2])
 ade_fit_roc <- roc(ade_data$lesion ~ ade_data$fit_result)
 
-par(mar=c(4.5,4.5,1,1))
-pdf(file='results/figures/fig1_ROCcurve.pdf', height=6, width=6)
-plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
+par(mar=c(4.5,4.5,0,1))
+pdf(file='results/figures/fig1A_ROCcurve.pdf', height=6, width=6)
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='', xlab='')
 plot(les_roc, col='purple2', lwd=2, add=T)
 plot(canc_roc, col='red', lwd=2, add=T)
 plot(ade_roc, col='blue', lwd=2, add=T)
 plot(ade_fit_roc, col='blue', lwd=2, add=T, lty=2)
 plot(canc_fit_roc, col='red', lwd=2, add=T, lty=2)
 plot(les_fit_roc, col='purple2', lwd=2, add=T, lty=2)
-legend('bottomright', legend=c(sprintf('Lesion: %.3g',les_roc$auc),
-                               sprintf('Les. FIT: %.3g',les_fit_roc$auc),
-                               sprintf('Cancer: %.3g',canc_roc$auc),
-                               sprintf('Canc. FIT: %.3g',canc_fit_roc$auc),
-                               sprintf('Adenoma: %.3g',ade_roc$auc),
-                               sprintf('Ade. FIT: %.3g',ade_fit_roc$auc)),lty=c(1,2,1,2,1,2), lwd=2, col=c('purple2','purple2','red','red','blue','blue'), bty='n')
+mtext(side=2, text="Sensitivity", line=2.5)
+mtext(side=1, text="Specificity", line=2.5)
+legend('bottomright', legend=c(sprintf('RF-Les. vs Norm.: %.3g',les_roc$auc),
+                               sprintf('FIT-Les. vs Norm.: %.3g',les_fit_roc$auc),
+                               sprintf('RF-Canc. vs Norm: %.3g',canc_roc$auc),
+                               sprintf('FIT-Canc. vs Norm.: %.3g',canc_fit_roc$auc),
+                               sprintf('RF-Ade. vs Norm.: %.3g',ade_roc$auc),
+                               sprintf('FIT-Ade. vs Norm.: %.3g',ade_fit_roc$auc)),lty=c(1,2,1,2,1,2), lwd=2, col=c('purple2','purple2','red','red','blue','blue'), bty='n', cex=0.8)
 
 points(coords(canc_fit_roc, x=100, input='threshold', ret='specificity'),coords(canc_fit_roc, x=100, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=10)
 points(coords(les_fit_roc, x=100, input='threshold', ret='specificity'),coords(les_fit_roc, x=100, input='threshold', ret='sensitivity'), col='purple', cex=1.5, pch=10)
@@ -97,6 +99,32 @@ dev.off()
 
 ```
 
+```{r model_stripCharts, warning=F, echo=F, fig.width=8, fig.height=6, results='hide'}
+pdf(file='results/figures/fig1B_stripCharts.pdf', height=5.5, width=6)
+par(mfrow=c(1,2), mar=c(3, 3.5, 0.5, 0.5))
+
+plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0.07,5000), log="y", ylab="", xlab="", xaxt="n", yaxt="n")
+stripchart(at=1, jitter(all_data[all_data$dx=='normal','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=2, jitter(all_data[all_data$dx=='adenoma','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=3, jitter(all_data[all_data$dx=='cancer','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+axis(1, at=c(0.8,2,3.2), labels=c('Normal','Adenoma','Cancer'))
+axis(2, at=c(0.1,1.1,10.1,100.1,1000.1), labels=c(0,1,10,100,1000))
+mtext(side=2, text="FIT Result (ng/ml)", line=2)
+abline(h=100, lty=2)
+
+plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0.2,1), ylab="", xlab="", xaxt="n")
+stripchart(at=1, all_probs[all_data$dx=='normal',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
+stripchart(at=2, all_probs[all_data$dx=='adenoma',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
+stripchart(at=3, all_probs[all_data$dx=='cancer',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
+mtext(side=2, text="Model Probability of Lesion", line=2)
+axis(1, at=c(0.8,2,3.2), labels=c('Normal','Adenoma','Cancer'))
+abline(h=cutoff, lty=2)
+
+dev.off()
+par(mfrow=c(1,1))
+
+```
+
 ```{r les_OTUs, warning=F, echo=F, fig.width=7, fig.height=12, results='hide'}
 les_otus <- les_model$Xopt
 les_otus <- les_otus[les_otus!='fit_result']
@@ -108,7 +136,7 @@ les_tax <- paste(tax[les_otus, 'Classification'], '\n(', tax[les_otus, 'OTU'], '
 norm_abunds <- all_data[all_data$dx=='normal', les_otus]/10000 + 1e-4
 les_abunds <- all_data[all_data$dx!='normal', les_otus]/10000 + 1e-4
 
-pdf('results/figures/supp2_modelOTUstripchart.pdf', width=7, height=12)
+pdf('results/figures/Schloss_EDfig2.pdf', width=7, height=12)
 par(mar=c(5, 10, 0.5, 0.5))
 plot(1, type="n", ylim=c(0,length(les_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
 index <- 1
@@ -125,31 +153,9 @@ legend('topright', legend=c("Lesion", "Normal"), pch=c(21, 21), pt.bg=c("grey30"
 dev.off()
 ```
 
-```{r model_stripCharts, warning=F, echo=F, fig.width=8, fig.height=6, results='hide'}
-pdf(file='results/figures/fig2A_stripCharts.pdf', height=5.5, width=7)
-par(mfrow=c(1,2), mar=c(3, 5, 0.5, 0.5))
-plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0.2,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
-stripchart(at=1, all_probs[all_data$dx=='normal',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=2, all_probs[all_data$dx=='adenoma',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=3, all_probs[all_data$dx=='cancer',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
-axis(1, at=c(1,2,3), labels=c('Normal','Adenoma','Cancer'))
-abline(h=cutoff, lty=2)
-
-plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0.07,5000), log="y", ylab="FIT Result (ng/ml)", xlab="", xaxt="n", yaxt="n")
-stripchart(at=1, jitter(all_data[all_data$dx=='normal','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=2, jitter(all_data[all_data$dx=='adenoma','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=3, jitter(all_data[all_data$dx=='cancer','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
-axis(1, at=c(1,2,3), labels=c('Normal','Adenoma','Cancer'))
-axis(2, at=c(0.1,1.1,10.1,100.1,1000.1), labels=c(0,1,10,100,1000))
-abline(h=100, lty=2)
-dev.off()
-par(mfrow=c(1,1))
-
-```
-
 ```{r neg_fit_stripchart, echo=F, fig.width=8, fig.height=6, results='hide'}
 par(mar=c(3, 5, 0.5, 0.5))
-pdf(file='results/figures/supp3_negFITstripchart.pdf', height=7, width=7)
+pdf(file='results/figures/Schloss_EDfig3.pdf', height=7, width=7)
 plot(1, type="n", xlim=c(0.5,7), ylim=c(0.2,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
 
 stripchart(at=1, all_probs[all_data$dx=='normal' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
@@ -198,7 +204,7 @@ rownames(output_matrix)<-c('Positive FIT','Negative FIT')
 ```
 
 ```{r fit_vs_model, echo=F, fig.width=8, fig.height=7, results='hide'}
-pdf('results/figures/fig3_FITvsRF.pdf', width=7, height=6)
+pdf('results/figures/Schloss_fig3.pdf', width=7, height=6)
 par(mar=c(5, 5, 0.5, 0.5))
 plot(1, type="n", xlim=c(0.1,10000), ylim=c(0.2,1), log='x',ylab="Model Probability of Lesion", xlab="FIT (ng/ml)", xaxt='n')
 
@@ -245,7 +251,7 @@ s4_fit_sens <- length(s4_fit[s4_fit>=100]) / length(s4_fit)
 sens_matrix <- matrix(c(nonAdv_sens,nonAdv_fit_sens,advAde_sens,advAde_fit_sens,s1_sens,s1_fit_sens,s2_sens,s2_fit_sens,s3_sens,s3_fit_sens,s4_sens,s4_fit_sens), byrow=F, nrow=2)
 rownames(sens_matrix) <- c('RF Model','FIT')
 
-pdf('results/figures/fig2B_sensitivityBarplot.pdf', height=6, width=9)
+pdf('results/figures/Schloss_fig2.pdf', height=6, width=9)
 par(mar=c(4,4,2,2))
 x_labels <- c(sprintf(' \nNonadvanced\nAdenoma\n(n=%i)',length(nonAdv_probs)),sprintf('Advanced\nAdenomas\n(n=%i)',length(advAde_probs)),sprintf('Cancer\nStage I\n(n=%i)',length(s1_probs)), sprintf('Cancer\nStage II\n(n=%i)',length(s2_probs)), sprintf('Cancer\nStage III\n(n=%i)',length(s3_probs)), sprintf('Cancer\nStage IV\n(n=%i)',length(s4_probs)))
 bp<-barplot(sens_matrix, beside=T, ylab='Sensitvity (%)', ylim=c(0,1.1), axisnames=F, col=c('grey25','grey90'),axis.lty=1, yaxt='n')
@@ -406,7 +412,7 @@ pv_table[4,] <- c('17.7%', nonAdv_pv$PPV, nonAdv_fit_pv$PPV, nonAdv_pv$NPV, nonA
 pv_table[5,] <- c('30.2%', les_pv$PPV, les_fit_pv$PPV, les_pv$NPV, les_fit_pv$NPV)
 
 write(kable(pv_table), file='results/tables/supp_table2.md')
-#render('results/tables/supp_table2.md', output_format='pdf_document', output_file='supp_table2.pdf')
+#render('results/tables/supp_table2.md', output_format='pdf_document', output_file='Schloss_EDtable2.pdf')
 
 ```
 
@@ -415,7 +421,7 @@ m_roc <- roc(all_data$lesion[all_data$Gender == 'm'] ~ all_probs[all_data$Gender
 f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender == 'f',2])
 gender_pval <- roc.test(m_roc,f_roc)$p.value
 
-pdf('results/figures/supp4_maleFemale.pdf', height=6, width=9)
+pdf('results/figures/Schloss_EDfig4.pdf', height=6, width=9)
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
 
@@ -489,10 +495,10 @@ for(i in 1:1000){
 
 ```{r figures, echo=F}
 
-ROC <- 'Fig. 1'
+ROC <- 'Fig. 1A'
 table1 <- 'Table 1'
-strip <- 'Fig. 2A'
-bar <- 'Fig. 2B'
+strip <- 'Fig. 1B'
+bar <- 'Fig. 2'
 scatter <- 'Fig. 3'
 
 
