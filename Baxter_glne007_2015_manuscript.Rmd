@@ -368,7 +368,7 @@ fit_spec <- sprintf('%.3g (%.3g-%.3g)',100*fit_spec_ci[2],100*fit_spec_ci[1],100
 #Build Output table
 
 stats_table <- matrix(NA, ncol=6, nrow=8)
-colnames(stats_table) <- c('Most Advanced Finding','Colonoscopy','RF Model','','FIT','')
+colnames(stats_table) <- c('Most Advanced Finding','','RF Model','','FIT','')
 stats_table[1,] <- c('','','Positive Results','Sensitivity (95% CI)','Positive Results','Sensitivity (95% CI)')
 stats_table[2,] <- c('','no.','no.','%','no.','%')
 stats_table[3,] <- c('Cancer', num_canc, canc_obs, canc_mod_sens, canc_fit_obs, canc_fit_sens)
@@ -379,7 +379,7 @@ stats_table[7,] <- c('','','Negative Results','Specificity (95% CI)','Negative R
 stats_table[8,] <- c('Negative Colonosopies', num_norm, norm_obs, mod_spec, norm_fit_obs, fit_spec)
 
 write(kable(stats_table), file='results/tables/table1.md')
-#render('results/tables/table.md', output_format='pdf_document', output_file='table1.pdf')
+#render('results/tables/table1.md', output_format='pdf_document', output_file='table1.pdf')
 
 ```
 
