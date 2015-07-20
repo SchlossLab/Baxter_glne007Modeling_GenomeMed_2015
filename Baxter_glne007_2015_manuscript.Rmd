@@ -553,5 +553,17 @@ _**Statistical Methods.**_ All statistical analyses were performed using R. Rand
 
 _**Data Availability.**_ Raw fastq files and MIMARKS file are available through the NCBI Sequence Read Archive [insert accession number]. A data analysis pipeline and all necessary scripts are available at github.com/SchlossLab/Baxter\_glne007Modeling_2015.
 
+###Figure legends  
+**Figure 1.** (A) ROC Curves for the RF model (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (purple), normal from cancer (red) and normal from adenoma (blue). Filled dots show the sensitivity and specificity of the RF model at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (B) Strip charts showing the results for FIT and the RF model. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
+
+**Table 1**
+Table of sensitivities and specificities for the RF model and FIT. The 95% confidence intervals were computed with 2000 stratified bootstrap replicates
+
+**Figure 2**
+Barplot of sensitivities for the RF model and FIT for each stage of tumor development.  P-values based on McNemar's chi-squared test.
+
+**Figure 3**
+Scatter plot of the results of the RF model and FIT for each sample. Dashed lines show the cutoff for each test. 
+
 
 ### Literature cited
