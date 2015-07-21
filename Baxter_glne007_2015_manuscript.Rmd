@@ -46,7 +46,7 @@ les_data <- all_data[,c('lesion','fit_result',colnames(all_data)[grep('Otu[01234
 #generate lesion vs normal model
 set.seed(53015)
 les_model <- AUCRF(lesion ~ ., data=les_data, ntree=500, pdel=0.05)
-pdf('results/figures/Schloss_EDfig1.pdf', height=5, width=5)
+png('results/figures/Schloss_EDfig1.png', height=5, width=5, units='in', res=150)
 plot(les_model, main='AUC-RF Model: Microbiota + FIT')
 dev.off()
 opt_model <- les_model$RFopt
@@ -66,7 +66,7 @@ ade_roc <-  roc(ade_data$lesion ~ ade_probs[,2])
 ade_fit_roc <- roc(ade_data$lesion ~ ade_data$fit_result)
 
 par(mar=c(4.5,4.5,0,1))
-pdf(file='results/figures/fig1A_ROCcurve.pdf', height=6, width=6)
+png(file='results/figures/fig1A_ROCcurve.png', height=6, width=6, units='in', res=150)
 plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='', xlab='')
 plot(les_roc, col='purple2', lwd=2, add=T)
 plot(canc_roc, col='red', lwd=2, add=T)
@@ -100,7 +100,7 @@ dev.off()
 ```
 
 ```{r model_stripCharts, warning=F, echo=F, fig.width=8, fig.height=6, results='hide'}
-pdf(file='results/figures/fig1B_stripCharts.pdf', height=5.5, width=6)
+png(file='results/figures/fig1B_stripCharts.png', height=5.5, width=6, units='in', res=150)
 par(mfrow=c(1,2), mar=c(3, 3.5, 0.5, 0.5))
 
 plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0.07,5000), log="y", ylab="", xlab="", xaxt="n", yaxt="n")
@@ -136,7 +136,7 @@ les_tax <- paste(tax[les_otus, 'Classification'], '\n(', tax[les_otus, 'OTU'], '
 norm_abunds <- all_data[all_data$dx=='normal', les_otus]/10000 + 1e-4
 les_abunds <- all_data[all_data$dx!='normal', les_otus]/10000 + 1e-4
 
-pdf('results/figures/Schloss_EDfig2.pdf', width=7, height=12)
+png('results/figures/Schloss_EDfig2.png', width=7, height=12, units='in', res=150)
 par(mar=c(5, 10, 0.5, 0.5))
 plot(1, type="n", ylim=c(0,length(les_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
 index <- 1
@@ -155,7 +155,7 @@ dev.off()
 
 ```{r neg_fit_stripchart, echo=F, fig.width=8, fig.height=6, results='hide'}
 par(mar=c(3, 5, 0.5, 0.5))
-pdf(file='results/figures/Schloss_EDfig3.pdf', height=7, width=7)
+png(file='results/figures/Schloss_EDfig3.png', height=7, width=7, units='in', res=150)
 plot(1, type="n", xlim=c(0.5,7), ylim=c(0.2,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
 
 stripchart(at=1, all_probs[all_data$dx=='normal' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
@@ -204,7 +204,7 @@ rownames(output_matrix)<-c('Positive FIT','Negative FIT')
 ```
 
 ```{r fit_vs_model, echo=F, fig.width=8, fig.height=7, results='hide'}
-pdf('results/figures/Schloss_fig3.pdf', width=7, height=6)
+png('results/figures/Schloss_fig3.png', width=7, height=6, units='in', res=150)
 par(mar=c(5, 5, 0.5, 0.5))
 plot(1, type="n", xlim=c(0.1,10000), ylim=c(0.2,1), log='x',ylab="Model Probability of Lesion", xlab="FIT (ng/ml)", xaxt='n')
 
@@ -251,7 +251,7 @@ s4_fit_sens <- length(s4_fit[s4_fit>=100]) / length(s4_fit)
 sens_matrix <- matrix(c(nonAdv_sens,nonAdv_fit_sens,advAde_sens,advAde_fit_sens,s1_sens,s1_fit_sens,s2_sens,s2_fit_sens,s3_sens,s3_fit_sens,s4_sens,s4_fit_sens), byrow=F, nrow=2)
 rownames(sens_matrix) <- c('RF Model','FIT')
 
-pdf('results/figures/Schloss_fig2.pdf', height=6, width=9)
+png('results/figures/Schloss_fig2.png', height=6, width=9, units='in', res=150)
 par(mar=c(4,4,2,2))
 x_labels <- c(sprintf(' \nNonadvanced\nAdenoma\n(n=%i)',length(nonAdv_probs)),sprintf('Advanced\nAdenomas\n(n=%i)',length(advAde_probs)),sprintf('Cancer\nStage I\n(n=%i)',length(s1_probs)), sprintf('Cancer\nStage II\n(n=%i)',length(s2_probs)), sprintf('Cancer\nStage III\n(n=%i)',length(s3_probs)), sprintf('Cancer\nStage IV\n(n=%i)',length(s4_probs)))
 bp<-barplot(sens_matrix, beside=T, ylab='Sensitvity (%)', ylim=c(0,1.1), axisnames=F, col=c('grey25','grey90'),axis.lty=1, yaxt='n')
@@ -379,7 +379,7 @@ stats_table[7,] <- c('','','Negative Results','Specificity (95% CI)','Negative R
 stats_table[8,] <- c('Negative Colonosopies', num_norm, norm_obs, mod_spec, norm_fit_obs, fit_spec)
 
 write(kable(stats_table), file='results/tables/table1.md')
-#render('results/tables/table1.md', output_format='pdf_document', output_file='table1.pdf')
+#render('results/tables/table1.md', output_format='png_document', output_file='table1.png')
 
 ```
 
@@ -412,7 +412,7 @@ pv_table[4,] <- c('17.7%', nonAdv_pv$PPV, nonAdv_fit_pv$PPV, nonAdv_pv$NPV, nonA
 pv_table[5,] <- c('30.2%', les_pv$PPV, les_fit_pv$PPV, les_pv$NPV, les_fit_pv$NPV)
 
 write(kable(pv_table), file='results/tables/supp_table2.md')
-#render('results/tables/supp_table2.md', output_format='pdf_document', output_file='Schloss_EDtable2.pdf')
+#render('results/tables/supp_table2.md', output_format='png_document', output_file='Schloss_EDtable2.png')
 
 ```
 
@@ -421,7 +421,7 @@ m_roc <- roc(all_data$lesion[all_data$Gender == 'm'] ~ all_probs[all_data$Gender
 f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender == 'f',2])
 gender_pval <- roc.test(m_roc,f_roc)$p.value
 
-pdf('results/figures/Schloss_EDfig4.pdf', height=6, width=9)
+png('results/figures/Schloss_EDfig4.png', height=6, width=9, units='in', res=150)
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
 
@@ -553,15 +553,27 @@ _**Statistical Methods.**_ All statistical analyses were performed using R. Rand
 
 _**Data Availability.**_ Raw fastq files and MIMARKS file are available through the NCBI Sequence Read Archive [insert accession number]. A data analysis pipeline and all necessary scripts are available at github.com/SchlossLab/Baxter\_glne007Modeling_2015.
 
-###Figure legends  
+### Author Contributions  
+All authors were involved in the conception and design of the study. NTB processed samples and analyzed the data.  All authors interpreted the data. NTB and PDS wrote the manuscript.  All authors reviewed and revised the manuscript.
+
+### Author Information  
+The authors declare no competing financial interests.  
+
+###Figures
+
+![](results/figures/Schloss_fig1.png)  
 **Figure 1.** (A) ROC Curves for the RF model (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (purple), normal from cancer (red) and normal from adenoma (blue). Filled dots show the sensitivity and specificity of the RF model at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (B) Strip charts showing the results for FIT and the RF model. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
 
+
+![](results/tables/Schloss_table1.png)  
 **Table 1**
 Table of sensitivities and specificities for the RF model and FIT. The 95% confidence intervals were computed with 2000 stratified bootstrap replicates
 
+![](results/figures/Schloss_fig2.png)  
 **Figure 2**
 Barplot of sensitivities for the RF model and FIT for each stage of tumor development.  P-values based on McNemar's chi-squared test.
 
+![](results/figures/Schloss_fig3.png)  
 **Figure 3**
 Scatter plot of the results of the RF model and FIT for each sample. Dashed lines show the cutoff for each test. 
 
