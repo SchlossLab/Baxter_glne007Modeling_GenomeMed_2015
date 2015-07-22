@@ -1,4 +1,4 @@
-Most Advanced Finding         RF Model                                  FIT                                     
+Most Advanced Finding         combined model                            FIT                                     
 ----------------------  ----  -----------------  ---------------------  -----------------  ---------------------
                               Positive Results   Sensitivity (95% CI)   Positive Results   Sensitivity (95% CI) 
                         no.   no.                %                      no.                %                    
