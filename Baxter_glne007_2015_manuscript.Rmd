@@ -606,7 +606,7 @@ The authors declare no competing financial interests.
 **Extended Data Figure 3.** Stripchart of combined model results for each sample based on FIT result.
 
 ![](results/figures/Schloss_EDfig4.png)  
-**Extended Data Figure 4.** ROC curves of combined model separated by gender (left). Stripchart of combined model results by gender (right). 
+**Extended Data Figure 4.** ROC curves (left) and stripchart (right) of combined model separated by sex. 
 
 
 ### Literature cited
