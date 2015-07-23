@@ -22,7 +22,7 @@ Nielson T. Baxter^1^, Mack T. Ruffin IV^2^, Mary A.M. Rogers^3^, and Patrick D. 
 
 
 ```{r startup, echo=F, message=F, warning=F}
-deps = c("pROC","randomForest","AUCRF","knitr","rmarkdown");
+deps = c("pROC","randomForest","AUCRF","knitr","rmarkdown","vegan");
 for (dep in deps){
   if (dep %in% installed.packages()[,"Package"] == FALSE){
     install.packages(as.character(dep), quiet=TRUE);
@@ -125,7 +125,7 @@ par(mfrow=c(1,1))
 
 ```
 
-```{r les_OTUs, warning=F, echo=F, fig.width=7, fig.height=12, results='hide'}
+```{r les_OTUs, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
 les_otus <- les_model$Xopt
 les_otus <- les_otus[les_otus!='fit_result']
 les_otus <- rev(les_otus)
@@ -136,20 +136,20 @@ les_tax <- paste(tax[les_otus, 'Classification'], '\n(', tax[les_otus, 'OTU'], '
 norm_abunds <- all_data[all_data$dx=='normal', les_otus]/10000 + 1e-4
 les_abunds <- all_data[all_data$dx!='normal', les_otus]/10000 + 1e-4
 
-png('results/figures/Schloss_EDfig2.png', width=7, height=12, units='in', res=150)
+png('results/figures/Schloss_EDfig2.png', width=7, height=9, units='in', res=150)
 par(mar=c(5, 10, 0.5, 0.5))
 plot(1, type="n", ylim=c(0,length(les_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
 index <- 1
 for(i in les_otus){
-  stripchart(at=index-0.35, jitter(norm_abunds[,i], amount=1e-5), pch=21, bg="grey90", method="jitter", jitter=0.2, add=T, cex=1)
-  stripchart(at=index+0.35, jitter(les_abunds[,i], amount=1e-5), pch=21, bg="grey30", method="jitter", jitter=0.2, add=T, cex=1)
+  stripchart(at=index-0.35, jitter(norm_abunds[,i], amount=1e-5), pch=21, bg="grey80", method="jitter", jitter=0.2, add=T, cex=1, lwd=0.5)
+  stripchart(at=index+0.35, jitter(les_abunds[,i], amount=1e-5), pch=21, bg="purple1", method="jitter", jitter=0.2, add=T, cex=1, lwd=0.5)
   segments(mean(norm_abunds[,i]),index-0.7,mean(norm_abunds[,i]),index, lwd=3)
   segments(mean(les_abunds[,i]),index+0.7,mean(les_abunds[,i]),index, lwd=3)
   index <- index + 2
 }
 axis(2, at=seq(1,index-2,2), labels=les_tax, las=1, tick=F, cex.axis=1)
 axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
-legend('topright', legend=c("Lesion", "Normal"), pch=c(21, 21), pt.bg=c("grey30","grey90"))
+legend('topright', legend=c("Lesion", "Normal"), pch=c(21, 21), pt.bg=c("purple1","grey80"))
 dev.off()
 ```
 
@@ -416,7 +416,7 @@ write(kable(pv_table), file='results/tables/supp_table2.md')
 
 ```
 
-```{r male_vs_female, echo=F, results='hide', fig.width=9, fig.height=6}
+```{r male_vs_female, echo=F, results='hide', cache=T, fig.width=9, fig.height=6}
 m_roc <- roc(all_data$lesion[all_data$Gender == 'm'] ~ all_probs[all_data$Gender == 'm',2])
 f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender == 'f',2])
 gender_pval <- roc.test(m_roc,f_roc)$p.value
@@ -465,6 +465,14 @@ f_canc_probs <- all_probs[all_data$Gender=='f' & all_data$dx=='cancer', 2]
 
 m_canc_sens <- length(m_canc_probs[m_canc_probs > cutoff])/length(m_canc_probs)
 f_canc_sens <- length(f_canc_probs[f_canc_probs > cutoff])/length(f_canc_probs)
+
+#correct for diagnosis
+fit_aov <- aov(meta$fit_result~meta$Gender*meta$dx)
+fit_aov_p <- summary(fit_aov)[[1]][["Pr(>F)"]][1]
+
+dist <- read.table('data/glne007.final.an.unique_list.0.03.subsample.0.03.filter.thetayc.0.03.square.dist', skip=1)
+mod_adonis <- adonis(dist~meta$Gender*meta$dx)
+mod_adonis_p <- mod_adonis[[1]][["Pr(>F)"]][1]
 
 ```
 
@@ -542,24 +550,24 @@ To better understand the relationship between the combined model and FIT, we com
 
 As a final metric of our model's performance, we estimated the positive predictive value (PPV) and negative predictive value (NPV) by extrapolating its performance on an average-risk population using previously published values for CRC prevalence [@heitman2009prevalence] (`r pred_values`). Based on a prevalence of 0.3% for CRC, the model would have a relatively low PPV of `r 100*signif(canc_pv$PPV, 3)`%, but a high NPV of `r 100*signif(canc_pv$NPV, 4)`%.  Based on a prevalence of 5.7% for advanced adenomas the model would have a PPV of `r 100*signif(advAde_pv$PPV, 3)`% and NPV of `r 100*signif(advAde_pv$NPV, 3)`%. Based on a prevalence of 17.7% for nonadvanced adenomas, the PPV for the model would be `r 100*signif(nonAdv_pv$PPV, 3)`% and the NPV would be `r 100*signif(nonAdv_pv$NPV, 3)`%. Although the PPV is quite low relative to FIT, its NPV was higher than that of FIT (`r pred_values`). These results indicate that the combined model would be highly effective at identifying individuals that would not need a more invasive test.
 
-Previous studies have identified differences in diagnostic test performance for certain demographic groups or for people taking certain medications [@symonds2015factors;@kapidzic2015gender;@levi2009sensitivity]. Therefore we tested whether the combined model performance differed between patient populations. We found no difference in model performance according to age, BMI, NSAID usage, diabetes, smoking, or previous history of polyps (all p>0.05). However the model was significantly better at differentiating normal from lesion for females than for males (`r pval(gender_pval)`; `r gender`). For females the model detected `r 100*signif(f_sens, 3)`% of lesions with a specificity of `r 100*signif(f_spec, 3)`%. For males the model detected `r 100*signif(m_sens, 3)`% of lesions with a specificity of `r 100*signif(m_spec, 3)`%. However the model did have a higher sensitivity for cancer among males (`r 100*signif(m_canc_sens, 3)`%) than females (`r 100*signif(f_canc_sens, 3)`%). 
+Previous studies have identified differences in diagnostic test performance for certain demographic groups or for people taking certain medications [@symonds2015factors;@kapidzic2015gender;@levi2009sensitivity]. Therefore we tested whether the combined model performance differed between patient populations. We found no difference in model performance according to age, BMI, NSAID usage, diabetes, smoking, or previous history of polyps (all p>0.05). However the model was significantly better at differentiating normal from lesion for females than for males (`r pval(gender_pval)`; `r gender`). For females the model detected `r 100*signif(f_sens, 3)`% of lesions with a specificity of `r 100*signif(f_spec, 3)`%. For males the model detected `r 100*signif(m_sens, 3)`% of lesions with a specificity of `r 100*signif(m_spec, 3)`%.  The difference in performance between males and females seems to be due to differences in FIT results rather than differences in the microbiome. After correcting for diagnosis, there was a significant effect of sex on FIT result (`r pval(fit_aov_p)`), but not on the overall structure of the microbiome(`r pval(mod_adonis_p)`). Despite performing more poorly overall for males, the combined model did have a higher sensitivity for cancer among males (`r 100*signif(m_canc_sens, 3)`%) than females (`r 100*signif(f_canc_sens, 3)`%), consistent with the observations of previous studies [@symonds2015factors;@kapidzic2015gender].
 
-Similar to our results, it has recently been shown that when FIT was combined with host-associated DNA biomarkers the ability to detect adenomas and carcinomas was significantly improved over FIT alone [@imperiale2014multitarget]. Such results support the assertion that because of the large interpersonal variation in markers for adenomas and carcinomas, it is necessary to employ a panel of biomarkers and to use a model that integrates across the biomarkers. The accuracy of our model may be further improved by incorporating additional biomarkers such as the host-associated biomarkers or those targeting specific genes that encode for toxins [@wu2009human;@arthur2012intestinal;@zeller2014potential]. More generally, predictive and diagnostic models for other diseases with a microbial etiology may benefit from a similar approach. For example, we recently demonstrated the ability to detect *Clostridium difficile* infection based on the composition of the microbiota [@schubert2015antibiotic]. Such models are likely to be useful as microbiota sequencing gains traction as a tool for characterizing health.
+Similar to our results, it has recently been shown that when FIT was combined with host-associated DNA biomarkers the ability to detect adenomas and carcinomas was significantly improved over FIT alone [@imperiale2014multitarget]. The sensitivity of the host-associated DNA screen was 92.3% for CRC and 42.4% for adenomas, which are both slightly lower than what we observed with our combined model. Regardless, such results support the assertion that because of the large interpersonal variation in markers for adenomas and carcinomas, it is necessary to employ a panel of biomarkers and to use a model that integrates across the biomarkers. The accuracy of our model may be further improved by incorporating additional biomarkers such as the host-associated biomarkers or those targeting specific genes involved in the underlying mechanism of tumorigenesis such as toxins [@wu2009human;@arthur2012intestinal;@zeller2014potential]. More generally, predictive and diagnostic models for other diseases with a microbial etiology may benefit from a similar approach. For example, we recently demonstrated the ability to detect *Clostridium difficile* infection based on the composition of the microbiota [@schubert2015antibiotic]. Such models are likely to be useful as microbiota sequencing gains traction as a tool for characterizing health.
 
 Our findings demonstrate the potential for combining the analysis of a patient's microbiota with conventional stool-based tests to improve CRC detection. Using the random forest algorithm it was possible to interpret FIT results in the context of the microbiota. The combined model had significantly higher sensitivity for lesions at almost all stages of tumorigenesis. Moreover the model detected the majority of lesions that FIT was unable to detect. The shortcomings of the combined model were its lack of specificity and low PPV. However in the case of CRC, all individuals at average risk in the United States are encouraged to receive regular colonoscopies once they reach the age of 50 [@rex2009american]. Therefore the potential value of the combined model is in its high sensitivity and NPV. With a NPV of `r 100*signif(canc_pv$NPV, 4)`%, the model could be used to identify people for whom a colonoscopy is unnecessary. This strategy could result in a decrease in the number of colonoscopies, thereby reducing both the financial costs and potential health risks of more invasive screening methods.
 
 
-**Methods Summary.** Fecal samples were collected from 490 subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopy and subsequent histopathological examination. FIT was performed using OC FIT-CHEK sampling bottles and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer [@miseq]. A data analysis pipeline and all necessary scripts to generate this paper are available at github.com/SchlossLab/Baxter_glne007Modeling_2015. The sequence data are available in the Sequence Read Archive under Bioproject Accession XXXXXXXXXXXXX.
+**Methods Summary.** Fecal samples were collected from 490 subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopy and subsequent histopathological examination. FIT was performed using OC FIT-CHEK sampling bottles and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer and analyzed as described previously [@miseq]. A data analysis pipeline and all necessary scripts to generate this paper are available at github.com/SchlossLab/Baxter_glne007Modeling_2015. The sequence data are available in the Sequence Read Archive under Bioproject Accession XXXXXXXXXXXXX.
 
 ### Methods (online only)
 _**Study Design/Patient sampling.**_ Eligible patients for this study were at least 18 years old, willing to sign informed consent, able to tolerate removal of 58 ml of blood, and willing to collect a stool sample. Patients were excluded if they had undergone surgery, radiation, or chemotherapy for current CRC prior to baseline samples or had inflammatory bowel disease, known hereditary nonpolyposis CRC, or familial adenomatous polyposis. Colonoscopies were performed and fecal samples were collected from subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopic examination. Lesions were biopsied and diagnosed as adenoma or cancer based on subsequent histopathological examination. While colonic lesions were still intact, whole evacuated stool was collected from each patient 1 to 2 weeks after their colonoscopy. This has been shown to be sufficient time for the microbiota to recover from colnoscopy preparation [@OBrien2013].  Stool samples were packed in ice, shipped to a processing center via next day delivery and stored at -80˚C. 
 
 
-_**Fecal Immunochemical Tests.**_ Fecal material for FIT was collected from frozen stool aliquots using OC FIT-CHEK sampling bottles (Polymedco Inc.) and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). Raw FIT results were used for generating ROC curves and for building combined models. Sensitivities and specificities reported for FIT are based on a cutoff of 100 ng/ml.
+_**Fecal Immunochemical Tests.**_ Fecal material for FIT was collected from frozen stool aliquots using OC FIT-CHEK sampling bottles (Polymedco Inc.) and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). Raw FIT results were used for generating ROC curves and for building the combined model. Sensitivities and specificities reported for FIT are based on a cutoff of 100 ng/ml.
 
-_**16S rRNA Sequencing.**_ DNA was extracted from roughly 50 mg of fecal material from each subject using the PowerSoil-htp 96 Well Soil DNA isolation kit (MO BIO Laboratories) and an epMotion 5075 automated pipetting system (Eppendorf). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer [@miseq]. The 490 samples were divided into three sequencing runs to increase the per sample sequencing depth. Samples were randomly assigned to the sequencing runs to avoid biasing based on diagnosis or demographics.
+_**16S rRNA Sequencing.**_ DNA was extracted from roughly 50 mg of fecal material from each subject using the PowerSoil-htp 96 Well Soil DNA isolation kit (MO BIO Laboratories) and an epMotion 5075 automated pipetting system (Eppendorf). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer [@miseq]. The 490 samples were divided into three sequencing runs to increase the per sample sequencing depth. Although the same percentage of samples from the three groups were represented on each sequencing run, samples were randomly assigned to the sequencing runs to avoid confounding our analysis based on diagnosis or demographics.
 
-_**Sequence Curation.**_ The 16S rRNA gene sequences were curated using the mothur software package, as described previously [@miseq]. Briefly, paired-end reads were merged into contigs, screened for quality, aligned to SILVA 16S rRNA sequence database, and screened for chimeras. Curated sequences were clustered in to operational taxonomic units (OTUs) using a 97% similarity cutoff. The number of sequences in each sample was rarefied to 10,000 per sample to minimize the effects of uneven sampling.
+_**Sequence Curation.**_ The 16S rRNA gene sequences were curated using the mothur software package, as described previously [@miseq]. Briefly, paired-end reads were merged into contigs, screened for quality, aligned to SILVA 16S rRNA sequence database, and screened for chimeras. Curated sequences were clustered in to operational taxonomic units (OTUs) using a 97% similarity cutoff with the average neighbor clustering algorithm. The number of sequences in each sample was rarefied to 10,000 per sample to minimize the effects of uneven sampling.
 
 _**Statistical Methods.**_ All statistical analyses were performed using R. Random Forest models were generated using the AUCRF package [@calle2011auc]. The AUC of ROC curves was compared using the method described by DeLong et al. [@delong1988comparing]. The optimal cutoff for the combined model was determined using Youden's _J_ statistic as implemented in the pROC package in R [@youden1950index]. The sensitivities of FIT and the combined model were compared using McNemar's chi-squared test.
 
@@ -572,13 +580,11 @@ All authors were involved in the conception and design of the study. NTB process
 The authors declare no competing financial interests.  
 
 ###Figures
+![](results/tables/Schloss_table1.png)  
+**Table 1.** Table of sensitivities and specificities for the combined model and FIT. The 95% confidence intervals were computed with 2000 stratified bootstrap replicates
 
 ![](results/figures/Schloss_fig1.png)  
 **Figure 1.** (A) ROC Curves for the combined model (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (purple), normal from cancer (red) and normal from adenoma (blue). Filled dots show the sensitivity and specificity of the combined model at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (B) Strip charts showing the results for FIT and the combined model. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
-
-
-![](results/tables/Schloss_table1.png)  
-**Table 1.** Table of sensitivities and specificities for the combined model and FIT. The 95% confidence intervals were computed with 2000 stratified bootstrap replicates
 
 ![](results/figures/Schloss_fig2.png)  
 **Figure 2.** Barplot of sensitivities for the combined model and FIT for each stage of tumor development.  P-values based on McNemar's chi-squared test.
@@ -587,18 +593,17 @@ The authors declare no competing financial interests.
 **Figure 3.** Scatter plot of the results of the combined model and FIT for each sample. Dashed lines show the cutoff for each test. 
 
 ###Extended Data Figures
+![](results/tables/Schloss_EDtable1.png)  
+**Extended Data Table 1.** Positive and negative predictive values for the combined model and FIT based on published estimates of CRC prevalence.
 
 ![](results/figures/Schloss_EDfig1.png)  
-**Extended Data Figure 1.** Change in out-of-bag AUC with number of features in the random forest model. The optimal model contains 24 features and has an AUC of 0.8292.
+**Extended Data Figure 1.** Change in out-of-bag AUC with number of features in the combined model. The optimal model contains 24 features and has an AUC of 0.829.
 
 ![](results/figures/Schloss_EDfig2.png)  
 **Extended Data Figure 2.** Stripchart of the relative abundances of each OTU in the combined model.
 
 ![](results/figures/Schloss_EDfig3.png)  
 **Extended Data Figure 3.** Stripchart of combined model results for each sample based on FIT result.
-
-![](results/tables/Schloss_EDtable1.png)  
-**Extended Data Table 1.** Positive and negative predictive values for the combined model and FIT based on published estimates of CRC prevalence.
 
 ![](results/figures/Schloss_EDfig4.png)  
 **Extended Data Figure 4.** ROC curves of combined model separated by gender (left). Stripchart of combined model results by gender (right). 
