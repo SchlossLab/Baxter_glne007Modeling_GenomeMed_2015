@@ -1,5 +1,5 @@
 ---
-title: Microbiota analysis complements fecal immunochemical test for detection of colonic lesions #must be 90 characters or less  (including spaces)
+title: Microbiota-based model improves the sensitivity of detecting colonic lesions
 csl: nature.csl
 output:
   word_document:
@@ -76,11 +76,11 @@ plot(canc_fit_roc, col='red', lwd=2, add=T, lty=2)
 plot(les_fit_roc, col='purple2', lwd=2, add=T, lty=2)
 mtext(side=2, text="Sensitivity", line=2.5)
 mtext(side=1, text="Specificity", line=2.5)
-legend('bottomright', legend=c(sprintf('RF-Les. vs Norm.: %.3g',les_roc$auc),
+legend('bottomright', legend=c(sprintf('Model-Les. vs Norm.: %.3g',les_roc$auc),
                                sprintf('FIT-Les. vs Norm.: %.3g',les_fit_roc$auc),
-                               sprintf('RF-Canc. vs Norm: %.3g',canc_roc$auc),
+                               sprintf('Model-Canc. vs Norm: %.3g',canc_roc$auc),
                                sprintf('FIT-Canc. vs Norm.: %.3g',canc_fit_roc$auc),
-                               sprintf('RF-Ade. vs Norm.: %.3g',ade_roc$auc),
+                               sprintf('Model-Ade. vs Norm.: %.3g',ade_roc$auc),
                                sprintf('FIT-Ade. vs Norm.: %.3g',ade_fit_roc$auc)),lty=c(1,2,1,2,1,2), lwd=2, col=c('purple2','purple2','red','red','blue','blue'), bty='n', cex=0.8)
 
 points(coords(canc_fit_roc, x=100, input='threshold', ret='specificity'),coords(canc_fit_roc, x=100, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=10)
@@ -257,7 +257,7 @@ x_labels <- c(sprintf(' \nNonadvanced\nAdenoma\n(n=%i)',length(nonAdv_probs)),sp
 bp<-barplot(sens_matrix, beside=T, ylab='Sensitvity (%)', ylim=c(0,1.1), axisnames=F, col=c('grey25','grey90'),axis.lty=1, yaxt='n')
 axis(2, at=seq(0,1,0.1), labels=seq(0,100,10))
 mtext(text=x_labels, side=1, at=c(2,5,8,11,14,17), line=2)
-legend('topleft', legend=c('combined model','FIT (100ng/ml cutoff)'), col=c('grey25','grey90'), pch=15, bty='n', pt.cex=2)
+legend('topleft', legend=c('Combined Model','FIT (100ng/ml cutoff)'), col=c('grey25','grey90'), pch=15, bty='n', pt.cex=2)
 
 
 #McNemar test
@@ -368,7 +368,7 @@ fit_spec <- sprintf('%.3g (%.3g-%.3g)',100*fit_spec_ci[2],100*fit_spec_ci[1],100
 #Build Output table
 
 stats_table <- matrix(NA, ncol=6, nrow=8)
-colnames(stats_table) <- c('Most Advanced Finding','','combined model','','FIT','')
+colnames(stats_table) <- c('Most Advanced Finding','','Combined Model','','FIT','')
 stats_table[1,] <- c('','','Positive Results','Sensitivity (95% CI)','Positive Results','Sensitivity (95% CI)')
 stats_table[2,] <- c('','no.','no.','%','no.','%')
 stats_table[3,] <- c('Cancer', num_canc, canc_obs, canc_mod_sens, canc_fit_obs, canc_fit_sens)
@@ -557,7 +557,7 @@ Similar to our results, it has recently been shown that when FIT was combined wi
 Our findings demonstrate the potential for combining the analysis of a patient's microbiota with conventional stool-based tests to improve CRC detection. Using the random forest algorithm it was possible to interpret FIT results in the context of the microbiota. The combined model had significantly higher sensitivity for lesions at almost all stages of tumorigenesis. Moreover the model detected the majority of lesions that FIT was unable to detect. The shortcomings of the combined model were its lack of specificity and low PPV. However in the case of CRC, all individuals at average risk in the United States are encouraged to receive regular colonoscopies once they reach the age of 50 [@rex2009american]. Therefore the potential value of the combined model is in its high sensitivity and NPV. With a NPV of `r 100*signif(canc_pv$NPV, 4)`%, the model could be used to identify people for whom a colonoscopy is unnecessary. This strategy could result in a decrease in the number of colonoscopies, thereby reducing both the financial costs and potential health risks of more invasive screening methods.
 
 
-**Methods Summary.** Fecal samples were collected from 490 subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopy and subsequent histopathological examination. FIT was performed using OC FIT-CHEK sampling bottles and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers and sequenced as described previously using an Illumina MiSeq sequencer and analyzed as described previously [@miseq]. A data analysis pipeline and all necessary scripts to generate this paper are available at github.com/SchlossLab/Baxter_glne007Modeling_2015. The sequence data are available in the Sequence Read Archive under Bioproject Accession XXXXXXXXXXXXX.
+**Methods Summary.** Fecal samples were collected from 490 subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopy and subsequent histopathological examination. FIT was performed using OC FIT-CHEK sampling bottles and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers, sequenced using an Illumina MiSeq sequencer, and analyzed as described previously [@miseq]. A data analysis pipeline and all necessary scripts to generate this paper are available at github.com/SchlossLab/Baxter_glne007Modeling_2015. The sequence data are available in the Sequence Read Archive under Bioproject Accession XXXXXXXXXXXXX.
 
 ### Methods (online only)
 _**Study Design/Patient sampling.**_ Eligible patients for this study were at least 18 years old, willing to sign informed consent, able to tolerate removal of 58 ml of blood, and willing to collect a stool sample. Patients were excluded if they had undergone surgery, radiation, or chemotherapy for current CRC prior to baseline samples or had inflammatory bowel disease, known hereditary nonpolyposis CRC, or familial adenomatous polyposis. Colonoscopies were performed and fecal samples were collected from subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopic examination. Lesions were biopsied and diagnosed as adenoma or cancer based on subsequent histopathological examination. While colonic lesions were still intact, whole evacuated stool was collected from each patient 1 to 2 weeks after their colonoscopy. This has been shown to be sufficient time for the microbiota to recover from colnoscopy preparation [@OBrien2013].  Stool samples were packed in ice, shipped to a processing center via next day delivery and stored at -80˚C. 
@@ -580,8 +580,9 @@ All authors were involved in the conception and design of the study. NTB process
 The authors declare no competing financial interests.  
 
 ###Figures
+
 ![](results/tables/Schloss_table1.png)  
-**Table 1.** Table of sensitivities and specificities for the combined model and FIT. The 95% confidence intervals were computed with 2000 stratified bootstrap replicates
+**Table 1.** Table of sensitivities and specificities for the combined model and FIT. The 95% confidence intervals were computed with 2000 stratified bootstrap replicates.
 
 ![](results/figures/Schloss_fig1.png)  
 **Figure 1.** (A) ROC Curves for the combined model (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (purple), normal from cancer (red) and normal from adenoma (blue). Filled dots show the sensitivity and specificity of the combined model at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (B) Strip charts showing the results for FIT and the combined model. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.

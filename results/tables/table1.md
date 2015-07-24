@@ -1,4 +1,4 @@
-Most Advanced Finding         combined model                            FIT                                     
+Most Advanced Finding         Combined Model                            FIT                                     
 ----------------------  ----  -----------------  ---------------------  -----------------  ---------------------
                               Positive Results   Sensitivity (95% CI)   Positive Results   Sensitivity (95% CI) 
                         no.   no.                %                      no.                %                    
