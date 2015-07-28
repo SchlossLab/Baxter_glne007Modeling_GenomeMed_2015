@@ -486,15 +486,14 @@ scatter <- 'Fig. 3'
 
 
 aucrf_curve <- 'Extended Data Fig. 1'
-otu_table <- 'Extended Data Fig. 1'
-pred_values <- 'Extended Data Table 2'
+otu_table <- 'Extended Data Fig. 2'
+pred_values <- 'Extended Data Table 1'
 fit_neg_strip <- 'Extended Data Fig. 3'
 gender <- 'Extended Data Fig. 4'
 OTUs <- 'Extended Data Fig. 5'
 
 
 ```
-
 
 ```{r, echo=F}
 pval <- function(p){
