@@ -476,31 +476,6 @@ mod_adonis_p <- mod_adonis[[1]][["Pr(>F)"]][1]
 
 ```
 
-```{r gender_normalized, echo=F, fig.width=9, fig.height=6, cache=T, results='hide'}
-
-row_nums <- 1:nrow(all_data)
-pvals <- numeric()
-for(i in 1:1000){
-  m_norm <- sample(row_nums[all_data$Gender=='m' & all_data$dx=='normal'], 61)
-  m_ade <- sample(row_nums[all_data$Gender=='m' & all_data$dx=='adenoma'], 80)
-  m_canc <- sample(row_nums[all_data$Gender=='m' & all_data$dx=='cancer'], 52)
-  f_norm <- sample(row_nums[all_data$Gender=='f' & all_data$dx=='normal'], 61)
-  f_ade <- sample(row_nums[all_data$Gender=='f' & all_data$dx=='adenoma'], 80)
-  f_canc <- sample(row_nums[all_data$Gender=='f' & all_data$dx=='cancer'], 52)
-
-  m_rows <- c(m_norm,m_ade,m_canc)
-  f_rows <- c(f_norm,f_ade,f_canc)
-
-  m_roc <- roc(all_data$lesion[m_rows] ~ all_probs[m_rows,2])
-  f_roc <- roc(all_data$lesion[f_rows] ~ all_probs[f_rows,2])
-
-  pvals[i] <- roc.test(m_roc,f_roc)$p.value
-}
-
-#cat('Male vs Female\n % of tests with p-value < 0.05:', length(pvals[pvals<0.05])/length(pvals))
-
-```
-
 ```{r figures, echo=F}
 
 ROC <- 'Fig. 1A'
