@@ -39,6 +39,14 @@ all_data$lesion[all_data$dx=='adenoma' | all_data$dx=='cancer'] <- 1
 all_data$lesion[all_data$dx=='normal'] <- 0
 ```
 
+```{r, echo=F}
+pval <- function(p){
+  if(p < 0.001){p <- 'p<0.001'}
+  else{p <- sprintf('p=%.2g', p)}
+  return(p)
+}
+
+```
 
 ```{r lesion_ROC_FIT, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
 les_data <- all_data[,c('lesion','fit_result',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
@@ -112,7 +120,7 @@ axis(2, at=c(0.1,1.1,10.1,100.1,1000.1), labels=c(0,1,10,100,1000))
 mtext(side=2, text="FIT Result (ng/ml)", line=2)
 abline(h=100, lty=2)
 
-plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0.2,1), ylab="", xlab="", xaxt="n")
+plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0,1), ylab="", xlab="", xaxt="n")
 stripchart(at=1, all_probs[all_data$dx=='normal',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
 stripchart(at=2, all_probs[all_data$dx=='adenoma',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
 stripchart(at=3, all_probs[all_data$dx=='cancer',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
@@ -156,7 +164,7 @@ dev.off()
 ```{r neg_fit_stripchart, echo=F, fig.width=8, fig.height=6, results='hide'}
 par(mar=c(3, 5, 0.5, 0.5))
 png(file='results/figures/Schloss_EDfig3.png', height=7, width=7, units='in', res=150)
-plot(1, type="n", xlim=c(0.5,7), ylim=c(0.2,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
+plot(1, type="n", xlim=c(0.5,7), ylim=c(0,1), ylab="Model Probability of Lesion", xlab="", xaxt="n")
 
 stripchart(at=1, all_probs[all_data$dx=='normal' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
 stripchart(at=2, all_probs[all_data$dx=='adenoma' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
@@ -270,12 +278,12 @@ getMcnemarP <- function(model, fit){
   }
 
 
-text(2,sens_matrix[1,1]+0.05, sprintf('p=%.1g',getMcnemarP(nonAdv_probs, nonAdv_fit)))
-text(5,sens_matrix[1,2]+0.05, sprintf('p=%.1g',getMcnemarP(advAde_probs, advAde_fit)))
-text(8,sens_matrix[1,3]+0.05, sprintf('p=%.1g',getMcnemarP(s1_probs, s1_fit)))
-text(11,sens_matrix[1,4]+0.05, sprintf('p=%.1g',getMcnemarP(s2_probs, s2_fit)))
-text(14,sens_matrix[1,5]+0.05, sprintf('p=%.1g',getMcnemarP(s3_probs, s3_fit)))
-text(17,sens_matrix[1,6]+0.05, sprintf('p=%.1g',getMcnemarP(s4_probs, s4_fit)))
+text(2,sens_matrix[1,1]+0.05, pval(getMcnemarP(nonAdv_probs, nonAdv_fit)))
+text(5,sens_matrix[1,2]+0.05, pval(getMcnemarP(advAde_probs, advAde_fit)))
+text(8,sens_matrix[1,3]+0.05, pval(getMcnemarP(s1_probs, s1_fit)))
+text(11,sens_matrix[1,4]+0.05, pval(getMcnemarP(s2_probs, s2_fit)))
+text(14,sens_matrix[1,5]+0.05, pval(getMcnemarP(s3_probs, s3_fit)))
+text(17,sens_matrix[1,6]+0.05, pval(getMcnemarP(s4_probs, s4_fit)))
 
 
 dev.off()
@@ -507,14 +515,6 @@ OTUs <- 'Extended Data Fig. 5'
 
 ```
 
-```{r, echo=F}
-pval <- function(p){
-  if(p < 0.001){p <- 'p<0.001'}
-  else{p <- sprintf('p=%.2g', p)}
-  return(p)
-}
-
-```
 
 
 
@@ -526,7 +526,7 @@ The gut microbiota, the collection of microorganisms that inhabit the gastrointe
 
 We and others have shown that statistical models that take into account the abundances of multiple bacterial species can be used to distinguish healthy individuals from those with CRC [@zackular2014human;@zeller2014potential]. In the present study we expanded upon those findings by demonstrating the potential for microbiota analysis to complement FIT for improved detection of colonic lesions, including adenomas. We utilized the random forest algorithm, which is a decision tree-based machine learning algorithm for classification that accounts for non-linear data and interactions among features and includes an internal cross-validation to prevent overfitting [@liaw2002classification]. By incorporating both FIT and bacterial abundances into a single model, we were able to improve the sensitivity for adenomas and cancer compared to FIT alone.
 
-We characterized the bacterial communities of stool samples from 490 patients using 16S rRNA gene sequencing.  Among these patients, 120 had CRC, 109 had advanced adenomas, 89 had non-advanced adenomas, and 172 had no colonic lesions. We also tested each sample for the concentration of occult blood using FIT. With these data we developed a random forest model that incorporated the microbiota and FIT data and would differentiate normal individuals from those with any type of colonic lesion (i.e. adenoma or carcinoma). We determined the optimal model using the AUC-RF algorithm for maximizing the area under the curve (AUC) of the receiver operator characteristic (ROC) curve for the combined model [@calle2011auc]. The optimal model combining FIT and the microbiota used 23 bacterial populations, or operational taxonomic units (OTUs) (`r aucrf_curve`). Of those OTUs, 16 were members of the Firmicutes phylum, including 3 from the Ruminococcaceae family and 10 from the Lachnospiraceae family, the predominant producers of butyrate in the gut [@pryde2002microbiology]. Three OTUs were associated with the genus *Bacteroides*. The remaining OTUs were associated with *Porphyromonas*, *Parabacteroides*, *Collinsella*, and Enterobacteriaceae. The OTU associated with *Porphyromonas* was most closely related to *Porphyromonas asaccharolytica*, which has been previously shown to be predictive of CRC [@rex2009american;@zackular2014human]. Like other studies[@kostic2012genomic;@zackular2014human] we also observed an OTU associated with *Fusobacterium nucleatum* that was enriched in cancer samples, however its relative abundance did not add sufficient information to be included in the model. Interestingly the majority of OTUs used in the model, especially the Lachnospiraceae, were enriched in normal patients, suggesting that a loss of beneficial organisms in addition to the emergence of pathogens may be indicative of CRC development.
+We characterized the bacterial communities of stool samples from 490 patients using 16S rRNA gene sequencing.  Among these patients, 120 had CRC, 109 had advanced adenomas, 89 had non-advanced adenomas, and 172 had no colonic lesions. We also tested each sample for the concentration of occult blood using FIT. With these data we developed a random forest model that incorporated the microbiota and FIT data and would differentiate normal individuals from those with any type of colonic lesion (i.e. adenoma or carcinoma). We determined the optimal model using the AUC-RF algorithm for maximizing the area under the curve (AUC) of the receiver operating characteristic (ROC) curve for the combined model [@calle2011auc]. The optimal model combining FIT and the microbiota used 23 bacterial populations, or operational taxonomic units (OTUs) (`r aucrf_curve`). Of those OTUs, 16 were members of the Firmicutes phylum, including 3 from the Ruminococcaceae family and 10 from the Lachnospiraceae family, the predominant producers of butyrate in the gut [@pryde2002microbiology]. Three OTUs were associated with the genus *Bacteroides*. The remaining OTUs were associated with *Porphyromonas*, *Parabacteroides*, *Collinsella*, and Enterobacteriaceae. The OTU associated with *Porphyromonas* was most closely related to *Porphyromonas asaccharolytica*, which has been previously shown to be predictive of CRC [@rex2009american;@zackular2014human]. Like other studies[@kostic2012genomic;@zackular2014human] we also observed an OTU associated with *Fusobacterium nucleatum* that was enriched in cancer samples, however its relative abundance did not add sufficient information to be included in the model. Interestingly the majority of OTUs used in the model, especially the Lachnospiraceae, were enriched in normal patients, suggesting that a loss of beneficial organisms in addition to the emergence of pathogens may be indicative of CRC development.
 
 To determine whether microbiota sequence data could be used to complement FIT, we compared the performance of the combined model to using FIT alone. The AUC for the combined model (AUC=`r signif(ade_roc$auc, 3)`) was significantly higher than FIT alone (AUC=`r signif(ade_fit_roc$auc, 3)`) for distinguishing adenoma from normal (`r pval(roc.test(ade_roc, ade_fit_roc)$p.value)`) or all lesions from normal (FIT AUC=`r signif(les_fit_roc$auc, 3)`, combined model AUC=`r signif(les_roc$auc, 3)`, `r pval(roc.test(les_roc, les_fit_roc)$p.value)`), but not cancer from normal (FIT AUC=`r signif(canc_fit_roc$auc, 3)`, combined model AUC=`r signif(canc_roc$auc, 3)`, `r pval(roc.test(canc_roc, canc_fit_roc)$p.value)`) (`r ROC`).
 
@@ -534,7 +534,7 @@ To generate a categorical prediction from the combined model, we determined that
 
 To better understand the relationship between the combined model and FIT, we compared the results of the two tests for each sample (`r scatter`). All samples that tested positive by FIT also tested positive in the combined model, indicating that the combined model did not miss any of the lesions that FIT was able to detect. However the combined model was able to detect `r signif(100*neg_canc_mod_sens, 3)`% of cancers and `r signif(100*neg_ade_mod_sens, 3)`% of adenomas that FIT had failed to detect, while maintaining a specificity of `r signif(100*neg_mod_spec, 3)`% (`r fit_neg_strip`). This result demonstrated that incorporation of data from a subject's microbiota complemented FIT to improve its sensitivity.
 
-As a final comparison of our model's performance, we estimated the posttest probabilities for each test by extrapolating their performance on an average-risk population using previously published values for CRC prevalence [@heitman2009prevalence]. Based on a prevalence of 0.3% for cancer, the model would have a negative posttest probability (NPP) of `r 100*signif(canc_pp$NPP, 2)`%, compared to `r 100*signif(canc_fit_pp$NPP, 2)`% for FIT. In other words, a negative result with the combined model would be one-fourth as likely to be a false negative than would a negative result from FIT. Likewise assuming a prevalence of 5.7% for advanced adenomas, the NPP for the combined model (`r 100*signif(advAde_pp$NPP, 2)`%) would be approximately half that of FIT (`r 100*signif(advAde_fit_pp$NPP, 2)`%), meaning FIT would be nearly twice as likely to result in a false negative for advanced adenomas. Assuming a prevalence of 17.7% for non-advanced adenomas, the NPP would be `r 100*signif(nonAdv_fit_pp$NPP, 3)`% for FIT and `r 100*signif(nonAdv_pp$NPP, 3)`% for the combined model. In costrast to the NPP, the positive posttest probability of the combined model would be worse than that of FIT for cancer and advanced adenomas and similar for non-advanced adenomas. Therefore the combined model is more likely that FIT to result in false positives.  However the posttest probabilities for all types of lesions could be improved by using the two tests in series (`r pred_values`).
+As a final comparison of our model's performance, we estimated the posttest probabilities for each test by extrapolating their performance on an average-risk population using previously published values for CRC prevalence. Based on a prevalence of 0.3% for cancer, the model would have a negative posttest probability (NPP) of `r sprintf('%.2f', 100*canc_pp$NPP)`%, compared to `r sprintf('%.2f', 100*canc_fit_pp$NPP)`% for FIT. In other words, a negative result with the combined model would be one-fourth as likely to be a false negative than would a negative result from FIT. Likewise assuming a prevalence of 5.7% for advanced adenomas, the NPP for the combined model (`r sprintf('%.2f', 100*advAde_pp$NPP)`%) would be approximately half that of FIT (`r sprintf('%.2f', 100*advAde_fit_pp$NPP)`%), meaning FIT would be nearly twice as likely to result in a false negative for advanced adenomas. Assuming a prevalence of 17.7% for non-advanced adenomas, the NPP would be `r sprintf('%.2f', 100*nonAdv_fit_pp$NPP)`% for FIT and `r sprintf('%.2f', 100*nonAdv_pp$NPP)`% for the combined model. In costrast to the NPP, the positive posttest probability (PPP) of the combined model would be worse than that of FIT for cancer and advanced adenomas and similar for non-advanced adenomas  (`r pred_values`). Therefore the combined model is more likely than FIT to result in false positives.  However the posttest probabilities for all types of lesions could be improved by using the two tests in series. For example, the NPP for detecting Non-advanced adenoma when performing FIT and the combined model in series was `r sprintf('%.2f', 100*nonAdv_neg_pp)`% and the PPP was `r sprintf('%.2f', 100*nonAdv_pos_pp)`%. By combining the binary FIT screen and the microbiome-based model, it was possible to enhance the ability to detect tumors early with a high degree of specificity.
 
 
 Previous studies have identified differences in diagnostic test performance for certain demographic groups or for people taking certain medications [@symonds2015factors;@kapidzic2015gender;@levi2009sensitivity]. Therefore we tested whether the combined model performance differed between patient populations. We found no difference in model performance according to age, BMI, NSAID usage, diabetes, smoking, or previous history of polyps (all p>0.05). However the model was significantly better at differentiating normal from lesion for females than for males (`r pval(gender_pval)`; `r gender`). For females the model detected `r 100*signif(f_sens, 3)`% of lesions with a specificity of `r 100*signif(f_spec, 3)`%. For males the model detected `r 100*signif(m_sens, 3)`% of lesions with a specificity of `r 100*signif(m_spec, 3)`%.  This difference was more pronounced for adenomas. The combined model detected `r 100*signif(f_ade_sens, 3)`% of adenomas in females and `r 100*signif(m_ade_sens, 3)`% in males. Despite performing more poorly overall for males, the combined model did have a higher sensitivity for cancer among males (`r 100*signif(m_canc_sens, 3)`%) than females (`r 100*signif(f_canc_sens, 3)`%). The difference in performance between males and females seems to be due to differences in FIT results rather than differences in the microbiome. After correcting for diagnosis, there was a significant effect of sex on FIT result (`r pval(fit_aov_p)`, two-way ANOVA), but not on the overall structure of the microbiome(`r pval(mod_adonis_p)`, PERMANOVA). 
@@ -544,7 +544,7 @@ It was recently shown that when FIT was combined with host-associated DNA biomar
 Our findings demonstrate the potential for combining the analysis of a patient's microbiota with conventional stool-based tests to improve CRC detection. Using the random forest algorithm it was possible to interpret FIT results in the context of the microbiota. The combined model had significantly higher sensitivity for lesions at almost all stages of tumorigenesis. Moreover the model detected the majority of lesions that FIT was unable to detect. The shortcomings of the combined model were its lack of specificity and low positive predictive value. However, individuals at average risk in the United States are already encouraged to receive regular colonoscopies once they reach the age of 50 [@rex2009american]. Therefore the potential value of the combined model is in its high sensitivity and negative posttest probability. With a lower risk of false negatives compared to FIT, the model could be used to accurately identify people for whom a colonoscopy is unnecessary. This strategy could result in a decrease in the number of colonoscopies, thereby reducing both the financial costs and potential health risks of more invasive screening methods.
 
 
-**Methods Summary.** Fecal samples were collected from 490 subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopy and subsequent histopathological examination. FIT was performed using OC FIT-CHEK sampling bottles and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers, sequenced using an Illumina MiSeq sequencer, and analyzed as described previously [@miseq]. A data analysis pipeline and all necessary scripts to generate this paper are available at github.com/SchlossLab/Baxter_glne007Modeling_2015. The sequence data are available in the Sequence Read Archive under accession number SRP062005.
+**Methods Summary.** Fecal samples were collected from 490 subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopy and subsequent histopathological examination of any biopsies taken. FIT was performed using OC FIT-CHEK sampling bottles and processed using an OC-Auto Micro 80 automated system (Polymedco Inc.). The V4 region of the bacterial 16S rRNA gene was amplified using custom barcoded primers, sequenced using an Illumina MiSeq sequencer, and analyzed as described previously [@miseq]. A data analysis pipeline and all necessary scripts to generate this paper are available at github.com/SchlossLab/Baxter_glne007Modeling_2015. The sequence data are available in the Sequence Read Archive under accession number SRP062005.
 
 ### Methods (online only)
 _**Study Design/Patient sampling.**_ Eligible patients for this study were at least 18 years old, willing to sign informed consent, able to tolerate removal of 58 ml of blood, and willing to collect a stool sample. Patient age at the time of enrollment ranged from 29 to 89 with a median of 60. All patients were asymptomatic and were excluded if they had undergone surgery, radiation, or chemotherapy for current CRC prior to baseline samples or had inflammatory bowel disease, known hereditary non-polyposis CRC, or familial adenomatous polyposis. Colonoscopies were performed and fecal samples were collected from subjects in 4 locations: Toronto (Ontario, Canada), Boston (Massachusetts, USA), Houston (Texas, USA), and Ann Arbor (Michigan, USA). Patient diagnoses were determined by colonoscopic examination and histopathological review of any biopsies taken. Patients with an adenoma greater than 1cm, more than three adenomas of any size, or an adenoma with villous histology were classified as advanced adenoma. Whole evacuated stool was collected from each patient either prior to colonoscopy preparation or 1-2 weeks after colonoscopy. This has been shown to be sufficient time for the microbiota to recover from colonoscopy preparation[@OBrien2013].  Stool samples were packed in ice, shipped to a processing center via next day delivery and stored at -80˚C. 
@@ -556,7 +556,7 @@ _**16S rRNA Sequencing.**_ DNA was extracted from roughly 50 mg of fecal materia
 
 _**Sequence Curation.**_ The 16S rRNA gene sequences were curated using the mothur software package, as described previously [@miseq]. Briefly, paired-end reads were merged into contigs, screened for quality, aligned to SILVA 16S rRNA sequence database, and screened for chimeras. Curated sequences were clustered in to operational taxonomic units (OTUs) using a 97% similarity cutoff with the average neighbor clustering algorithm. The number of sequences in each sample was rarefied to 10,000 per sample to minimize the effects of uneven sampling.
 
-_**Statistical Methods.**_ All statistical analyses were performed using R. Random Forest models were generated using the AUCRF package [@calle2011auc]. The AUC of ROC curves was compared using the method described by DeLong et al. [@delong1988comparing]. The optimal cutoff for the combined model was determined using Youden's _J_ statistic as implemented in the pROC package in R [@youden1950index]. The sensitivities of FIT and the combined model were compared using McNemar's chi-squared test. To control for diagnosis while testing the effects of sex on the microbiome we used PERMANOVA as implemented in the adonis funciton in the vegan package.
+_**Statistical Methods.**_ All statistical analyses were performed using R. Random Forest models were generated using the AUCRF package [@calle2011auc]. The AUC of ROC curves was compared using the method described by DeLong et al. [@delong1988comparing]. The optimal cutoff for the combined model was determined using Youden's _J_ statistic as implemented in the pROC package in R [@youden1950index]. The sensitivities of FIT and the combined model were compared using McNemar's chi-squared test. To control for diagnosis while testing the effects of sex on the microbiome we used PERMANOVA as implemented in the adonis funciton in the vegan package. Posttest probabilities were calculated by multiplying pretest odds (prevalence) by the likelihood ratio of each test and converting the posttest odds to probabilities.
 
 _**Data Availability.**_ Raw fastq files and MIMARKS file are available through the NCBI Sequence Read Archive [SRP062005]. A data analysis pipeline and all necessary scripts are available at github.com/SchlossLab/Baxter\_glne007Modeling_2015.
 
@@ -578,11 +578,11 @@ The authors declare no competing financial interests.
 **Figure 2.** Barplot of sensitivities for the combined model and FIT for each stage of tumor development.  P-values based on McNemar's chi-squared test.
 
 ![](results/figures/Schloss_fig3.png)  
-**Figure 3.** Scatter plot of the results of the combined model and FIT for each sample. Dashed lines show the cutoff for each test. 
+**Figure 3.** Scatter plot of the results of the combined model and FIT for each sample. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
 
 ###Extended Data Figures
 ![](results/tables/Schloss_EDtable1.png)  
-**Extended Data Table 1.** Positive and negative predictive values for the combined model and FIT based on published estimates of CRC prevalence.
+**Extended Data Table 1.** Positive and negative posttest probabilities  for the combined model and FIT based on published estimates of CRC prevalence.
 
 ![](results/figures/Schloss_EDfig1.png)  
 **Extended Data Figure 1.** Change in out-of-bag AUC with number of features in the combined model. The optimal model contains 24 features and has an AUC of 0.829.
