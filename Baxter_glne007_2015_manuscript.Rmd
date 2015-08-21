@@ -563,11 +563,11 @@ Our findings demonstrate the potential for combining the analysis of a patient's
 **Statistical Methods.**  All statistical analyses were performed using R. Random Forest models were generated using the AUCRF package [@calle2011auc]. The AUC of ROC curves was compared using the method described by DeLong et al. [@delong1988comparing]. The optimal cutoff for the MMT was determined using Youden's _J_ statistic as implemented in the pROC package in R [@youden1950index]. The sensitivities of FIT and the MMT were compared using McNemar's chi-squared test. To control for diagnosis while testing the effects of sex on the microbiome we used PERMANOVA as implemented in the adonis funciton in the vegan package.
 
 **Supplementary Materials:**  
-Fig. S1. Title of figure
-Fig. S2.
-Fig. S3.
-Fig. S4.
-Table S1.
+Fig. S1. Variable selection for MMT.
+Fig. S2. Bacterial OTUs in MMT.
+Fig. S3. MMT Probabilities based on FIT results
+Fig. S4. Effect of sex on MMT performance.
+Table S1. Estimated MMT performance on average risk population.
 
 **Competing interests:** The authors declare no competing financial interests.  
 
@@ -578,31 +578,31 @@ Table S1.
 
 **Figures:**  
 ![](results/tables/Schloss_table1.png)  
-**Table 1.** Table of sensitivities and specificities for FIT and MMT. The 95% confidence intervals were computed with 2000 stratified bootstrap replicates.
+**Table 1.** Sensitivities and specificities for FIT and MMT. The 95% confidence intervals were computed with 2000 stratified bootstrap replicates.
 
 ![](results/figures/Schloss_fig1.png)  
-**Fig. 1.** (a) ROC Curves for the MMT (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (purple), normal from cancer (red) and normal from adenoma (blue). Filled dots show the sensitivity and specificity of the MMT at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (b) Strip charts showing the results for FIT and the MMT. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
+**Fig. 1.** Comparing MMT to FIT. (A) ROC Curves for the MMT (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (purple), normal from cancer (red) and normal from adenoma (blue). Filled dots show the sensitivity and specificity of the MMT at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (A) Strip charts showing the results for FIT and the MMT. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
 
 ![](results/figures/Schloss_fig2.png)  
-**Fig. 2.** Barplot of sensitivities for FIT and MMT for each stage of tumor development.  P-values based on McNemar's chi-squared test.
+**Fig. 2.** Sensitivities for FIT and MMT for each stage of tumor development.  P-values based on McNemar's chi-squared test.
 
 ![](results/figures/Schloss_fig3.png)  
-**Fig. 3.** Scatter plot of the results of FIT and MMT for each sample. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
+**Fig. 3.** Results of FIT and MMT for each sample. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
 
 ####Supplementary Figures  
 ![](results/figures/Schloss_EDfig1.png)  
-**Supplementary Figure 1.** Change in out-of-bag AUC with number of features in the MMT. The optimal model contains 24 features and has an AUC of 0.829.
+**Supplementary Figure 1.** Variable selection for MMT. Change in out-of-bag AUC with number of features in the MMT. The optimal model contains 24 features and has an AUC of 0.829.
 
 ![](results/figures/Schloss_EDfig2.png)  
-**Supplementary Figure 2.** Stripchart of the relative abundances of each OTU in the MMT with black lines at the medians.
+**Supplementary Figure 2.** Bacterial OTUs in MMT. Stripchart of the relative abundances of each OTU in the MMT with black lines at the medians.
 
 ![](results/figures/Schloss_EDfig3.png)  
-**Supplementary Figure 3.** Stripchart of MMT results for each sample based on FIT result.
+**Supplementary Figure 3.**  MMT Probabilities based on FIT results. Stripchart of MMT results for samples with a positive or negative FIT result.
 
 ![](results/figures/Schloss_EDfig4.png)  
-**Supplementary Figure 4.** ROC curves (left) and stripchart (right) of MMT separated by sex. 
+**Supplementary Figure 4.** Effect of sex on MMT performance. ROC curves (left) and stripchart (right) of MMT results separated by sex. 
 
 ![](results/tables/Schloss_EDtable1.png)  
-**Supplementary Table 1.** Number and proportion of true positives identified through FIT and MMT in the United States in adults 50-75 years of age, based on published estimates of CRC prevalence. Far right column shows percentage of true positives identified among individuals with a negative FIT result.
+**Supplementary Table 1.** Estimated MMT performance on average risk population. Number and proportion of true positives identified through FIT and MMT in the United States in adults 50-75 years of age, based on published estimates of CRC prevalence. Far right column shows percentage of true positives identified among individuals with a negative FIT result.
 
 **References and Notes:**
