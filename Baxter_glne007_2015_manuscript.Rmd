@@ -48,19 +48,22 @@ pval <- function(p){
 
 ```
 
-```{r microbiota_cancer, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
-#generate cancer vs normal model
+```{r figure1, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
+### Cancer vs Normal
+
 otu_canc_data <- all_data[meta$dx!='adenoma',c('lesion',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
 set.seed(62515)
-otu_canc_model <- AUCRF(lesion ~ ., data=otu_canc_data, ranking='MDA', ntree=500, pdel=0.05)
-plot(otu_canc_model)
+#otu_canc_model <- AUCRF(lesion ~ ., data=otu_canc_data, ranking='MDA', ntree=500, pdel=0.05)
 canc_opt_model <- otu_canc_model$RFopt
 otu_canc_probs <- predict(canc_opt_model, type='prob')
 otu_canc_roc <- roc(otu_canc_data$lesion~otu_canc_probs[,2])
 
-
 canc_fit_roc <- roc(canc_data$lesion ~ canc_data$fit_result)
+
+pdf(file='results/figures/Figure1.pdf', width=12, height=10)
+layout(rbind(c(1,2),c(3,4)))
+par(oma=c(1,6,1,1))
 
 par(mar=c(4,4,1,1))
 plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='', xlab='')
@@ -69,55 +72,59 @@ plot(canc_fit_roc, col='grey30', lwd=2, lty=2, add=T)
 mtext(side=2, text="Sensitivity", line=2.5)
 mtext(side=1, text="Specificity", line=2.5)
 legend('bottomright', legend=c(sprintf('FIT - AUC: %.3g', canc_fit_roc$auc), sprintf('Microbiota - AUC: %.3g', otu_canc_roc$auc)), bty='n', xjust=0, lty=c(2,1), col='grey30')
-
 points(coords(otu_canc_roc, x='best', ret='spec'),coords(otu_canc_roc, x='best', ret='sens'), pch=16, cex=1.5)
 points(coords(canc_fit_roc, x=100, input='thr', ret='spec'),coords(canc_fit_roc, x=100, input='thr', ret='sens'), pch=10, cex=1.5)
+mtext('A', at=1.15, font=2)
 
 canc_res <- data.frame(fit=jitter(all_data[all_data$dx=='cancer','fit_result']+0.1, amount=0.01),micro=otu_canc_probs[otu_canc_data$lesion==1,2])
 
-plot(canc_res, log='x', ylab='Microbiota Model Result', xlab='FIT Result', xaxt='n')
+plot(canc_res, log='x', ylab='', xlab='', xaxt='n')
 points(canc_res[canc_res$fit>100 | canc_res$micro>0.459,], pch=21, bg='grey')
 points(canc_res[canc_res$fit>100 & canc_res$micro>0.459,], pch=21, bg='black', col='white', lwd=0.7)
 axis(1, labels=c(0,1,10,100,1000), at=c(0.1,1.1,10,100,1000))
+mtext(side=2, text='Microbiota Model Result', line=2.5)
+mtext(side=1, text='FIT Result', line=2.5)
 abline(h=0.459, lty=3)
 abline(v=100, lty=3)
+mtext('B', at=0.04, font=2, side=3)
 
 canc_pos <- cbind(all_data[all_data$dx=='cancer','fit_result']>100, otu_canc_probs[otu_canc_data$lesion==1,2]>0.459)
 colnames(canc_pos) <- c('FIT','Microbiota')
 canc_table <- 100*table(as.data.frame(canc_pos))/sum(all_data$dx=='cancer')
 text(x=c(1,1,400,200), y=c(0.87,0.27,0.87,0.27), labels=sprintf('%.3g%%',canc_table[c(3,1,4,2)]))
 
-```
-
-```{r microbiota_adenoma, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
+### Adenoma vs Normal
 otu_ade_data <- all_data[meta$dx!='cancer',c('lesion',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
 set.seed(071315)
-otu_ade_model <- AUCRF(lesion ~ ., data=otu_ade_data, ntree=500, pdel=0.05)
-plot(otu_ade_model)
+#otu_ade_model <- AUCRF(lesion ~ ., data=otu_ade_data, ntree=500, pdel=0.05)
 
 otu_ade_probs <- predict(otu_ade_model$RFopt, type='prob')
 otu_ade_roc <- roc(ade_data$lesion~otu_ade_probs[,2])
 ade_fit_roc <- roc(otu_ade_data$lesion~les_data$fit_result[meta$dx!='cancer'])
 
 par(mar=c(4,4,1,1))
-plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='', xlab='')
 plot(otu_ade_roc, col='grey30', lwd=2, add=T, lty=1)
 plot(ade_fit_roc, col='grey30', lwd=2, add=T, lty=2)
-
+mtext(side=2, text="Sensitivity", line=2.5)
+mtext(side=1, text="Specificity", line=2.5)
 legend('bottomright', legend=c(sprintf('FIT - AUC: %.3g', ade_fit_roc$auc), sprintf('Microbiota - AUC: %.3g', otu_ade_roc$auc)), bty='n', xjust=0, lty=c(2,1), col='grey30')
-
 points(coords(otu_ade_roc, x=0.702, input='thr', ret='spec'),coords(otu_ade_roc, x=0.702, input='thr', ret='sens'), pch=16, cex=1.5)
 points(coords(ade_fit_roc, x=100, input='thr', ret='spec'),coords(ade_fit_roc, x=100, input='thr', ret='sens'), pch=10, cex=1.5)
+mtext('C', at=1.15, font=2)
 
 ade_res <- data.frame(fit=jitter(all_data[all_data$dx=='adenoma','fit_result']+0.1, amount=0.01),micro=otu_ade_probs[otu_ade_data$lesion==1,2])
 
-plot(ade_res, log='x', ylab='Microbiota Model Result', xlab='FIT Result', xaxt='n')
+plot(ade_res, log='x', ylab='', xlab='', xaxt='n')
 points(ade_res[ade_res$fit>100 | ade_res$micro>0.702,], pch=21, bg='grey')
 points(ade_res[ade_res$fit>100 & ade_res$micro>0.702,], pch=21, bg='black', col='white', lwd=0.7)
 axis(1, labels=c(0,1,10,100,1000), at=c(0.1,1.1,10,100,1000))
+mtext(side=2, text='Microbiota Model Result', line=2.5)
+mtext(side=1, text='FIT Result', line=2.5)
 abline(h=0.702, lty=3)
 abline(v=100, lty=3)
+mtext('D', at=0.04, font=2, side=3)
 
 ade_pos <- cbind(all_data[all_data$dx=='adenoma','fit_result']>100, otu_ade_probs[otu_ade_data$lesion==1,2]>0.702)
 colnames(ade_pos) <- c('FIT','Microbiota')
@@ -125,19 +132,22 @@ ade_table <- 100*table(as.data.frame(ade_pos))/sum(all_data$dx=='adenoma')
 text(x=c(1,1,500,500), y=c(0.9,0.3,0.9,0.3), labels=sprintf('%.3g%%',ade_table[c(3,1,4,2)]))
 
 
+mtext('Cancer\nvs.\nNormal', las=1, side=2, at=0.8,outer=T, adj=0.5, line=3, font=2)
+mtext('Adenoma\nvs.\nNormal', las=1, side=2, at=0.3,outer=T, adj=0.5, line=3, font=2)
+dev.off()
 ```
 
-```{r otu_stripcharts, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
-#Importance Plot
-canc_otus <- otu_canc_model$Xopt
-dotchart(rev(otu_canc_model$ranking[canc_otus]), labels=rev(tax[canc_otus, 'Label']), xlab='Mean Decrease Accuracy')
+```{r supp_fig1, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
+pdf('results/figures/supp_fig1.pdf', height=6, width=8)
+layout(matrix(c(1,2,3,3), nrow=2))
 
 #Abundance stripchart or most predictive otus
+canc_otus <- otu_canc_model$Xopt
 canc_otus <- rev(canc_otus[1:7])
 norm_abunds <- all_data[all_data$dx=='normal', canc_otus]/10000 + 1e-4
-canc_abunds <- all_data[all_data$dx!='normal', canc_otus]/10000 + 1e-4
+canc_abunds <- all_data[all_data$dx=='cancer', canc_otus]/10000 + 1e-4
 
-par(mar=c(5, 12, 0.5, 0.5))
+par(mar=c(4, 10, 1, 1))
 plot(1, type="n", ylim=c(0,length(canc_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
 index <- 1
 for(i in canc_otus){
@@ -147,21 +157,71 @@ stripchart(at=index-0.35, jitter(norm_abunds[,i], amount=1e-5), pch=21, bg="grey
   #segments(median(canc_abunds[,i]),index+0.7,median(canc_abunds[,i]),index, lwd=3)
   index <- index + 2
 }
-axis(2, at=seq(1,index-2,2), labels=tax[canc_otus, 'Label'], las=1, tick=F, cex.axis=1)
+axis(2, at=seq(1,index-2,2), labels=tax[canc_otus, 'Label'], las=1, line=-0.5, tick=F, cex.axis=0.8)
 axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
-legend('right', legend=c("Cancer", "Normal"), pch=c(21, 21), pt.bg=c("red","grey80"))
+legend('bottomright', legend=c("Cancer", "Normal"), pch=c(21, 21), pt.bg=c("red","grey80"), cex=0.7)
+mtext('A', at=1e-7, font=2, side=3)
+
+#AUCRF curve
+par(mar=c(5,5,1,1))
+plot(otu_canc_model)
+mtext('B', at=-90, font=2, side=3)
+
+#Importance Plot
+par(mar=c(4,0,1,1))
+canc_otus <- otu_canc_model$Xopt
+dotchart(rev(otu_canc_model$ranking[canc_otus]), labels=rev(tax[canc_otus, 'Label']), xlab='Mean Decrease Accuracy')
+mtext('C', at=-0.014, font=2, side=3)
+dev.off()
+```
+
+```{r supp_fig2, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
+layout(matrix(c(1,2,3,3), nrow=2))
+
+#Abundance stripchart or most predictive otus
+canc_otus <- otu_canc_model$Xopt
+ade_otus <- rev(ade_otus[1:5])
+norm_abunds <- all_data[all_data$dx=='normal', ade_otus]/10000 + 1e-4
+ade_abunds <- all_data[all_data$dx=='adenoma', ade_otus]/10000 + 1e-4
+
+par(mar=c(4, 9, 1, 1))
+plot(1, type="n", ylim=c(0,length(ade_otus)*2), xlim=c(1e-4,3), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
+index <- 1
+for(i in ade_otus){
+stripchart(at=index-0.35, jitter(norm_abunds[,i], amount=1e-5), pch=21, bg="grey80", method="jitter", jitter=0.2, add=T, cex=1, lwd=0.5)
+  stripchart(at=index+0.35, jitter(ade_abunds[,i], amount=1e-5), pch=21, bg="red", method="jitter", jitter=0.2, add=T, cex=1, lwd=0.5)
+  segments(mean(norm_abunds[,i]),index-0.7,mean(norm_abunds[,i]),index, lwd=3)
+  segments(mean(ade_abunds[,i]),index+0.7,mean(ade_abunds[,i]),index, lwd=3)
+  index <- index + 2
+}
+axis(2, at=seq(1,index-2,2), labels=tax[ade_otus, 'Label'], las=1, line=-0.5, tick=F, cex.axis=0.8)
+axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
+legend('topright', legend=c("Adenoma", "Normal"), pch=c(21, 21), pt.bg=c("red","grey80"), cex=0.7)
+mtext('A', at=1e-7, font=2, side=3)
+
+#AUCRF curve
+par(mar=c(5,5,1,1))
+plot(otu_ade_model)
+mtext('B', at=-90, font=2, side=3)
+
+#Importance Plot
+ade_otus <- otu_ade_model$Xopt
+dotchart(rev(otu_ade_model$ranking[ade_otus]), labels=rev(tax[ade_otus, 'Label']), xlab='Mean Decrease Accuracy')
+mtext('C', at=-0.014, font=2, side=3)
 
 ```
 
-```{r lesion_ROC_FIT, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
+```{r figure2, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
+pdf('results/figures/Figure2.pdf', width=10, height=5)
+
+layout(matrix(c(1,1,2,3), nrow=1))
+par(oma=c(1,1,2,1))
+
 les_data <- all_data[,c('lesion','fit_result',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
 #generate lesion vs normal model
 set.seed(53015)
-les_model <- AUCRF(lesion ~ ., data=les_data, ntree=500, pdel=0.05)
-png('results/figures/Schloss_EDfig1.png', height=6, width=6, units='in', res=150)
-plot(les_model)
-dev.off()
+#les_model <- AUCRF(lesion ~ ., data=les_data, ntree=500, pdel=0.05)
 opt_model <- les_model$RFopt
 all_probs <- predict(opt_model, type='prob')
 les_roc <- roc(les_data$lesion~all_probs[,2])
@@ -178,17 +238,17 @@ ade_probs <- all_probs[all_data$dx!='cancer',]
 ade_roc <-  roc(ade_data$lesion ~ ade_probs[,2])
 ade_fit_roc <- roc(ade_data$lesion ~ ade_data$fit_result)
 
-par(mar=c(4.5,4.5,0,1))
-png(file='results/figures/fig1A_ROCcurve.png', height=6, width=6, units='in', res=150)
-plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='', xlab='')
+par(mar=c(4.5,4.5,1,1))
+plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='', xlab='', cex.axis=1.2)
 plot(les_roc, col='purple2', lwd=2, add=T)
 plot(canc_roc, col='red', lwd=2, add=T)
 plot(ade_roc, col='blue', lwd=2, add=T)
 plot(ade_fit_roc, col='blue', lwd=2, add=T, lty=2)
 plot(canc_fit_roc, col='red', lwd=2, add=T, lty=2)
 plot(les_fit_roc, col='purple2', lwd=2, add=T, lty=2)
-mtext(side=2, text="Sensitivity", line=2.5)
-mtext(side=1, text="Specificity", line=2.5)
+mtext(side=2, text="Sensitivity", line=2.5, cex=1)
+mtext(side=1, text="Specificity", line=2.5, cex=1)
+mtext('A', at=1.12, font=2, side=3)
 legend('bottomright', legend=c(sprintf('MMT-Les. vs Norm.: %.3g',les_roc$auc),
                                sprintf('FIT-Les. vs Norm.: %.3g',les_fit_roc$auc),
                                sprintf('MMT-Canc. vs Norm: %.3g',canc_roc$auc),
@@ -202,40 +262,31 @@ points(coords(ade_fit_roc, x=100, input='threshold', ret='specificity'),coords(a
 
 cutoff <- coords(roc=les_roc, x='best', best.method='y', ret=c('threshold'))
 
-
 points(coords(canc_roc, x=cutoff, input='threshold', ret='specificity'),coords(canc_roc, x=cutoff, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=16)
 points(coords(les_roc, x=cutoff, input='threshold', ret='specificity'),coords(les_roc, x=cutoff, input='threshold', ret='sensitivity'), col='purple', cex=1.5, pch=16)
 points(coords(ade_roc, x=cutoff, input='threshold', ret='specificity'),coords(ade_roc, x=cutoff, input='threshold', ret='sensitivity'), col='blue', cex=1.5, pch=16)
 
-cat('MMT vs FIT alone\n','Lesion vs Normal: p=', roc.test(les_roc, les_fit_roc)$p.value, '\nAdenoma vs Normal: p=',roc.test(ade_roc, ade_fit_roc)$p.value,'\nCancer vs Normal: p=',roc.test(canc_roc, canc_fit_roc)$p.value)
-dev.off()
-
-```
-
-```{r model_stripCharts, warning=F, echo=F, fig.width=8, fig.height=6, results='hide'}
-png(file='results/figures/fig1B_stripCharts.png', height=5.5, width=6, units='in', res=150)
-par(mfrow=c(1,2), mar=c(3, 3.5, 0.5, 0.5))
-
+par(mar=c(3, 3.5, 1, 1))
 plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0.07,5000), log="y", ylab="", xlab="", xaxt="n", yaxt="n")
-stripchart(at=1, jitter(all_data[all_data$dx=='normal','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=2, jitter(all_data[all_data$dx=='adenoma','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=3, jitter(all_data[all_data$dx=='cancer','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
-axis(1, at=c(0.8,2,3.2), labels=c('Normal','Adenoma','Cancer'))
-axis(2, at=c(0.1,1.1,10.1,100.1,1000.1), labels=c(0,1,10,100,1000))
-mtext(side=2, text="FIT Result (ng/ml)", line=2)
+stripchart(at=1, jitter(all_data[all_data$dx=='normal','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T, cex=1.5)
+stripchart(at=2, jitter(all_data[all_data$dx=='adenoma','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T, cex=1.5)
+stripchart(at=3, jitter(all_data[all_data$dx=='cancer','fit_result']+.1, amount=0.05), vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T, cex=1.5)
+axis(1, at=c(0.8,2,3.2), labels=c('Normal','Adenoma','Cancer'), cex.axis=1.2)
+axis(2, at=c(0.1,1.1,10.1,100.1,1000.1), labels=c(0,1,10,100,1000), cex.axis=1.2)
+mtext(side=2, text="FIT Result (ng/ml)", line=2.2, cex=0.8)
+mtext('B', at=0, font=2, side=3)
 abline(h=100, lty=2)
 
-plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0,1), ylab="", xlab="", xaxt="n")
-stripchart(at=1, all_probs[all_data$dx=='normal',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
-stripchart(at=2, all_probs[all_data$dx=='adenoma',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
-stripchart(at=3, all_probs[all_data$dx=='cancer',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
-mtext(side=2, text="MMT Probability of Lesion", line=2)
-axis(1, at=c(0.8,2,3.2), labels=c('Normal','Adenoma','Cancer'))
+plot(1, type="n", xlim=c(0.5,3.5), ylim=c(0,1), ylab="", xlab="", xaxt="n", cex.axis=1.2)
+stripchart(at=1, all_probs[all_data$dx=='normal',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T, cex=1.5)
+stripchart(at=2, all_probs[all_data$dx=='adenoma',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T, cex=1.5)
+stripchart(at=3, all_probs[all_data$dx=='cancer',2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T, cex=1.5)
+mtext(side=2, text="MMT Probability of Lesion", line=2.2, cex=0.8)
+mtext('C', at=0, font=2, side=3)
+axis(1, at=c(0.8,2,3.2), labels=c('Normal','Adenoma','Cancer'), cex.axis=1.2)
 abline(h=cutoff, lty=2)
 
 dev.off()
-par(mfrow=c(1,1))
-
 ```
 
 ```{r les_OTUs, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
