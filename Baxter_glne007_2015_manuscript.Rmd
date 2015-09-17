@@ -532,16 +532,15 @@ fit_spec <- sprintf('%.3g (%.3g-%.3g)',100*fit_spec_ci[2],100*fit_spec_ci[1],100
 
 #Build Output table
 
-stats_table <- matrix(NA, ncol=6, nrow=8)
+stats_table <- matrix(NA, ncol=6, nrow=7)
 colnames(stats_table) <- c('Most Advanced Finding','','MMT','','FIT','')
 stats_table[1,] <- c('','','Positive Results','Sensitivity (95% CI)','Positive Results','Sensitivity (95% CI)')
 stats_table[2,] <- c('','no.','no.','%','no.','%')
 stats_table[3,] <- c('Cancer', num_canc, canc_obs, canc_mod_sens, canc_fit_obs, canc_fit_sens)
-stats_table[4,] <- c('Advanced Adenoma', num_advAde, advAde_obs, advAde_mod_sens, advAde_fit_obs, advAde_fit_sens)
-stats_table[5,] <- c('Nonadvanced Adenoma', num_nonAdv, nonAdv_obs, nonAdv_mod_sens, nonAdv_fit_obs, nonAdv_fit_sens)
-stats_table[6,] <- c('Any Lesion', num_les, les_obs, les_mod_sens, les_fit_obs, les_fit_sens)
-stats_table[7,] <- c('','','Negative Results','Specificity (95% CI)','Negative Results','Specificity (95% CI)')
-stats_table[8,] <- c('Negative Colonosopies', num_norm, norm_obs, mod_spec, norm_fit_obs, fit_spec)
+stats_table[4,] <- c('Adenoma', num_ade, ade_obs, ade_mod_sens, ade_fit_obs, ade_fit_sens)
+stats_table[5,] <- c('Any Lesion', num_les, les_obs, les_mod_sens, les_fit_obs, les_fit_sens)
+stats_table[6,] <- c('','','Negative Results','Specificity (95% CI)','Negative Results','Specificity (95% CI)')
+stats_table[7,] <- c('Negative Colonosopies', num_norm, norm_obs, mod_spec, norm_fit_obs, fit_spec)
 
 write(kable(stats_table), file='results/tables/table1.md')
 #render('results/tables/table1.md', output_format='png_document', output_file='table1.png')
@@ -714,7 +713,7 @@ We and others have shown that statistical models that take into account the abun
 ###Results
 
 _???_  
-We characterized the bacterial communities of stool samples from 490 patients using 16S rRNA gene sequencing.  Among these patients, 120 had CRC, 109 had advanced adenomas, 89 had non-advanced adenomas, and 172 had no colonic lesions. First we tested whether a random forest model could distinguish healthy individuals from those with CRC. We determined the optimal model using the AUC-RF algorithm for maximizing the area under the curve (AUC) of the receiver operating characteristic (ROC) curve for the random forest model [@calle2011auc]. The optimal model utilized 22 bacterial populations (`r canc_varImp`). Consistent with previous observations, the bacteria most strongly associated with CRC belonged to taxa more commonly associated with the oral cavity, including Pophyromonas, Fusobacterium, Parvimonas, Peptostreptococcus,and Gemella [warren2013co,zeller2014potential] (`r canc_stripChart`). The ROC curve for the model had an AUC of 0.837, which is similar to AUCs reported for other microbiota-based models for CRC, but lower than that of FIT (`r signif(canc_fit_roc$auc, 3)`). This confirms that random forest model based on bacterial abundances can distinuish healhty individuals from those with cancer.
+We characterized the bacterial communities of stool samples from 490 patients using 16S rRNA gene sequencing.  Among these patients, 120 had CRC, 198 had adenomas, and 172 had no colonic lesions. First we tested whether a random forest model could distinguish healthy individuals from those with cancer. We determined the optimal model using the AUC-RF algorithm for maximizing the area under the curve (AUC) of the receiver operating characteristic (ROC) curve for the random forest model [@calle2011auc]. The optimal model utilized 22 bacterial populations (`r canc_varImp`). Consistent with previous observations, the bacteria most strongly associated with CRC belonged to taxa more commonly associated with the oral cavity, including Pophyromonas, Fusobacterium, Parvimonas, Peptostreptococcus,and Gemella [warren2013co,zeller2014potential] (`r canc_stripChart`). The ROC curve for the model had an AUC of 0.837, which is similar to AUCs reported for other microbiota-based models for CRC, but lower than that of FIT (`r signif(canc_fit_roc$auc, 3)`). This confirms that random forest model based on bacterial abundances can distinuish healhty individuals from those with cancer.
 
 We also generated a model for differentiating healthy indviduals from those with any type of lesion (i.e. adenoma or carcinoma).  
 
