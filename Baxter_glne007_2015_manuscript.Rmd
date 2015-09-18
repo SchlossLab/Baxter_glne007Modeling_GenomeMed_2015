@@ -1,9 +1,10 @@
 ---
-title: Microbiota-based model improves the sensitivity for detecting colonic lesions
+title: "Microbiota-based model improves the sensitivity for detecting colonic lesions"
 csl: bmc.csl
 output:
   word_document:
     reference_docx: manuscript_format.docx
+  html_document: default
 bibliography: references.bibtex
 ---
 
@@ -332,26 +333,43 @@ dev.off()
 ```
 
 ```{r neg_fit_stripchart, echo=F, fig.width=8, fig.height=6, results='hide'}
-par(mar=c(3, 5, 0.5, 0.5))
-pdf(file='results/figures/figS4.pdf', height=7, width=7)
-plot(1, type="n", xlim=c(0.5,7), ylim=c(0,1), ylab="MMT Probability of Lesion", xlab="", xaxt="n")
+### FIT vs MMT scatter plot
+pdf('results/figures/Figure4.pdf', width=10, height=6)
+layout(matrix(c(1,2), nrow=1), widths=c(3,2))
+par(mar=c(4, 4, 2, 0.5))
+plot(1, type="n", xlim=c(0.1,10000), ylim=c(0.2,1), log='x',ylab="", xlab="", xaxt='n')
+
+palette(c('blue','red','grey'))
+points(all_data[,'fit_result'], all_probs[,2], pch=21, bg=all_data$dx)
+points(jitter(rep(0.15,length(all_probs[all_data$fit_result==0,2])), factor=20), all_probs[all_data$fit_result==0,2], pch=21, bg=all_data[all_data$fit_result==0, 'dx'])
+mtext(side=2, text="MMT Probability of Lesion", line=2.2, cex=1)
+mtext(side=1, text="FIT (ng/ml)", line=2.2, cex=1)
+axis(1, at=c(0.15,1.1,10.1,100.1,1000.1), labels=c(0,1,10,100,1000))
+abline(h=cutoff, lty=2)
+abline(v=100.1, lty=2)
+legend('bottomright', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue','red'), pch=21, bty='n', pt.cex=1)
+
+mtext('A', at=0.03, font=2, side=3)
+
+###Stripchart by FIT result
+plot(1, type="n", xlim=c(0.5,7), ylim=c(0,1), ylab="", xlab="", xaxt="n")
 
 stripchart(at=1, all_probs[all_data$dx=='normal' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
 stripchart(at=2, all_probs[all_data$dx=='adenoma' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
 stripchart(at=3, all_probs[all_data$dx=='cancer' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 
-
 stripchart(at=4.5, all_probs[all_data$dx=='normal' & all_data$fit_result < 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
 stripchart(at=5.5, all_probs[all_data$dx=='adenoma' & all_data$fit_result < 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='blue', add=T)
 stripchart(at=6.6, all_probs[all_data$dx=='cancer' & all_data$fit_result < 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='red', add=T)
 
-axis(1, at=c(2,5), labels=c('Positive FIT','Negative FIT'))
+axis(1, at=c(2,5), labels=c('Positive FIT','Negative FIT'), cex=0.8)
+mtext(side=2, text="MMT Probability of Lesion", line=2.2, cex=1)
 abline(h=cutoff, lty=2)
-legend('bottomleft', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue','red'), pch=21, bty='n', pt.cex=1.5)
+legend('bottomleft', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue','red'), pch=21, bty='n')
+mtext('B', at=-0.5, font=2, side=3)
 dev.off()
-```
 
-```{r fit_neg_stats, echo=F}
+### Model stats for samples negative for FIT
 neg_les_mod <- all_probs[all_data$dx!='normal' & all_data$fit_result < 100,2]
 neg_ade_mod <- all_probs[all_data$dx=='adenoma' & all_data$fit_result < 100,2]
 neg_canc_mod <- all_probs[all_data$dx=='cancer' & all_data$fit_result < 100,2]
@@ -362,40 +380,8 @@ neg_ade_mod_sens <- length(neg_ade_mod[neg_ade_mod>=cutoff]) / length(neg_ade_mo
 neg_canc_mod_sens <- length(neg_canc_mod[neg_canc_mod>=cutoff]) / length(neg_canc_mod)
 neg_mod_spec <- length(neg_norm_mod[neg_norm_mod<cutoff]) / length(neg_norm_mod)
 neg_mod_acc <- (length(neg_norm_mod[neg_norm_mod<cutoff]) + length(neg_les_mod[neg_les_mod>=cutoff])) / (length(neg_les_mod) + length(neg_norm_mod))
-
-pos_les_mod <- all_probs[all_data$dx!='normal' & all_data$fit_result >= 100,2]
-pos_ade_mod <- all_probs[all_data$dx=='adenoma' & all_data$fit_result >= 100,2]
-pos_canc_mod <- all_probs[all_data$dx=='cancer' & all_data$fit_result >= 100,2]
-pos_norm_mod <-  all_probs[all_data$dx=='normal' & all_data$fit_result >= 100,2]
-
-pos_les_mod_sens <- length(pos_les_mod[pos_les_mod>=cutoff]) / length(pos_les_mod)
-pos_ade_mod_sens <- length(pos_ade_mod[pos_ade_mod>=cutoff]) / length(pos_ade_mod)
-pos_canc_mod_sens <- length(pos_canc_mod[pos_canc_mod>=cutoff]) / length(pos_canc_mod)
-pos_mod_spec <- length(pos_norm_mod[pos_norm_mod<cutoff]) / length(pos_norm_mod)
-pos_mod_acc <- (length(pos_norm_mod[pos_norm_mod<cutoff]) + length(pos_les_mod[pos_les_mod>=cutoff])) / (length(pos_les_mod) + length(pos_norm_mod))
-
-output_matrix <- matrix(100*c(pos_les_mod_sens,pos_canc_mod_sens,pos_ade_mod_sens,pos_mod_spec,pos_mod_acc,
-                          neg_les_mod_sens,neg_canc_mod_sens,neg_ade_mod_sens,neg_mod_spec,neg_mod_acc), byrow=T, nrow=2)
-colnames(output_matrix)<-c('Lesion Sensitivity','Cancer Sensitivity','Adenoma Sensitivity','Specificity','Accuracy')
-rownames(output_matrix)<-c('Positive FIT','Negative FIT')
-#kable(output_matrix, digits=1)
 ```
 
-```{r fit_vs_model, echo=F, fig.width=8, fig.height=7, results='hide'}
-pdf('results/figures/Figure4.pdf', width=7, height=6)
-par(mar=c(5, 5, 0.5, 0.5))
-plot(1, type="n", xlim=c(0.1,10000), ylim=c(0.2,1), log='x',ylab="MMT Probability of Lesion", xlab="FIT (ng/ml)", xaxt='n')
-
-palette(c('blue','red','grey'))
-points(all_data[,'fit_result'], all_probs[,2], pch=21, bg=all_data$dx)
-points(jitter(rep(0.15,length(all_probs[all_data$fit_result==0,2])), factor=20), all_probs[all_data$fit_result==0,2], pch=21, bg=all_data[all_data$fit_result==0, 'dx'])
-
-axis(1, at=c(0.15,1.1,10.1,100.1,1000.1), labels=c(0,1,10,100,1000))
-abline(h=cutoff, lty=2)
-abline(v=100.1, lty=2)
-legend('bottomright', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('grey','blue','red'), pch=21, bty='n', pt.cex=1.5)
-dev.off()
-```
 
 ```{r sensitivity_barplots, echo=F, fig.width=9, fig.height=6, results='hide'}
 nonAdv_probs <- all_probs[all_data$Dx_Bin=='Adenoma',2]
@@ -605,7 +591,7 @@ f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender
 gender_pval <- roc.test(m_roc,f_roc)$p.value
 
 
-pdf('results/figures/figS5.pdf', height=6, width=9)
+pdf('results/figures/figS4.pdf', height=6, width=9)
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
 
@@ -777,13 +763,14 @@ Table S1. Estimated MMT performance on average risk population.
 ###Figures
 
 **Figures:**  
-![](results/figures/figure1.pdf)  
+
+![](results/figures/Figure1.pdf)  
 **Figure 1. Figure title.** Figure description.
 
-![](results/figures/figure2.pdf)  
+![](results/figures/Figure2.pdf)  
 **Figure 2. Comparing MMT to FIT.** (A) ROC Curves for the MMT (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (purple), normal from cancer (red) and normal from adenoma (blue). Filled dots show the sensitivity and specificity of the MMT at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (B) Strip charts showing the results for FIT and the MMT. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
 
-![](results/tables/Schloss_table1.pdf)  
+![](results/tables/Schloss_table1.png)  
 **Table 1. Sensitivities and specificities for FIT and MMT.** The 95% confidence intervals were computed with 2000 stratified bootstrap replicates.
 
 ![](results/figures/Figure3.pdf)  
@@ -803,12 +790,9 @@ Table S1. Estimated MMT performance on average risk population.
 **Supplementary Figure 3.** Bacterial OTUs in MMT. Stripchart of the relative abundances of each OTU in the MMT with black lines at the medians.
 
 ![](results/figures/figS4.pdf)  
-**Supplementary Figure 4.**  MMT Probabilities based on FIT results. Stripchart of MMT results for samples with a positive or negative FIT result.
+**Supplementary Figure 4.** Effect of sex on MMT performance. ROC curves (left) and stripchart (right) of MMT results separated by sex. 
 
-![](results/figures/figS5.pdf)  
-**Supplementary Figure 5.** Effect of sex on MMT performance. ROC curves (left) and stripchart (right) of MMT results separated by sex. 
-
-![](results/tables/Schloss_tableS1.pdf)  
+![](results/tables/Schloss_EDtable1.pdf)  
 **Supplementary Table 6.** Estimated MMT performance on average risk population. Number and proportion of true positives identified through FIT and MMT in the United States in adults 50-75 years of age, based on published estimates of CRC prevalence. Far right column shows percentage of true positives identified among individuals with a negative FIT result.
 
 **References and Notes:**
