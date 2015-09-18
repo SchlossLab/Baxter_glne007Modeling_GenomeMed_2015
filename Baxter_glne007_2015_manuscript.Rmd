@@ -1,6 +1,6 @@
 ---
 title: Microbiota-based model improves the sensitivity for detecting colonic lesions
-csl: science-translational-medicine.csl
+csl: bmc.csl
 output:
   word_document:
     reference_docx: manuscript_format.docx
@@ -54,14 +54,14 @@ pval <- function(p){
 otu_canc_data <- all_data[meta$dx!='adenoma',c('lesion',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
 set.seed(62515)
-#otu_canc_model <- AUCRF(lesion ~ ., data=otu_canc_data, ranking='MDA', ntree=500, pdel=0.05)
+otu_canc_model <- AUCRF(lesion ~ ., data=otu_canc_data, ranking='MDA', ntree=500, pdel=0.05)
 canc_opt_model <- otu_canc_model$RFopt
 otu_canc_probs <- predict(canc_opt_model, type='prob')
 otu_canc_roc <- roc(otu_canc_data$lesion~otu_canc_probs[,2])
 
-canc_fit_roc <- roc(canc_data$lesion ~ canc_data$fit_result)
+canc_fit_roc <- roc(all_data[all_data$dx!='adenoma','lesion'] ~ all_data[all_data$dx!='adenoma','fit_result'])
 
-pdf(file='results/figures/Figure1.pdf', width=12, height=10)
+pdf(file='results/figures/figure1.pdf', width=12, height=10)
 layout(rbind(c(1,2),c(3,4)))
 par(oma=c(1,6,1,1))
 
@@ -72,36 +72,43 @@ plot(canc_fit_roc, col='grey30', lwd=2, lty=2, add=T)
 mtext(side=2, text="Sensitivity", line=2.5)
 mtext(side=1, text="Specificity", line=2.5)
 legend('bottomright', legend=c(sprintf('FIT - AUC: %.3g', canc_fit_roc$auc), sprintf('Microbiota - AUC: %.3g', otu_canc_roc$auc)), bty='n', xjust=0, lty=c(2,1), col='grey30')
-points(coords(otu_canc_roc, x='best', ret='spec'),coords(otu_canc_roc, x='best', ret='sens'), pch=16, cex=1.5)
+
+otu_canc_sens <- coords(otu_canc_roc, x='best', ret='sens')
+otu_canc_spec <- coords(otu_canc_roc, x='best', ret='spec')
+otu_canc_thr <- coords(otu_canc_roc, x='best', ret='thr')
+
+points(otu_canc_spec,otu_canc_sens, pch=16, cex=1.5)
 points(coords(canc_fit_roc, x=100, input='thr', ret='spec'),coords(canc_fit_roc, x=100, input='thr', ret='sens'), pch=10, cex=1.5)
 mtext('A', at=1.15, font=2)
 
 canc_res <- data.frame(fit=jitter(all_data[all_data$dx=='cancer','fit_result']+0.1, amount=0.01),micro=otu_canc_probs[otu_canc_data$lesion==1,2])
 
 plot(canc_res, log='x', ylab='', xlab='', xaxt='n')
-points(canc_res[canc_res$fit>100 | canc_res$micro>0.459,], pch=21, bg='grey')
-points(canc_res[canc_res$fit>100 & canc_res$micro>0.459,], pch=21, bg='black', col='white', lwd=0.7)
+points(canc_res[canc_res$fit>100 | canc_res$micro>otu_canc_thr,], pch=21, bg='grey')
+points(canc_res[canc_res$fit>100 & canc_res$micro>otu_canc_thr,], pch=21, bg='black', col='white', lwd=0.7)
 axis(1, labels=c(0,1,10,100,1000), at=c(0.1,1.1,10,100,1000))
 mtext(side=2, text='Microbiota Model Result', line=2.5)
 mtext(side=1, text='FIT Result', line=2.5)
-abline(h=0.459, lty=3)
+abline(h=otu_canc_thr, lty=3)
 abline(v=100, lty=3)
 mtext('B', at=0.04, font=2, side=3)
 
-canc_pos <- cbind(all_data[all_data$dx=='cancer','fit_result']>100, otu_canc_probs[otu_canc_data$lesion==1,2]>0.459)
+canc_pos <- cbind(all_data[all_data$dx=='cancer','fit_result']>100, otu_canc_probs[otu_canc_data$lesion==1,2]>otu_canc_thr)
 colnames(canc_pos) <- c('FIT','Microbiota')
 canc_table <- 100*table(as.data.frame(canc_pos))/sum(all_data$dx=='cancer')
 text(x=c(1,1,400,200), y=c(0.87,0.27,0.87,0.27), labels=sprintf('%.3g%%',canc_table[c(3,1,4,2)]))
+
+
 
 ### Adenoma vs Normal
 otu_ade_data <- all_data[meta$dx!='cancer',c('lesion',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
 set.seed(071315)
-#otu_ade_model <- AUCRF(lesion ~ ., data=otu_ade_data, ntree=500, pdel=0.05)
+otu_ade_model <- AUCRF(lesion ~ ., data=otu_ade_data, ntree=500, pdel=0.05)
 
 otu_ade_probs <- predict(otu_ade_model$RFopt, type='prob')
-otu_ade_roc <- roc(ade_data$lesion~otu_ade_probs[,2])
-ade_fit_roc <- roc(otu_ade_data$lesion~les_data$fit_result[meta$dx!='cancer'])
+otu_ade_roc <- roc(otu_ade_data$lesion~otu_ade_probs[,2])
+ade_fit_roc <- roc(all_data[all_data$dx!='cancer','lesion'] ~ all_data[all_data$dx!='cancer','fit_result'])
 
 par(mar=c(4,4,1,1))
 plot(c(1,0),c(0,1), type='l', lty=2, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='', xlab='')
@@ -110,19 +117,24 @@ plot(ade_fit_roc, col='grey30', lwd=2, add=T, lty=2)
 mtext(side=2, text="Sensitivity", line=2.5)
 mtext(side=1, text="Specificity", line=2.5)
 legend('bottomright', legend=c(sprintf('FIT - AUC: %.3g', ade_fit_roc$auc), sprintf('Microbiota - AUC: %.3g', otu_ade_roc$auc)), bty='n', xjust=0, lty=c(2,1), col='grey30')
-points(coords(otu_ade_roc, x=0.702, input='thr', ret='spec'),coords(otu_ade_roc, x=0.702, input='thr', ret='sens'), pch=16, cex=1.5)
+
+otu_ade_spec <- coords(ade_fit_roc, x=100, input='thr', ret='spec')
+otu_ade_sens <- coords(otu_ade_roc, x=otu_ade_spec, input='spec', ret='sens')
+otu_ade_thr <- coords(otu_ade_roc, x=otu_ade_spec, input='spec', ret='thr')
+
+points(otu_ade_spec,otu_ade_sens, pch=16, cex=1.5)
 points(coords(ade_fit_roc, x=100, input='thr', ret='spec'),coords(ade_fit_roc, x=100, input='thr', ret='sens'), pch=10, cex=1.5)
 mtext('C', at=1.15, font=2)
 
 ade_res <- data.frame(fit=jitter(all_data[all_data$dx=='adenoma','fit_result']+0.1, amount=0.01),micro=otu_ade_probs[otu_ade_data$lesion==1,2])
 
 plot(ade_res, log='x', ylab='', xlab='', xaxt='n')
-points(ade_res[ade_res$fit>100 | ade_res$micro>0.702,], pch=21, bg='grey')
-points(ade_res[ade_res$fit>100 & ade_res$micro>0.702,], pch=21, bg='black', col='white', lwd=0.7)
+points(ade_res[ade_res$fit>100 | ade_res$micro>otu_ade_thr,], pch=21, bg='grey')
+points(ade_res[ade_res$fit>100 & ade_res$micro>otu_ade_thr,], pch=21, bg='black', col='white', lwd=0.7)
 axis(1, labels=c(0,1,10,100,1000), at=c(0.1,1.1,10,100,1000))
 mtext(side=2, text='Microbiota Model Result', line=2.5)
 mtext(side=1, text='FIT Result', line=2.5)
-abline(h=0.702, lty=3)
+abline(h=otu_ade_thr, lty=3)
 abline(v=100, lty=3)
 mtext('D', at=0.04, font=2, side=3)
 
@@ -138,7 +150,7 @@ dev.off()
 ```
 
 ```{r supp_fig1, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
-pdf('results/figures/supp_fig1.pdf', height=6, width=8)
+pdf('results/figures/figS1.pdf', height=6, width=8)
 layout(matrix(c(1,2,3,3), nrow=2))
 
 #Abundance stripchart or most predictive otus
@@ -176,10 +188,11 @@ dev.off()
 ```
 
 ```{r supp_fig2, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
+pdf('results/figures/figS2.pdf', height=6, width=8)
 layout(matrix(c(1,2,3,3), nrow=2))
 
 #Abundance stripchart or most predictive otus
-canc_otus <- otu_canc_model$Xopt
+ade_otus <- otu_ade_model$Xopt
 ade_otus <- rev(ade_otus[1:5])
 norm_abunds <- all_data[all_data$dx=='normal', ade_otus]/10000 + 1e-4
 ade_abunds <- all_data[all_data$dx=='adenoma', ade_otus]/10000 + 1e-4
@@ -208,11 +221,11 @@ mtext('B', at=-90, font=2, side=3)
 ade_otus <- otu_ade_model$Xopt
 dotchart(rev(otu_ade_model$ranking[ade_otus]), labels=rev(tax[ade_otus, 'Label']), xlab='Mean Decrease Accuracy')
 mtext('C', at=-0.014, font=2, side=3)
-
+dev.off()
 ```
 
 ```{r figure2, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
-pdf('results/figures/Figure2.pdf', width=10, height=5)
+pdf('results/figures/figure2.pdf', width=10, height=5)
 
 layout(matrix(c(1,1,2,3), nrow=1))
 par(oma=c(1,1,2,1))
@@ -221,7 +234,7 @@ les_data <- all_data[,c('lesion','fit_result',colnames(all_data)[grep('Otu[01234
 
 #generate lesion vs normal model
 set.seed(53015)
-#les_model <- AUCRF(lesion ~ ., data=les_data, ntree=500, pdel=0.05)
+les_model <- AUCRF(lesion ~ ., data=les_data, ntree=500, pdel=0.05)
 opt_model <- les_model$RFopt
 all_probs <- predict(opt_model, type='prob')
 les_roc <- roc(les_data$lesion~all_probs[,2])
@@ -301,7 +314,7 @@ les_tax <- paste(tax[les_otus, 'Classification'], ' (', tax[les_otus, 'OTU'], ')
 norm_abunds <- all_data[all_data$dx=='normal', les_otus]/10000 + 1e-4
 les_abunds <- all_data[all_data$dx!='normal', les_otus]/10000 + 1e-4
 
-png('results/figures/Schloss_EDfig2.png', width=7, height=9, units='in', res=150)
+pdf('results/figures/figS3.pdf', width=7, height=9)
 par(mar=c(5, 12, 0.5, 0.5))
 plot(1, type="n", ylim=c(0,length(les_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
 index <- 1
@@ -320,7 +333,7 @@ dev.off()
 
 ```{r neg_fit_stripchart, echo=F, fig.width=8, fig.height=6, results='hide'}
 par(mar=c(3, 5, 0.5, 0.5))
-png(file='results/figures/Schloss_EDfig3.png', height=7, width=7, units='in', res=150)
+pdf(file='results/figures/figS4.pdf', height=7, width=7)
 plot(1, type="n", xlim=c(0.5,7), ylim=c(0,1), ylab="MMT Probability of Lesion", xlab="", xaxt="n")
 
 stripchart(at=1, all_probs[all_data$dx=='normal' & all_data$fit_result >= 100,2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='grey', add=T)
@@ -369,7 +382,7 @@ rownames(output_matrix)<-c('Positive FIT','Negative FIT')
 ```
 
 ```{r fit_vs_model, echo=F, fig.width=8, fig.height=7, results='hide'}
-png('results/figures/Schloss_fig3.png', width=7, height=6, units='in', res=150)
+pdf('results/figures/Figure4.pdf', width=7, height=6)
 par(mar=c(5, 5, 0.5, 0.5))
 plot(1, type="n", xlim=c(0.1,10000), ylim=c(0.2,1), log='x',ylab="MMT Probability of Lesion", xlab="FIT (ng/ml)", xaxt='n')
 
@@ -416,7 +429,7 @@ s4_fit_sens <- length(s4_fit[s4_fit>=100]) / length(s4_fit)
 sens_matrix <- matrix(c(nonAdv_fit_sens,nonAdv_sens,advAde_fit_sens,advAde_sens,s1_fit_sens,s1_sens,s2_fit_sens,s2_sens,s3_fit_sens,s3_sens,s4_fit_sens,s4_sens), byrow=F, nrow=2)
 rownames(sens_matrix) <- c('FIT','MMT')
 
-png('results/figures/Schloss_fig2.png', height=6, width=9, units='in', res=150)
+pdf('results/figures/Figure3.pdf', height=6, width=9)
 par(mar=c(4,4,2,2))
 x_labels <- c(sprintf(' \nNonadvanced\nAdenoma\n(n=%i)',length(nonAdv_probs)),sprintf('Advanced\nAdenomas\n(n=%i)',length(advAde_probs)),sprintf('Cancer\nStage I\n(n=%i)',length(s1_probs)), sprintf('Cancer\nStage II\n(n=%i)',length(s2_probs)), sprintf('Cancer\nStage III\n(n=%i)',length(s3_probs)), sprintf('Cancer\nStage IV\n(n=%i)',length(s4_probs)))
 bp<-barplot(sens_matrix, beside=T, ylab='Sensitvity (%)', ylim=c(0,1.1), axisnames=F, col=c('grey90','grey25'),axis.lty=1, yaxt='n')
@@ -543,7 +556,7 @@ stats_table[6,] <- c('','','Negative Results','Specificity (95% CI)','Negative R
 stats_table[7,] <- c('Negative Colonosopies', num_norm, norm_obs, mod_spec, norm_fit_obs, fit_spec)
 
 write(kable(stats_table), file='results/tables/table1.md')
-#render('results/tables/table1.md', output_format='png_document', output_file='table1.png')
+#render('results/tables/table1.md', output_format='pdf_document', output_file='table1.pdf')
 
 ```
 
@@ -581,8 +594,8 @@ pp_table[2,] <- c('0.3%', canc_pp$NPP, canc_fit_pp$NPP, canc_neg_pp, canc_pp$PPP
 pp_table[3,] <- c('5.7%', advAde_pp$NPP, advAde_fit_pp$NPP, advAde_neg_pp, advAde_pp$PPP, advAde_fit_pp$PPP, advAde_pos_pp)
 pp_table[4,] <- c('17.7%', nonAdv_pp$NPP, nonAdv_fit_pp$NPP, nonAdv_neg_pp, nonAdv_pp$PPP, nonAdv_fit_pp$PPP, nonAdv_pos_pp)
 
-write(kable(pp_table), file='results/tables/supp_table1.md')
-#render('results/tables/supp_table1.md', output_format='pdf_document', output_file='Schloss_EDtable1.pdf')
+write(kable(pp_table), file='results/tables/tableS1.md')
+#render('results/tables/supp_table1.md', output_format='pdf_document', output_file='Schloss_tableS1.pdf')
 
 ```
 
@@ -591,7 +604,8 @@ m_roc <- roc(all_data$lesion[all_data$Gender == 'm'] ~ all_probs[all_data$Gender
 f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender == 'f',2])
 gender_pval <- roc.test(m_roc,f_roc)$p.value
 
-png('results/figures/Schloss_EDfig4.png', height=6, width=9, units='in', res=150)
+
+pdf('results/figures/figS5.pdf', height=6, width=9)
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
 
@@ -654,9 +668,11 @@ mod_adonis_p <- mod_adonis[[1]][["Pr(>F)"]][1]
 
 ```{r figures, echo=F}
 
-canc_varImp <- 'Fig. 1A'
-canc_stripChart <- 'Fig. 1B'
-canc_ROC <- 'Fig. 1C'
+canc_ROC <- 'Fig. 1A'
+canc_scatter <- 'Fig. 1B'
+ade_ROC <- 'Fig. 1C'
+ade_scatter <- 'Fig. 1D'
+
 ROC <- 'Fig. 2A'
 table1 <- 'Table 1'
 strip <- 'Fig. 2B'
@@ -664,12 +680,16 @@ bar <- 'Fig. 3'
 scatter <- 'Fig. 4'
 
 
-aucrf_curve <- 'Fig. S1'
-otu_table <- 'Fig. S2'
+canc_varImp <- 'Fig. S1C'
+canc_stripChart <- 'Fig. S1A'
+canc_aucrf <- 'Fig. S1B'
+ade_varImp <- 'Fig. S2'
+aucrf_curve <- 'Fig. S3'
+otu_table <- 'Fig. S4'
 pred_values <- 'Table S1'
-fit_neg_strip <- 'Fig. S3'
-gender <- 'Fig. S4'
-OTUs <- 'Fig. S5'
+fit_neg_strip <- 'Fig. S5'
+gender <- 'Fig. S6'
+OTUs <- 'Fig. S7'
 
 
 ```
@@ -712,15 +732,16 @@ We and others have shown that statistical models that take into account the abun
 
 ###Results
 
-_???_  
-We characterized the bacterial communities of stool samples from 490 patients using 16S rRNA gene sequencing.  Among these patients, 120 had CRC, 198 had adenomas, and 172 had no colonic lesions. First we tested whether a random forest model could distinguish healthy individuals from those with cancer. We determined the optimal model using the AUC-RF algorithm for maximizing the area under the curve (AUC) of the receiver operating characteristic (ROC) curve for the random forest model [@calle2011auc]. The optimal model utilized 22 bacterial populations (`r canc_varImp`). Consistent with previous observations, the bacteria most strongly associated with CRC belonged to taxa more commonly associated with the oral cavity, including Pophyromonas, Fusobacterium, Parvimonas, Peptostreptococcus,and Gemella [warren2013co,zeller2014potential] (`r canc_stripChart`). The ROC curve for the model had an AUC of 0.837, which is similar to AUCs reported for other microbiota-based models for CRC, but lower than that of FIT (`r signif(canc_fit_roc$auc, 3)`). This confirms that random forest model based on bacterial abundances can distinuish healhty individuals from those with cancer.
+_Complementary detection of lesions by FIT and the microbiota_  
+We characterized the bacterial communities of stool samples from 490 patients using 16S rRNA gene sequencing.  Among these patients, 120 had CRC, 198 had adenomas, and 172 had no colonic lesions. In addition to characterizing the bacterial community, we tested each sample for the concentration of hemoglobin using FIT. With these data we compared the ability to detect lesion using FIT to using a microbiota-based model. First we developed a random forest classification model for differentiating healthy individuals from those with cancer based on the relative abundance of bacterial populations in stool. We determined the optimal model using the AUC-RF algorithm for maximizing the area under the curve (AUC) of the receiver operating characteristic (ROC) curve for a random forest model [@calle2011auc]. The optimal model utilized 34 bacterial populations (`r canc_aucrf`,`r canc_varImp`). Consistent with previous observations, the bacteria most strongly associated with CRC belonged to taxa commonly associated with the oral cavity, including Pophyromonas, Fusobacterium, Parvimonas, Peptostreptococcus, Gemella, and Prevotella [@warren2013co;@zeller2014potential] (`r canc_stripChart`). The ROC curve for the model had an AUC of 0.837, which is similar to AUCs reported for other microbiota-based models for CRC [@zackular2014human;@zeller2014potential], but significantly lower than that of FIT (FIT AUC:`r signif(canc_fit_roc$auc, 3)`, `r pval(roc.test(otu_canc_roc,canc_fit_roc)$p.value)`, `r canc_ROC`). At the manufacturer recommended cutoff of 100ng/ml FIT detected `r sprintf('%.3g',100*canc_fit_sens_ci[2])`% of cancers with a specificity of `r sprintf('%.3g',100*fit_spec_ci[2])`%. At its optimal cutoff (`r sprintf('%.3g',otu_canc_thr)`) the microbiota model detected `r sprintf('%.3g',100*otu_canc_sens)`% of cancers with a specificity of `r sprintf('%.3g',100*otu_canc_spec)`%. 
 
-We also generated a model for differentiating healthy indviduals from those with any type of lesion (i.e. adenoma or carcinoma).  
+To determine whether FIT and the microbiota model were detecting the same lesions, we compared the results of the two tests for each sample. Most cancers (53.3%) were detected by both FIT and the microbiota model, while 37.5% of cancers were only detected by one of the two tests (`r canc_scatter`). Thus each test detected cancers that the other failed to detect, suggesting the two methods could complement each other if combined into a single test. 
 
-  
+One of the problems with FIT and other stool-based is their inability to detect adenomas.  Therefrore we generated a random forest model for differentiating normal individuals from those with adenomas using the relative abundance 22 bacterial populations. The AUC for the microbiota model (`r signif(otu_ade_roc$auc, 3)`) was slightly, but not significantly, higer than that of FIT (FIT AUC:`r signif(ade_fit_roc$auc, 3)`, p>0.05, `r ade_ROC`). At the manufacturer the 100ng/ml cutoff FIT detected `r sprintf('%.3g',100*ade_fit_sens_ci[2])`% of cancers with a specificity of `r sprintf('%.3g',100*fit_spec_ci[2])`%. Setting the microbiota model to the same `r sprintf('%.3g',100*otu_ade_spec)`% specificity resulted `r sprintf('%.3g',100*otu_ade_sens)`% sensitivity for adenomas.  When comparing the results of the tests for each sample, only 2.5% of adenomas were detected by both tests, while 28.8% were detected by one of the two tests (`r ade_scatter`).  Therefore combining FIT with microbiota biomarkers should be especially effective at improving the detection of adenomas.
 
-_Generating the MMT._
-In addition to characterizing the bacterial community, we tested each sample for the concentration of hemoglobin using FIT. With these data we sought to determine whether incorporating FIT and microbiota data into a single model would the sensitivity for detecting colonic lesions. Therefore we developed a random forest model that incorporated both the microbiota and FIT data and would differentiate normal individuals from those with any type of colonic lesion (i.e. adenoma or carcinoma). The optimal model combining hemoglobin results and the microbiota used 23 OTUs (`r aucrf_curve`). Of those OTUs, 16 were members of the Firmicutes phylum, including 3 from the Ruminococcaceae family and 10 from the Lachnospiraceae family, the predominant producers of butyrate in the gut [@pryde2002microbiology] (`r otu_table`). Three OTUs were associated with the genus *Bacteroides*. The remaining OTUs were associated with *Porphyromonas*, *Parabacteroides*, *Collinsella*, and Enterobacteriaceae. The OTU associated with *Porphyromonas* was most closely related to *Porphyromonas asaccharolytica*, which has been previously shown to be predictive of CRC [@rex2009american;@zackular2014human]. Like other studies[@kostic2012genomic;@zackular2014human] we also observed an OTU associated with *Fusobacterium nucleatum* that was enriched in cancer samples, however its relative abundance did not add sufficient information to be included in the model. Interestingly the majority of OTUs used in the model, especially the Lachnospiraceae, were enriched in normal patients, suggesting that a loss of beneficial organisms in addition to the emergence of pathogens may be indicative of CRC development.
+
+_Multitarget Microbiota Test for colonic lesions._
+Based on these observations, we hypothesized that a single model that combined bacterial abundances and FIT would have improved sensitivity for colonic lesions compared to FIT alone. Therefore we developed a random forest model using both the microbiota and FIT that would differentiate normal individuals from those with any type of colonic lesion (i.e. adenoma or carcinoma). The optimal model, referred to as the Multitarget Microbiota Test (MMT), used 23 OTUs (`r aucrf_curve`). Of those OTUs, 16 were members of the Firmicutes phylum, including 3 from the Ruminococcaceae family and 10 from the Lachnospiraceae family, the predominant producers of butyrate in the gut [@pryde2002microbiology] (`r otu_table`). Three OTUs were associated with the genus *Bacteroides*. The remaining OTUs were associated with *Porphyromonas*, *Parabacteroides*, *Collinsella*, and Enterobacteriaceae. The OTU associated with *Porphyromonas* was most closely related to *Porphyromonas asaccharolytica*, which has been previously shown to be predictive of CRC [@rex2009american;@zackular2014human]. Like other studies[@kostic2012genomic;@zackular2014human] we also observed an OTU associated with *Fusobacterium nucleatum* that was enriched in cancer samples, however its relative abundance did not add sufficient information to be included in the model. Interestingly the majority of OTUs used in the model, especially the Lachnospiraceae, were enriched in normal patients, suggesting that a loss of beneficial organisms in addition to the emergence of pathogens may be indicative of CRC development.
 
 _Comparison to FIT._  
 To determine whether microbiota sequence data could be used to complement FIT, we compared the performance of the MMT to FIT. The AUC for the MMT (AUC=`r signif(ade_roc$auc, 3)`) was significantly higher than FIT (AUC=`r signif(ade_fit_roc$auc, 3)`) for distinguishing adenoma from normal (`r pval(roc.test(ade_roc, ade_fit_roc)$p.value)`) or all lesions from normal (FIT AUC=`r signif(les_fit_roc$auc, 3)`, MMT AUC=`r signif(les_roc$auc, 3)`, `r pval(roc.test(les_roc, les_fit_roc)$p.value)`), but not cancer from normal (FIT AUC=`r signif(canc_fit_roc$auc, 3)`, MMT AUC=`r signif(canc_roc$auc, 3)`, `r pval(roc.test(canc_roc, canc_fit_roc)$p.value)`) (`r ROC`). To generate a categorical prediction from the MMT, we determined that the optimal threshold for the models's probability was `r signif(cutoff, 3)` using Youden's J statisitc [@youden1950index]. Samples scoring above this cutoff were classified as lesions, and those below the cutoff were classified as normal.  We then compared the sensitivity and specificity of the MMT to those of FIT using the manufacturer recommended threshold of 100 ng/ml of hemoglobin.  At these cutoffs the MMT detected `r sprintf('%.1f',100*canc_sens_ci[2])`% of cancers and `r sprintf('%.1f',100*ade_sens_ci[2])`% of adenomas compared to `r sprintf('%.1f',100*canc_fit_sens_ci[2])`% and `r sprintf('%.1f',100*ade_fit_sens_ci[2])`% for FIT (`r table1`, `r strip`). When adenomas and cancers were pooled together, the MMT detected `r sprintf('%.1f',100*les_sens_ci[2])`% of lesions, while FIT only detected `r sprintf('%.1f',100*les_fit_sens_ci[2])`%. The MMT significantly improved sensitivity for both advanced and non-advanced adenomas as well as multiple stages of cancer (`r bar`). The increased sensitivity of the MMT was accompanied by a decrease in specificity (`r sprintf('%.1f',100*mod_spec_ci[2])`%) compared to FIT (`r sprintf('%.1f',100*fit_spec_ci[2])`%).
@@ -756,33 +777,38 @@ Table S1. Estimated MMT performance on average risk population.
 ###Figures
 
 **Figures:**  
-![](results/tables/Schloss_table1.png)  
-**Table 1.** Sensitivities and specificities for FIT and MMT. The 95% confidence intervals were computed with 2000 stratified bootstrap replicates.
+![](results/figures/figure1.pdf)  
+**Figure 1. Figure title.** Figure description.
 
-![](results/figures/Schloss_fig1.png)  
-**Fig. 1.** Comparing MMT to FIT. (A) ROC Curves for the MMT (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (purple), normal from cancer (red) and normal from adenoma (blue). Filled dots show the sensitivity and specificity of the MMT at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (B) Strip charts showing the results for FIT and the MMT. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
+![](results/figures/figure2.pdf)  
+**Figure 2. Comparing MMT to FIT.** (A) ROC Curves for the MMT (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (purple), normal from cancer (red) and normal from adenoma (blue). Filled dots show the sensitivity and specificity of the MMT at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (B) Strip charts showing the results for FIT and the MMT. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
 
-![](results/figures/Schloss_fig2.png)  
-**Fig. 2.** Sensitivities for FIT and MMT for each stage of tumor development.  P-values based on McNemar's chi-squared test.
+![](results/tables/Schloss_table1.pdf)  
+**Table 1. Sensitivities and specificities for FIT and MMT.** The 95% confidence intervals were computed with 2000 stratified bootstrap replicates.
 
-![](results/figures/Schloss_fig3.png)  
-**Fig. 3.** Results of FIT and MMT for each sample. Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
+![](results/figures/Figure3.pdf)  
+**Figure 3. Sensitivities for FIT and MMT for each stage of tumor development.**  P-values based on McNemar's chi-squared test.
+
+![](results/figures/Figure4.pdf)  
+**Figure 4. Results of FIT and MMT for each sample.** Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
 
 ###Supplementary Figures
+![](results/figures/figS1.pdf)  
+**Supplementary Figure 1.** 
 
-![](results/figures/Schloss_EDfig1.png)  
-**Supplementary Figure 1.** Variable selection for MMT. Change in out-of-bag AUC with number of features in the MMT. The optimal model contains 24 features and has an AUC of 0.829.
+![](results/figures/figS2.pdf)  
+**Supplementary Figure 2.** 
 
-![](results/figures/Schloss_EDfig2.png)  
-**Supplementary Figure 2.** Bacterial OTUs in MMT. Stripchart of the relative abundances of each OTU in the MMT with black lines at the medians.
+![](results/figures/figS3.pdf)  
+**Supplementary Figure 3.** Bacterial OTUs in MMT. Stripchart of the relative abundances of each OTU in the MMT with black lines at the medians.
 
-![](results/figures/Schloss_EDfig3.png)  
-**Supplementary Figure 3.**  MMT Probabilities based on FIT results. Stripchart of MMT results for samples with a positive or negative FIT result.
+![](results/figures/figS4.pdf)  
+**Supplementary Figure 4.**  MMT Probabilities based on FIT results. Stripchart of MMT results for samples with a positive or negative FIT result.
 
-![](results/figures/Schloss_EDfig4.png)  
-**Supplementary Figure 4.** Effect of sex on MMT performance. ROC curves (left) and stripchart (right) of MMT results separated by sex. 
+![](results/figures/figS5.pdf)  
+**Supplementary Figure 5.** Effect of sex on MMT performance. ROC curves (left) and stripchart (right) of MMT results separated by sex. 
 
-![](results/tables/Schloss_EDtable1.png)  
-**Supplementary Table 1.** Estimated MMT performance on average risk population. Number and proportion of true positives identified through FIT and MMT in the United States in adults 50-75 years of age, based on published estimates of CRC prevalence. Far right column shows percentage of true positives identified among individuals with a negative FIT result.
+![](results/tables/Schloss_tableS1.pdf)  
+**Supplementary Table 6.** Estimated MMT performance on average risk population. Number and proportion of true positives identified through FIT and MMT in the United States in adults 50-75 years of age, based on published estimates of CRC prevalence. Far right column shows percentage of true positives identified among individuals with a negative FIT result.
 
 **References and Notes:**
