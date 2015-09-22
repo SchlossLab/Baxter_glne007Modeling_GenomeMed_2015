@@ -32,7 +32,7 @@ for line in tax_file:
 						taxon = taxon[-7]
 	otu = line[0]
 	otu=re.sub('Otu0*','OTU',otu)
-	label=[taxon,'(',otu,')']
+	label=[taxon,' (',otu,')']
 	label=''.join(label)
 	print('\t'.join([line[0],otu, taxon, label]), file=outfile, end='\n')
 
