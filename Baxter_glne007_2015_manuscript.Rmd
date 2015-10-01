@@ -460,7 +460,7 @@ dev.off()
 
 ```
 
-```{r table1, echo=F, cache=T}
+```{r table1_sensSpec, echo=F, cache=T}
 #Numbers of each diagnosis by colonoscopy
 les_mod <- all_probs[all_data$dx!='normal',2]
 advAde_mod <- all_probs[all_data$Dx_Bin=='adv Adenoma',2]
@@ -559,42 +559,15 @@ write(kable(stats_table), file='results/tables/table1.md')
 
 ```
 
-```{r predictive_values, echo=F, results='hide'}
-getPP <- function(sens, spec, prev){
-  ppp <- signif((sens*prev) / (sens*prev + (1-spec)*(1-prev)), 4)
+```{r table2_truePos, echo=F, results='hide'}
+total_pop <- 80494283
 
-  npp <- signif(1-((spec*(1-prev)) / ( (1-sens)*prev + spec*(1-prev) )),4)
+canc_pop <- total_pop*0.003
+advAde_pop <- total_pop*0.057
+nonAdv_pop <- total_pop*0.177
 
-  return(list(PPP=ppp, NPP=npp))
-}
+canc_tpos_fit <- canc_pop*canc_fit_sens_ci[2]
 
-advAde_pp <- getPP(advAde_sens_ci[2],mod_spec_ci[2],0.057)
-nonAdv_pp <- getPP(nonAdv_sens_ci[2],mod_spec_ci[2],0.177)
-canc_pp <- getPP(canc_sens_ci[2],mod_spec_ci[2],0.003)
-
-advAde_fit_pp <- getPP(advAde_fit_sens_ci[2],fit_spec_ci[2],0.057)
-nonAdv_fit_pp <- getPP(nonAdv_fit_sens_ci[2],fit_spec_ci[2],0.177)
-canc_fit_pp <- getPP(canc_fit_sens_ci[2],fit_spec_ci[2],0.003)
-
-advAde_pos_pp <- getPP(advAde_fit_sens_ci[2],fit_spec_ci[2],advAde_pp$PPP)$PPP
-nonAdv_pos_pp <- getPP(nonAdv_fit_sens_ci[2],fit_spec_ci[2],nonAdv_pp$PPP)$PPP
-canc_pos_pp <- getPP(canc_fit_sens_ci[2],fit_spec_ci[2],canc_pp$PPP)$PPP
-
-advAde_neg_pp <- getPP(advAde_fit_sens_ci[2],fit_spec_ci[2],advAde_pp$NPP)$NPP
-nonAdv_neg_pp <- getPP(nonAdv_fit_sens_ci[2],fit_spec_ci[2],nonAdv_pp$NPP)$NPP
-canc_neg_pp <- getPP(canc_fit_sens_ci[2],fit_spec_ci[2],canc_pp$NPP)$NPP
-
-
-pp_table <- matrix(NA, ncol=7, nrow=4)
-colnames(pp_table) <- c('Prevalence','','NPP','','','PPP','')
-rownames(pp_table) <- c('','Cancer','Adv. Adenoma','Nonadv. Ade.')
-pp_table[1,] <- c('','MMT','FIT','Both','MMT','FIT','Both')
-pp_table[2,] <- c('0.3%', canc_pp$NPP, canc_fit_pp$NPP, canc_neg_pp, canc_pp$PPP, canc_fit_pp$PPP, canc_pos_pp)
-pp_table[3,] <- c('5.7%', advAde_pp$NPP, advAde_fit_pp$NPP, advAde_neg_pp, advAde_pp$PPP, advAde_fit_pp$PPP, advAde_pos_pp)
-pp_table[4,] <- c('17.7%', nonAdv_pp$NPP, nonAdv_fit_pp$NPP, nonAdv_neg_pp, nonAdv_pp$PPP, nonAdv_fit_pp$PPP, nonAdv_pos_pp)
-
-write(kable(pp_table), file='results/tables/tableS1.md')
-#render('results/tables/supp_table1.md', output_format='pdf_document', output_file='Schloss_tableS1.pdf')
 
 ```
 
@@ -736,7 +709,7 @@ In the present study we expanded upon those findings by demonstrating the potent
 ###Results
 
 _**Complementary detection of lesions by FIT and the microbiota**_  
-We characterized the bacterial communities of stool samples from 490 patients using 16S rRNA gene sequencing.  Among these patients, 120 had CRC, 198 had adenomas, and 172 had no colonic lesions. In addition to characterizing the bacterial community, we tested each sample for the concentration of hemoglobin using FIT. With these data we compared the ability to detect lesion using FIT to using a microbiota-based model. First we developed a random forest classification model for differentiating healthy individuals from those with cancer based on the relative abundance of bacterial populations in stool. We determined the optimal model using the AUC-RF algorithm for maximizing the area under the curve (AUC) of the receiver operating characteristic (ROC) curve for a random forest model [@calle2011auc]. The optimal model utilized 34 bacterial populations (`r canc_aucrf`). Consistent with previous observations, the bacteria most strongly associated with CRC belonged to taxa commonly associated with the oral cavity, including _Pophyromonas_, _Fusobacterium_, _Parvimonas_, _Peptostreptococcus_, _Gemella_, and _Prevotella_ [@warren2013co;@zeller2014potential] (`r canc_stripChart`). The ROC curve for the model had an AUC of 0.837, which is similar to AUCs reported for other microbiota-based models for CRC [@zackular2014human;@zeller2014potential], but significantly lower than that of FIT (FIT AUC:`r signif(canc_fit_roc$auc, 3)`, `r pval(roc.test(otu_canc_roc,canc_fit_roc)$p.value)`, `r canc_ROC`). At the manufacturer recommended cutoff of 100ng/ml FIT detected `r sprintf('%.3g',100*canc_fit_sens_ci[2])`% of cancers with a specificity of `r sprintf('%.3g',100*fit_spec_ci[2])`%. At its optimal cutoff (`r sprintf('%.3g',otu_canc_thr)`) the microbiota model detected `r sprintf('%.3g',100*otu_canc_sens)`% of cancers with a specificity of `r sprintf('%.3g',100*otu_canc_spec)`%. 
+We characterized the bacterial communities of stool samples from 490 patients using 16S rRNA gene sequencing.  Among these patients, 120 had CRC, 198 had adenomas, and 172 had no colonic lesions. In addition to characterizing the bacterial community, we tested each sample for the concentration of hemoglobin using FIT. With these data we compared the ability to detect lesion using FIT to using a microbiota-based model. First we developed a random forest classification model for differentiating healthy individuals from those with cancer based on the relative abundance of bacterial populations in stool. We determined the optimal model using the AUC-RF algorithm for maximizing the area under the curve (AUC) of the receiver operating characteristic (ROC) curve for a random forest model [@calle2011auc]. The optimal model utilized 34 bacterial populations (`r canc_aucrf`). Consistent with previous observations, the bacteria most strongly associated with CRC belonged to taxa commonly associated with periodontal disease [@warren2013co;@zeller2014potential;@yu2015metagenomic]. These include OTUs associated _Pophyromonas assaccharolytica (OTU105)_, _Fusobacterium nucleatum (OTU264)_, _Parvimonas micra (OTU281)_, _Peptostreptococcus stomatis (OTU310)_, _Gemella spp. (OTU356)_, and an _unclassified Prevotella (OTU57)_  (`r canc_stripChart`). The ROC curve for the model had an AUC of 0.837, which is similar to AUCs reported for other microbiota-based models for CRC [@zackular2014human;@zeller2014potential], but significantly lower than that of FIT (FIT AUC:`r signif(canc_fit_roc$auc, 3)`, `r pval(roc.test(otu_canc_roc,canc_fit_roc)$p.value)`, `r canc_ROC`). At the manufacturer recommended cutoff of 100ng/ml FIT detected `r sprintf('%.3g',100*canc_fit_sens_ci[2])`% of cancers with a specificity of `r sprintf('%.3g',100*fit_spec_ci[2])`%. At its optimal cutoff (`r sprintf('%.3g',otu_canc_thr)`) the microbiota model detected `r sprintf('%.3g',100*otu_canc_sens)`% of cancers with a specificity of `r sprintf('%.3g',100*otu_canc_spec)`%. 
 
 To determine whether FIT and the microbiota model were detecting the same lesions, we compared the results of the two tests for each sample. Most cancers (53.3%) were detected by both FIT and the microbiota model, while 37.5% of cancers were only detected by one of the two tests (`r canc_scatter`). Thus each test detected cancers that the other failed to detect, suggesting the two methods could complement each other if combined into a single test. 
 
@@ -758,15 +731,15 @@ Previous studies have identified differences in diagnostic test performance for 
 
 ###Discussion  
 
-Paragraph summarizing the results... 
-  - though FIT was better at detecting cancers than a model using only the microbiota, the microbiota detected many of the tumors that FIT had missed. 
+We confirmed previous findings that the gut microbiota can be used to differentiate healthy individuals from those with colonic lesions. Although FIT was better at detecting lesions than a model using only the microbiota, microbiota-based models detected a subset of lesions that were not detected by FIT, suggesting the two methods complement each other. Based on this observation we developed a cross-validated random forest model that combined both FIT and the microbiota to detect colonic lesions.  The resulting MMT had higher sensitivity than FIT for detecting lesions, especially adenomas. MMT was also able to detect the majority of lesion missed by FIT.  However, the increased sensitivity of MMT was accompanied by a decrease in specificity compared to FIT. By estimating the performance of the tests on the U.S. population, we demonstarted the potential for using FIT and the MMT in series to further improve the detection of CRC.
 
 It was recently shown that when FIT was combined with host-associated DNA biomarkers the ability to detect adenomas and carcinomas was significantly improved over FIT alone [@imperiale2014multitarget]. The sensitivity of the host-associated DNA screen was 92.3% for CRC and 42.4% for adenomas, which are both slightly lower than what we observed with our MMT. Regardless of the relative performance, such results support the assertion that because of the large interpersonal variation in markers for adenomas and carcinomas, it is necessary to employ a panel of biomarkers and to use a model that integrates the biomarkers. The accuracy of our model may be further improved by incorporating additional biomarkers such as the host-associated biomarkers or those targeting specific genes involved in the underlying mechanism of tumorigenesis such as toxins [@wu2009human;@arthur2012intestinal;@zeller2014potential]. More generally, predictive and diagnostic models for other diseases with a microbial etiology may benefit from a similar approach. For example, we recently demonstrated the ability to detect *Clostridium difficile* infection based on the composition of the microbiota [@schubert2015antibiotic]. Such models are likely to be useful as microbiota sequencing gains traction as a tool for characterizing health.
 
-Interestingly most of the OTUs in the MMT were enriched in normal individuals, suggesting that a loss of beneficial organisms in addition to the emergence of pathogens may be important for colorectal cancer development. Many of the OTUs that were depleted in patients with lesions belonged to the Ruminococcoaceae and Lachnospiraceae families, which are the predominant producers of butyrate, a short-chain fatty acid with anti-inflammatory and anti-tumorigenic properties [@pryde2002microbiology;@segain2000butyrate;@d1996butyrate;@hague1995apoptosis]. Loss of this or other beneficial microbial metabolites may contribute to CRC development. These possibilities highlight the need for longitudinal studies to better understand how changes to an individual's microbiome or the metabolic profile of the gut might predispose them to CRC.
+Surprisingly most of the OTUs that work well for identifying cancers, including _Fusobacterium nucleatum (OTU264)_, _Peptostroptococcus stomatis (OTU310)_, and _Parvimonas micra (OTU281)_, were excluded from the MMT. Instead the MMT is enriched for OTUs that help detect adenomas. It seems that the MMT model relies primarliy on FIT for detecting cancer, and uses the microbiota to identify adenomas. It is also interesting that most of the OTUs used in the MMT were enriched in normal individuals, suggesting that a loss of beneficial organisms in addition to the emergence of pathogens may be important for colorectal cancer development. Many of the OTUs that were depleted in patients with lesions belonged to the Ruminococcoaceae and Lachnospiraceae families, which are the predominant producers of butyrate, a short-chain fatty acid with anti-inflammatory and anti-tumorigenic properties [@pryde2002microbiology;@segain2000butyrate;@d1996butyrate;@hague1995apoptosis]. Loss of this or other beneficial microbial metabolites may contribute to CRC development. These possibilities highlight the need for longitudinal studies to better understand how changes to an individual's microbiome or the metabolic profile of the gut might predispose them to CRC.
 
 Like other groups before us, we noticed that the microbiota of CRC patients contained higher levels of bacterial taxa traditionally thought of as oral pathogens, including _Fusobacterium_, _Porphyromonas_, _Peptostreptococus_, _Gemella_, _Parvimonas_, and _Prevotella_. Periodontal pathogens have been shown to promote the progression of oral cancer [@gallimidi2015periodontal].  Therefore it's possible that these taxa could influence the progression of CRC by a similar mechanims. These observation may warrant further investigation into a potential link between periodontal diseases and CRC. Furthermore, since the structure of an individual's oral microbiome is correlated with that of the gut, alterations in the oral community could potentially be a proxy for ongoing or future changes to the gut community.
 
+ 
 ###Conclusions  
 Our findings demonstrate the potential for combining the analysis of a patient's microbiota with conventional stool-based tests to improve CRC detection. Using the random forest algorithm it was possible to interpret FIT results in the context of the microbiota. The MMT had significantly higher sensitivity for lesions at almost all stages of tumorigenesis. Moreover the model detected the majority of lesions that FIT was unable to detect. The shortcoming of the MMT is its lower specificity but, by conducting the FIT and MMT in series, it is possible to maximize the number of correctly identified individuals with preclinical lesions. The potential value of the MMT is its higher sensitivity which, at its core, is the purpose of preventive screening – finding lesions earlier so that cancer would be avoided.
 
