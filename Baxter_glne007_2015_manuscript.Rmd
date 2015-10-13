@@ -752,7 +752,7 @@ Our findings demonstrate the potential for combining the analysis of a patient's
 
 **Acknowledgements:** The authors thank the Great Lakes-New England Early Detection Research Network for providing the fecal samples that were used in this study.
 
-**Data and materials availability:** Raw fastq files and a MIMARKS file are available through the NCBI Sequence Read Archive [SRP062005]. The exact data processing steps including an automated workflow going from the raw sequence data to the final manuscript is available at http://www.github.com/SchlossLab/Baxter\_glne007Modeling_2015.
+**Data and materials availability:** Raw fastq files and a MIMARKS file are available through the NCBI Sequence Read Archive [SRP062005]. The exact data processing steps including an automated workflow going from the raw sequence data to the final manuscript is available at http://www.github.com/SchlossLab/Baxter_glne007Modeling_2015.
 
 
 ###Figures   
