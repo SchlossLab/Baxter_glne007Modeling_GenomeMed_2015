@@ -744,13 +744,7 @@ Like other groups before us, we noticed that the microbiota of CRC patients cont
  
 ###Conclusions  
 Our findings demonstrate the potential for combining the analysis of a patient's microbiota with conventional stool-based tests to improve CRC detection. Using the random forest algorithm it was possible to interpret FIT results in the context of the microbiota. The MMT had higher sensitivity for lesions, regardless of the stages of tumorigenesis. Moreover the model detected the majority of lesions that FIT was unable to detect. The shortcoming of the MMT is its lower specificity but, by conducting the FIT and MMT in series, it is possible to maximize the number of correctly identified individuals with preclinical lesions. The potential value of the MMT is its higher sensitivity which, is the purpose of preventive screening – finding lesions earlier so that cancer would be avoided.
-
-
-**Supplementary Materials:**  
-Fig. S1. OTU selection for adenoma model.  
-Fig. S2. OTU selection for cancer model.  
-Fig. S3. Bacterial OTUs in MMT.   
-Fig. S4. Effect of sex on MMT performance.    
+  
 
 **Competing interests:** The authors declare no competing financial interests.  
 
