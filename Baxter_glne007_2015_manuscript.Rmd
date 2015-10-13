@@ -19,7 +19,13 @@ bibliography: references.bibtex
 ^1^Department of Microbiology and Immunology, University of Michigan, Ann Arbor, Michigan.  
 ^2^Department of Family Medicine, University of Michigan, Ann Arbor, Michigan.  
 ^3^Department of Internal Medicine, University of Michigan, Ann Arbor, Michigan.  
-^\*^To whom correspondence should be addressed: pschloss@umich.edu
+^\*^Corresponding author
+
+**Email addresses:**  
+NTB: ntbaxter@umich.edu  
+MTR: mruffin@med.umich.edu  
+MAMR: maryroge@med.umich.edu  
+PDS: pschloss@umich.edu  
 
 
 ```{r startup, echo=F, message=F, warning=F}
@@ -233,7 +239,6 @@ mtext('C', at=1e-7, font=2, side=3)
 dev.off()
 ```
 
-
 ```{r figure2_MMT, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
 pdf('results/figures/figure2.pdf', width=10, height=5)
 
@@ -351,6 +356,7 @@ dev.off()
 
 ```{r figure4_negativeFIT, echo=F, fig.width=8, fig.height=6, results='hide'}
 ### FIT vs MMT scatter plot
+
 pdf('results/figures/Figure4.pdf', width=10, height=6)
 layout(matrix(c(1,2), nrow=1), widths=c(3,2))
 par(mar=c(4, 4, 2, 0.5))
@@ -431,6 +437,7 @@ s4_fit_sens <- length(s4_fit[s4_fit>=100]) / length(s4_fit)
 
 sens_matrix <- matrix(c(nonAdv_fit_sens,nonAdv_sens,advAde_fit_sens,advAde_sens,s1_fit_sens,s1_sens,s2_fit_sens,s2_sens,s3_fit_sens,s3_sens,s4_fit_sens,s4_sens), byrow=F, nrow=2)
 rownames(sens_matrix) <- c('FIT','MMT')
+
 
 pdf('results/figures/Figure3.pdf', height=6, width=9)
 par(mar=c(4,4,2,2))
@@ -745,49 +752,51 @@ Like other groups before us, we noticed that the microbiota of CRC patients cont
 ###Conclusions  
 Our findings demonstrate the potential for combining the analysis of a patient's microbiota with conventional stool-based tests to improve CRC detection. Using the random forest algorithm it was possible to interpret FIT results in the context of the microbiota. The MMT had higher sensitivity for lesions, regardless of the stages of tumorigenesis. Moreover the model detected the majority of lesions that FIT was unable to detect. The shortcoming of the MMT is its lower specificity but, by conducting the FIT and MMT in series, it is possible to maximize the number of correctly identified individuals with preclinical lesions. The potential value of the MMT is its higher sensitivity which, is the purpose of preventive screening – finding lesions earlier so that cancer would be avoided.
   
+###Declarations
+
+**Abbreviations:**  
+FIT: fecal immunochemical test  
+gFOBT: guaic fecal occult blood test  
+OTU: operational taxonomic unit  
+MMT: multitarget microbiota test  
+
+
+**Availability of data and materials:** Raw fastq files and a MIMARKS file are available through the NCBI Sequence Read Archive [SRP062005]. The exact data processing steps including an automated workflow going from the raw sequence data to the final manuscript is available at http://www.github.com/SchlossLab/Baxter_glne007Modeling_2015.
 
 **Competing interests:** The authors declare no competing financial interests.  
 
 **Author Contributions:** All authors were involved in the conception and design of the study. NTB processed samples and analyzed the data.  All authors interpreted the data. NTB and PDS wrote the manuscript.  All authors reviewed and revised the manuscript.
 
-**Acknowledgements:** The authors thank the Great Lakes-New England Early Detection Research Network for providing the fecal samples that were used in this study.
+**Funding:** This study was supported by funding from the National Institutes of Health to P. Schloss (R01GM099514) and to the Early Detection Research Network (U01CA86400).
 
-**Data and materials availability:** Raw fastq files and a MIMARKS file are available through the NCBI Sequence Read Archive [SRP062005]. The exact data processing steps including an automated workflow going from the raw sequence data to the final manuscript is available at http://www.github.com/SchlossLab/Baxter_glne007Modeling_2015.
+**Acknowledgements:** The authors thank the Great Lakes-New England Early Detection Research Network for providing the fecal samples that were used in this study. 
 
 
 ###Figures   
-
-![](results/figures/Figure1.pdf)  
 **Figure 1. Microbiota-based models can complement FIT.** (A,C) ROC curves for distinguishing healthy patients from those with adenoma (A) or cancer (C) based on FIT or a microbiota-based random forest model. Open circles show the sensitivity and specifity of FIT with a 100ng/ml cutoff.  Black points show the sensitivity and specificity of the microbiota-based models at the chosen cutoffs.  (B,D) Results of FIT and a microbiota-based model for each adenoma (B) or cancer (D) sample. Dotted lines represent the cutoffs for each test. Points are shaded based on whether the lesion was detected by both tests (black), one of the two tests (grey), or neither test (white).
-
-![](results/figures/Figure2.pdf)  
+  
 **Figure 2. Comparing MMT to FIT.** (A) ROC Curves for the MMT (solid lines) and FIT (dashed lines) for distinguishing normal from any lesion (dark red), normal from cancer (red) and normal from adenoma (orange). Filled dots show the sensitivity and specificity of the MMT at the optimal cutoff (0.622).  Open dots show the sensitivity and specificity of FIT at the 100ng/ml cutoff. (B,C) Stripcharts showing the results for FIT (B) and the MMT (C). Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility.
 
-![](results/tables/table1.pdf)  
+**Figure 3. Sensitivities for FIT and MMT for each stage of tumor development.**  P-values based on McNemar's chi-squared test.
+ 
+**Figure 4. Relationship between FIT and MMT for each sample.** (A) Scatterplot of MMT and FIT results for each sample.  Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility. (B) Stripchart of MMT results for samples separated by binary FIT result.
+ 
+ 
+###Tables  
 **Table 1. Sensitivities and specificities for FIT and MMT.** The 95% confidence intervals were computed with 2000 stratified bootstrap replicates.
 
-![](results/figures/Figure3.pdf)  
-**Figure 3. Sensitivities for FIT and MMT for each stage of tumor development.**  P-values based on McNemar's chi-squared test.
-
-![](results/figures/Figure4.pdf)  
-**Figure 4. Relationship between FIT and MMT for each sample.** (A) Scatterplot of MMT and FIT results for each sample.  Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility. (B) Stripchart of MMT results for samples separated by binary FIT result.
-
-![](results/tables/table2.pdf)  
-**Table 2.** Estimated MMT performance on average risk population. Number and proportion of true positives identified through FIT and MMT in the United States in adults 50-75 years of age, based on published estimates of CRC prevalence. Far right column shows percentage of true positives identified among individuals with a negative FIT result.
+**Table 2. Estimated performance on average risk population.** Number and proportion of true positives identified through FIT and MMT in the United States in adults 50-75 years of age, based on published estimates of CRC prevalence. Far right column shows percentage of true positives identified among individuals with a negative FIT result.
 
 
-###Supplementary Figures  
-![](results/figures/figS1.pdf)  
-**Supplementary Figure 1. Random forest feature selection for detecting adenomas.**  (A) Change in AUC with varying number of variables in the random forest model.  The model with the highest AUC contained 22 OTUs. (B) Importance of each OTU in the model as measured by mean decrease accuracy when the OTU is removed from the model. (C) Relative abundance of the most disciminatory OTUs in cancer and normal samples.
 
-![](results/figures/figS2.pdf)  
-**Supplementary Figure 2. Random forest feature selection for detecting cancers.**  (A) Change in AUC with varying number of variables in the random forest model.  The model with the highest AUC contained 34 OTUs. (B) Importance of each OTU in the model as measured by mean decrease accuracy when the OTU is removed from the model. (C) Relative abundance of the most disciminatory OTUs in cancer and normal samples.
+###Additional Files  
+**Additional file 1: Figure S1. Random forest feature selection for detecting adenomas.**  (A) Change in AUC with varying number of variables in the random forest model.  The model with the highest AUC contained 22 OTUs. (B) Importance of each OTU in the model as measured by mean decrease accuracy when the OTU is removed from the model. (C) Relative abundance of the most disciminatory OTUs in cancer and normal samples.
 
-![](results/figures/figS3.pdf)  
-**Supplementary Figure 3. Bacterial OTUs in MMT.** (left) Importance of each OTU used in the MMT as measured by the mean decrease in the Gini index when the OTU is removed from the model. (right) Stripchart of the relative abundances of each OTU in the MMT with black lines at the medians.
-
-![](results/figures/figS4.pdf)  
-**Supplementary Figure 4. MMT performance by sex.** ROC curves (left) and stripchart (right) of MMT results separated by sex. 
+**Additional file 2: Figure S2. Random forest feature selection for detecting cancers.**  (A) Change in AUC with varying number of variables in the random forest model.  The model with the highest AUC contained 34 OTUs. (B) Importance of each OTU in the model as measured by mean decrease accuracy when the OTU is removed from the model. (C) Relative abundance of the most disciminatory OTUs in cancer and normal samples.
+ 
+**Additional file 3: Figure S3. Bacterial OTUs in MMT.** (left) Importance of each OTU used in the MMT as measured by the mean decrease in the Gini index when the OTU is removed from the model. (right) Stripchart of the relative abundances of each OTU in the MMT with black lines at the medians.
+  
+**Additional file 4: Figure S4. MMT performance by sex.** ROC curves (left) and stripchart (right) of MMT results separated by sex. 
 
 
-###References and Notes
+###References
