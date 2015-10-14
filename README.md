@@ -15,25 +15,21 @@ Overview
     project
     |- README          # the top level description of content
     |
-    |- doc/            # documentation for the study
-    |  |- notebook/    # preliminary analyses (dead branches of analysis)
-    |  +- paper/       # manuscript(s), whether generated or not
     |
     |- data            # raw and primary data, are not changed once created
-    |  |- references/  # reference files to be used in analysis
-    |  |- raw/         # raw data, will not be altered
-    |  +- process/     # cleaned data, will not be altered once created
     |
     |- code/           # any programmatic code
     |- results         # all output from workflows and analyses
     |  |- tables/      # text version of tables to be rendered with kable in R
     |  |- figures/     # graphs, likely designated for manuscript figures
-    |  +- pictures/    # diagrams, images, and other non-graph graphics
     |
-    |- scratch/        # temporary files that can be safely deleted or lost
+    |- Baxter_glne007_2015_manuscript.Rmd       # executable Rmarkdown for this study, if applicable
+    |- Baxter_glne007_2015_manuscript.docx      # docx rendered version of the Rmd file
+    |- Baxter_GenMed_2015_manuscript.docx	# submission-ready version of manuscript
+    |- Baxter_GenMed_2015_CoverLetter.docx	# cover letter for submission
     |
-    |- study.Rmd       # executable Rmarkdown for this study, if applicable
-    |- study.md        # Markdown (GitHub) version of the *Rmd file
-    |- study.html      # HTML version of *.Rmd file
+    |- bmc.csl	# citation style guide for BioMed Central
+    |- manuscript_format.docx	# reference document for formatting docx made from Rmd
+    |- references.bibtex	# bibtex formatted bibliography for the manuscript
     |
     +- Makefile        # executable Makefile for this study, if applicable
