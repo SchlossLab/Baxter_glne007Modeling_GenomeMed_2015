@@ -767,7 +767,7 @@ MMT: multitarget microbiota test
 
 **Author Contributions:** All authors were involved in the conception and design of the study. NTB processed samples and analyzed the data.  All authors interpreted the data. NTB and PDS wrote the manuscript.  All authors reviewed and revised the manuscript.
 
-**Funding:** This study was supported by funding from the National Institutes of Health to P. Schloss (R01GM099514) and to the Early Detection Research Network (U01CA86400).
+**Funding:** This study was supported by funding from the National Institutes of Health to P. Schloss (R01GM099514, P30DK034933) and to the Early Detection Research Network (U01CA86400).
 
 **Acknowledgements:** The authors thank the Great Lakes-New England Early Detection Research Network for providing the fecal samples that were used in this study. 
 
