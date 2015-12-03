@@ -282,7 +282,7 @@ legend('bottomright', legend=c(sprintf('MMT-Les. vs Norm.: %.3g',les_roc$auc),
                                sprintf('MMT-Canc. vs Norm: %.3g',canc_roc$auc),
                                sprintf('FIT-Canc. vs Norm.: %.3g',canc_fit_roc$auc),
                                sprintf('MMT-Ade. vs Norm.: %.3g',ade_roc$auc),
-                               sprintf('FIT-Ade. vs Norm.: %.3g',ade_fit_roc$auc)),lty=c(1,2,1,2,1,2), lwd=2, col=c('red3','red3','red','red','orange','orange'), bty='n', cex=0.8)
+                               sprintf('FIT-Ade. vs Norm.: %.3g',ade_fit_roc$auc)),lty=c(1,2,1,2,1,2), lwd=2, col=c('red3','red3','red','red','orange','orange'), bty='n', cex=0.8, seg.len=5)
 
 points(coords(canc_fit_roc, x=100, input='threshold', ret='specificity'),coords(canc_fit_roc, x=100, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=10)
 points(coords(les_fit_roc, x=100, input='threshold', ret='specificity'),coords(les_fit_roc, x=100, input='threshold', ret='sensitivity'), col='darkred', cex=1.5, pch=10)
