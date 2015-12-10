@@ -637,6 +637,51 @@ mod_adonis_p <- mod_adonis[[1]][["Pr(>F)"]][1]
 
 ```
 
+```{r metadata_model, echo=F, cache=T, results='hide'}
+
+demo_data <- all_data[,c(les_model$Xopt,'Age','BMI','Gender','Smoke')]
+demo_data$lesion <- les_data$lesion
+rows <- apply(is.na(demo_data), 1, sum)==0
+demo_data <- demo_data[rows,]
+
+set.seed(120715)
+demo_rf <-AUCRF(lesion ~ ., data=demo_data, ntree=500, pdel=0.99, ranking='MDG')
+
+demo_probs <- predict(demo_rf$RFopt,type='prob')[,2]
+demo_roc <- roc(demo_data$lesion~demo_probs)
+
+mmt_probs <- all_probs[rows,2]
+mmt_roc <- roc(demo_data$lesion~mmt_probs)
+
+pdf('results/figures/figS5.pdf', height=5, width=6)
+par(mar=c(4.5,4.5,1,1))
+plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='', xlab='', cex.axis=1.2)
+plot(mmt_roc, col='red', lwd=2, add=T)
+plot(demo_roc, col='green3', lwd=2, add=T)
+plot(les_fit_roc, col='blue', lwd=2, add=T, lty=1)
+mtext(side=2, text="Sensitivity", line=2.5, cex=1)
+mtext(side=1, text="Specificity", line=2.5, cex=1)
+#mtext('A', at=1.12, font=2, side=3)
+legend('bottomright', legend=c(sprintf('MMT+Age,BMI,Gender,Smoking: %.3g', demo_roc$auc),
+                                sprintf('MMT: %.3g',mmt_roc$auc),
+                               sprintf('FIT: %.3g',les_fit_roc$auc)),
+                              lty=1, lwd=2, col=c('green3','red','blue'), bty='n', cex=0.8, seg.len=3)
+dev.off()
+
+mmt_sens <- coords(mmt_roc, x=cutoff, input='thr', ret='sens')
+demo_sens <- coords(demo_roc, x=0.837, input='spec', ret='sens')
+demo_cutoff <- coords(demo_roc, x=demo_sens, input='sens', ret='thr')
+
+mc <- matrix(c(sum(mmt_probs>=cutoff & demo_probs>=demo_cutoff),
+               sum(mmt_probs>=cutoff & demo_probs<demo_cutoff),
+               sum(mmt_probs<cutoff & demo_probs>=demo_cutoff),
+               sum(mmt_probs<cutoff & demo_probs<demo_cutoff)), nrow=2)
+
+demo_mc <- mcnemar.test(mc)
+
+```
+
+
 ```{r figures, echo=F}
 
 canc_ROC <- 'Fig. 1C'
@@ -660,6 +705,7 @@ ade_aucrf <- 'Fig. S1A'
 ade_varImp <- 'Fig. S1B'
 mmt_otus <- 'Fig. S3'
 gender <- 'Fig. S4'
+demo_fig <- 'Fig. S5'
 
 
 ```
@@ -722,6 +768,8 @@ The purpose of screening is to identify asymptomatic individuals with early stag
 
 _**Effect of sex on model performance.**_ 
 Previous studies have identified differences in diagnostic test performance for certain demographic groups or for people taking certain medications [@symonds2015factors;@kapidzic2015gender;@levi2009sensitivity]. Therefore we tested whether the MMT performance differed between patient populations. We found no difference in model performance according to age, BMI, NSAID usage, diabetes, smoking, or previous history of polyps (all p>0.05). However the model was significantly better at differentiating normal from lesion for females than for males (`r pval(gender_pval)`; `r gender`). For females the model detected `r 100*signif(f_sens, 3)`% of lesions with a specificity of `r 100*signif(f_spec, 3)`%. For males the model detected `r 100*signif(m_sens, 3)`% of lesions with a specificity of `r 100*signif(m_spec, 3)`%.  This difference was more pronounced for adenomas. The MMT detected `r 100*signif(f_ade_sens, 3)`% of adenomas in females and `r 100*signif(m_ade_sens, 3)`% in males. Despite performing more poorly overall for males, the MMT did have a higher sensitivity for cancer among males (`r 100*signif(m_canc_sens, 3)`%) than females (`r 100*signif(f_canc_sens, 3)`%). The difference in performance between males and females appeared to be due to differences in FIT results rather than differences in the microbiome. After correcting for diagnosis, there was a significant effect of sex on FIT result (`r pval(fit_aov_p)`, two-way ANOVA), but not on the overall structure of the microbiome (PERMANOVA: `r pval(mod_adonis_p)`). 
+
+We have previously shown that incorporating patient metadata into microbiome-based diagnostic models can improve screening accuracy [@zackular2014human]. To test whether the same was true for the MMT we generated a random forest model that combined patients' age, BMI, gender, and smoking status with the OTUs and FIT result from the MMT. The AUC of the ROC curve for this model (`r sprintf('%.3f',demo_roc$auc)`) was not significantly higher than that of the MMT (AUC: `r sprintf('%.3f',les_roc$auc)`, p=`r sprintf('%.2g',roc.test(demo_roc, les_roc)$p.value)`, `r demo_fig`). However, when the model with patient metadata was set to the same specificity as the MMT (83.7%), it had significantly higher sensitivity for lesions (`r sprintf('%.1f',100*demo_sens)`%) than the MMT (`r sprintf('%.1f',100*les_sens_ci[2])`%, p=`r sprintf('%.1g',demo_mc$p.value)`). This result supports our previous observations that patient metadata could be used to further improve screening accuracy.
 
 ###Discussion  
 
