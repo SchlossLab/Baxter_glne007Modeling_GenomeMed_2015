@@ -17,8 +17,15 @@ Overview
     |
     |
     |- data            # raw and primary data, are not changed once created
-    |
+    |  |- glne007.final.an.unique_list.0.03.subsample.0.03.filter.shared	# table of OTU abundances
+    |  |- metadata.tsv	# patient metadata
+    |  |- glne007.0.03.trim.tax	# OTU classifications
     |- code/           # any programmatic code
+    |  |- mothur.batch	# mothur commands for sequence curation
+    |  |- mothur.pbs	# PBS script for running mothur.batch
+    |  |- cluster.batch # mothur commands for OTU clustering
+    |  |- cluster.pbs	# PBS script for running cluster.batch
+    |  |- trimTax.py	# creates a simplified version of the OTU consenus taxonomy file
     |- results         # all output from workflows and analyses
     |  |- tables/      # text version of tables to be rendered with kable in R
     |  |- figures/     # graphs, likely designated for manuscript figures
