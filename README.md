@@ -12,20 +12,23 @@ Microbiota-based model improves the sensitivity for detecting colonic lesions
 Overview
 --------
 
+We are in the process of making this analysis workflow fully automated from raw reads to the finished manuscript. In the meantime, the workflow is outlined in the `analysis_workflow.md`.
+
     project
     |- README          # the top level description of content
-    |
     |
     |- data            # raw and primary data, are not changed once created
     |  |- glne007.final.an.unique_list.0.03.subsample.0.03.filter.shared	# table of OTU abundances
     |  |- metadata.tsv	# patient metadata
     |  |- glne007.0.03.trim.tax	# OTU classifications
+    |
     |- code/           # any programmatic code
     |  |- mothur.batch	# mothur commands for sequence curation
     |  |- mothur.pbs	# PBS script for running mothur.batch
     |  |- cluster.batch # mothur commands for OTU clustering
     |  |- cluster.pbs	# PBS script for running cluster.batch
     |  |- trimTax.py	# creates a simplified version of the OTU consenus taxonomy file
+    |
     |- results         # all output from workflows and analyses
     |  |- tables/      # text version of tables to be rendered with kable in R
     |  |- figures/     # graphs, likely designated for manuscript figures
