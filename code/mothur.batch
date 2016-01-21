@@ -1,6 +1,5 @@
 set.dir(input=data/, output=data/)
 make.contigs(file=glne007.files, processors=4)
-system(mv data/*.fastq data/fastqs/)
 summary.seqs(fasta=glne007.trim.contigs.fasta, processors=4)
 screen.seqs(fasta=glne007.trim.contigs.fasta, group=glne007.contigs.groups, summary=glne007.trim.contigs.summary, maxambig=0, maxlength=275, processors=4)
 summary.seqs()
