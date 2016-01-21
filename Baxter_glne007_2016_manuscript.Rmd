@@ -836,6 +836,6 @@ MMT: multitarget microbiota test
   
 **Additional file 4: Figure S4. MMT performance by sex.** ROC curves (left) and stripchart (right) of MMT results separated by sex. 
 
-
+**Additional file 5: Figure S5. MMT with patient metadata.** ROC curves for distinguishing normal from lesion using FIT, the MMT, or the MMT with metadata.
 
 ###References
