@@ -7,6 +7,8 @@ unique.seqs()
 summary.seqs(name=current, processors=4)
 count.seqs(name=glne007.trim.contigs.good.names, group=glne007.contigs.good.groups, processors=4)
 summary.seqs(count=glne007.trim.contigs.good.count_table)
+pcr.seqs(fasta=silva.nr_v123.align, start=11894, end=25319, keepdots=F)
+system(mv data/silva.nr_v123.pcr.align data/silva.v4.fasta)
 align.seqs(fasta=glne007.trim.contigs.good.unique.fasta, reference=silva.v4.fasta)
 summary.seqs(fasta=current, count=glne007.trim.contigs.good.count_table)
 screen.seqs(fasta=glne007.trim.contigs.good.unique.align, count=glne007.trim.contigs.good.count_table, summary=glne007.trim.contigs.good.unique.summary, start=1968, end=11550, maxhomop=8)
@@ -17,7 +19,7 @@ pre.cluster(fasta=glne007.trim.contigs.good.unique.good.filter.unique.fasta, cou
 chimera.uchime(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.count_table, dereplicate=T)
 remove.seqs(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.fasta, accnos=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.accnos)
 summary.seqs(fasta=current,count=current)
-classify.seqs(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.count_table, reference=trainset10_082014.pds.fasta, taxonomy=trainset10_082014.pds.tax, cutoff=80)
+classify.seqs(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.count_table, reference=trainset10_082014.pds/trainset10_082014.pds.fasta, taxonomy=trainset10_082014.pds/trainset10_082014.pds.tax, cutoff=80)
 remove.lineage(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.count_table, taxonomy=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.taxonomy, taxon=Chloroplast-Mitochondria-unknown-Archaea-Eukaryota)
 
 get.groups(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.pick.count_table, taxonomy=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.pick.taxonomy, groups=mock1-mock2-mock5-mock6-mock7)
@@ -25,6 +27,8 @@ get.groups(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.
 system(mv data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.pick.fasta data/mocks.final.fasta)
 system(mv data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.pick.pick.count_table data/mocks.final.counts)
 system(mv data/glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.pick.pick.taxonomy data/mocks.final.taxonomy)
+
+seq.error(fasta=mocks.final.fasta, count=mocks.final.counts, reference=HMP_MOCK.v35.fasta, aligned=F)
 
 remove.groups(fasta=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.fasta, count=glne007.trim.contigs.good.unique.good.filter.unique.precluster.uchime.pick.pick.count_table, taxonomy=glne007.trim.contigs.good.unique.good.filter.unique.precluster.pick.pds.wang.pick.taxonomy, groups=mock1-mock2-mock5-mock6-mock7)
 
