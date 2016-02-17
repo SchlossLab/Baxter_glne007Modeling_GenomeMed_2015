@@ -637,6 +637,41 @@ mod_adonis_p <- mod_adonis[[1]][["Pr(>F)"]][1]
 
 ```
 
+```{r leave_p_out, echo=F, cache=T}
+mmt_data <- les_data[,c('lesion',les_model$Xopt)]
+
+### Leave-1-out
+oos_probs <- rep(NA,nrow(mmt_data))
+oob_sens <- 
+oob_spec <- 
+for(i in 1:nrow(mmt_data)){
+  train <- mmt_data[-i,]
+  test <- mmt_data[i,]
+  temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
+  oob_probs <- predict(temp_model$RFopt, type='prob')[,2]
+  temp_roc <- roc(train$lesion~oob_probs)
+  oob_sens[i,] <- temp_roc$sensitivities
+  oob_spec[i,] <- temp_roc$specificities
+  oos_probs[i] <- predict(temp_model$RFopt, test, type='prob')[,2]
+}
+
+oos_roc <- roc(mmt_data$lesion~oos_probs)
+oob_roc <- plot(apply(oob_sens,2,mean), apply(oob_spec,2,mean))
+
+
+plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
+plot(les_roc, col='purple', lwd=2, add=T)
+plot(oos_roc, col='blue', lwd=2, add=T)
+#plot(oob_roc, col='green3', lwd=2, add=T)
+
+legend('bottomright', legend=c(sprintf('MMT out-of-bag (AUC: %.3g)',les_roc$auc),
+                               sprintf('Leave-one-out (AUC: %.3g)',oos_roc$auc),
+                               sprintf('p-value:%.2g', roc.test(les_roc,oos_roc)$p.value)
+                               ),lty=c(1,1,0), lwd=2, col=c('purple','blue','green3'), bty='n')
+
+```
+
+
 ```{r metadata_model, echo=F, cache=T, results='hide'}
 
 demo_data <- all_data[,c(les_model$Xopt,'Age','BMI','Gender','Smoke')]
