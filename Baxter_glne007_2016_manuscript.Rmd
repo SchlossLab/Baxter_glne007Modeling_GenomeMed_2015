@@ -29,7 +29,7 @@ PDS: pschloss@umich.edu
 
 
 ```{r startup, echo=F, message=F, warning=F}
-deps = c("pROC","randomForest","AUCRF","knitr","rmarkdown","vegan");
+deps = c("pROC","randomForest","AUCRF","knitr","rmarkdown","vegan","gtools");
 for (dep in deps){
   if (dep %in% installed.packages()[,"Package"] == FALSE){
     install.packages(as.character(dep), quiet=TRUE);
@@ -641,33 +641,59 @@ mod_adonis_p <- mod_adonis[[1]][["Pr(>F)"]][1]
 mmt_data <- les_data[,c('lesion',les_model$Xopt)]
 
 ### Leave-1-out
-oos_probs <- rep(NA,nrow(mmt_data))
-oob_sens <- 
-oob_spec <- 
-for(i in 1:nrow(mmt_data)){
-  train <- mmt_data[-i,]
-  test <- mmt_data[i,]
-  temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
-  oob_probs <- predict(temp_model$RFopt, type='prob')[,2]
-  temp_roc <- roc(train$lesion~oob_probs)
-  oob_sens[i,] <- temp_roc$sensitivities
-  oob_spec[i,] <- temp_roc$specificities
-  oos_probs[i] <- predict(temp_model$RFopt, test, type='prob')[,2]
+#iters <- 3
+#lv1_aucs <- c()
+#lv1_all_resp <- c()
+#lv1_all_pred <- c()
+#for(j in 1:iters){
+  lv1_probs <- rep(NA,nrow(mmt_data))
+  for(i in 1:nrow(mmt_data)){
+   train <- mmt_data[-i,]
+   test <- mmt_data[i,]
+   temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
+   lv1_probs[i] <- predict(temp_model$RFopt, test, type='prob')[,2]
+  }
+  lv1_roc <- roc(mmt_data$lesion~lv1_probs)
+  #lv1_all_pred <- c(lv1_all_pred, lv1_probs)
+  #lv1_all_resp <- c(lv1_all_resp, mmt_data$lesion)
+  #lv1_aucs[j] <- lv1_roc$auc
+#}
+
+### 10-fold CV
+start <- proc.time()[3]
+iters <- 100
+cv10f_aucs <- c()
+cv10f_all_resp <- c()
+cv10f_all_pred <- c()
+for(j in 1:iters){
+  sampling <- sample(1:490,490,replace=F)
+  cv10f_probs <- rep(NA,nrow(mmt_data))
+  for(i in seq(1,490,49)){
+    train <- mmt_data[sampling[-(i:(i+48))],]
+    test <- mmt_data[sampling[i:(i+48)],]
+    temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
+    cv10f_probs[sampling[i:(i+48)]] <- predict(temp_model$RFopt, test, type='prob')[,2]
+  }
+  cv10f_roc <- roc(mmt_data$lesion~cv10f_probs)
+  cv10f_all_pred <- c(cv10f_all_pred, cv10f_probs)
+  cv10f_all_resp <- c(cv10f_all_resp, mmt_data$lesion)
+  cv10f_aucs[j] <- cv10f_roc$auc
 }
-
-oos_roc <- roc(mmt_data$lesion~oos_probs)
-oob_roc <- plot(apply(oob_sens,2,mean), apply(oob_spec,2,mean))
-
+cv10f_roc <- roc(cv10f_all_resp~cv10f_all_pred)
+end <- proc.time()[3]
+time <- end-start
 
 plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
 plot(les_roc, col='purple', lwd=2, add=T)
 plot(oos_roc, col='blue', lwd=2, add=T)
-#plot(oob_roc, col='green3', lwd=2, add=T)
+plot(lv10_roc, col='green3', lwd=2, add=T)
 
 legend('bottomright', legend=c(sprintf('MMT out-of-bag (AUC: %.3g)',les_roc$auc),
-                               sprintf('Leave-one-out (AUC: %.3g)',oos_roc$auc),
-                               sprintf('p-value:%.2g', roc.test(les_roc,oos_roc)$p.value)
-                               ),lty=c(1,1,0), lwd=2, col=c('purple','blue','green3'), bty='n')
+                               sprintf('Leave-1-out (AUC: %.3g)',lv1_roc$auc),
+                               sprintf('10-fold CV (AUC: %.3g)',cv10f_roc$auc),
+                               sprintf('OOB vs Leave-1-out: p=%.2g', roc.test(les_roc,lv1_roc)$p.value),
+                               sprintf('OOB vs 10-fold CV: p=%.2g', roc.test(les_roc,cv10f_roc)$p.value)
+                               ),lty=c(1,1,1,0,0), lwd=2, col=c('purple','blue','green3'), bty='n')
 
 ```
 
