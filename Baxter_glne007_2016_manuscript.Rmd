@@ -82,6 +82,7 @@ set.seed(071315)
 otu_ade_model <- AUCRF(lesion ~ ., data=otu_ade_data, ntree=500, pdel=0.05)
 
 otu_ade_probs <- predict(otu_ade_model$RFopt, type='prob')
+otu_ade_probs <- (otu_ade_probs-0.14)/0.86
 otu_ade_roc <- roc(otu_ade_data$lesion~otu_ade_probs[,2])
 ade_fit_roc <- roc(all_data[all_data$dx!='cancer','lesion'] ~ all_data[all_data$dx!='cancer','fit_result'])
 
@@ -128,9 +129,10 @@ mtext(side=2, text="Sensitivity", line=2.5)
 mtext(side=1, text="Specificity", line=2.5)
 legend('bottomright', legend=c(sprintf('FIT - AUC: %.3g', canc_fit_roc$auc), sprintf('Microbiota - AUC: %.3g', otu_canc_roc$auc), pval(roc.test(canc_fit_roc,otu_canc_roc)$p.value)), bty='n', xjust=0, lty=c(2,1,NA), col='grey30')
 
-otu_canc_sens <- coords(otu_canc_roc, x='best', ret='sens')
-otu_canc_spec <- coords(otu_canc_roc, x='best', ret='spec')
-otu_canc_thr <- coords(otu_canc_roc, x='best', ret='thr')
+
+otu_canc_sens <- coords(otu_canc_roc, x=coords(canc_fit_roc, x=100, input='thr', ret='spec'), input='spec', ret='sens')
+otu_canc_spec <- coords(otu_canc_roc, x=coords(canc_fit_roc, x=100, input='thr', ret='spec'), input='spec', ret='spec')
+otu_canc_thr <- coords(otu_canc_roc, x=coords(canc_fit_roc, x=100, input='thr', ret='spec'), input='spec', ret='thr')
 
 points(otu_canc_spec,otu_canc_sens, pch=16, cex=1.5)
 points(coords(canc_fit_roc, x=100, input='thr', ret='spec'),coords(canc_fit_roc, x=100, input='thr', ret='sens'), pch=10, cex=1.5)
