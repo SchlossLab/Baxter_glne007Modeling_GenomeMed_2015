@@ -252,6 +252,7 @@ set.seed(53015)
 les_model <- AUCRF(lesion ~ ., data=les_data, ntree=500, pdel=0.05, ranking='MDG')
 opt_model <- les_model$RFopt
 all_probs <- predict(opt_model, type='prob')
+all_probs <- (all_probs-0.2)/0.8
 les_roc <- roc(les_data$lesion~all_probs[,2])
 les_fit_roc <- roc(les_data$lesion~les_data$fit_result)
 
@@ -282,13 +283,13 @@ legend('bottomright', legend=c(sprintf('MMT-Les. vs Norm.: %.3g',les_roc$auc),
                                sprintf('MMT-Canc. vs Norm: %.3g',canc_roc$auc),
                                sprintf('FIT-Canc. vs Norm.: %.3g',canc_fit_roc$auc),
                                sprintf('MMT-Ade. vs Norm.: %.3g',ade_roc$auc),
-                               sprintf('FIT-Ade. vs Norm.: %.3g',ade_fit_roc$auc)),lty=c(1,2,1,2,1,2), lwd=2, col=c('darkred','darkred','red','red','orange','orange'), bty='n', cex=0.8, seg.len=5)
+                               sprintf('FIT-Ade. vs Norm.: %.3g',ade_fit_roc$auc)),lty=c(1,2,1,2,1,2), lwd=2, col=c('darkred','darkred','red','red','orange','orange'), bty='n', cex=0.8, seg.len=3)
 
 points(coords(canc_fit_roc, x=100, input='threshold', ret='specificity'),coords(canc_fit_roc, x=100, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=10)
 points(coords(les_fit_roc, x=100, input='threshold', ret='specificity'),coords(les_fit_roc, x=100, input='threshold', ret='sensitivity'), col='darkred', cex=1.5, pch=10)
 points(coords(ade_fit_roc, x=100, input='threshold', ret='specificity'),coords(ade_fit_roc, x=100, input='threshold', ret='sensitivity'), col='orange', cex=1.5, pch=10)
 
-cutoff <- coords(roc=les_roc, x='best', best.method='y', ret=c('threshold'))
+cutoff <- coords(roc=canc_roc, x='best', best.method='y', ret=c('threshold'))
 
 points(coords(canc_roc, x=cutoff, input='threshold', ret='specificity'),coords(canc_roc, x=cutoff, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=16)
 points(coords(les_roc, x=cutoff, input='threshold', ret='specificity'),coords(les_roc, x=cutoff, input='threshold', ret='sensitivity'), col='darkred', cex=1.5, pch=16)
@@ -360,7 +361,7 @@ dev.off()
 pdf('results/figures/Figure4.pdf', width=10, height=6)
 layout(matrix(c(1,2), nrow=1), widths=c(3,2))
 par(mar=c(4, 4, 2, 0.5))
-plot(1, type="n", xlim=c(0.1,10000), ylim=c(0.2,1), log='x',ylab="", xlab="", xaxt='n')
+plot(1, type="n", xlim=c(0.1,10000), ylim=c(0,1), log='x',ylab="", xlab="", xaxt='n')
 
 palette(c('orange','red','royalblue1'))
 points(all_data[,'fit_result'], all_probs[,2], pch=21, bg=all_data$dx)
@@ -406,65 +407,84 @@ neg_mod_acc <- (length(neg_norm_mod[neg_norm_mod<cutoff]) + length(neg_les_mod[n
 ```
 
 ```{r figure3_barplot, echo=F, fig.width=9, fig.height=6, results='hide'}
+mmt_spec <- coords(les_roc, x=cutoff, input='thr', ret='spec')
+fit_thr <- coords(les_fit_roc, x=mmt_spec, input='spec', ret='thr')
+if(is.na(fit_thr)){fit_thr <- 7}
 
+all_les_probs <- all_probs[all_data$dx!='normal',2]
 nonAdv_probs <- all_probs[all_data$Dx_Bin=='Adenoma',2]
 advAde_probs <- all_probs[all_data$Dx_Bin=='adv Adenoma',2]
+all_ade_probs <- all_probs[all_data$dx=='adenoma',2]
 s1_probs <- all_probs[all_data$stage==1,2]
 s2_probs <- all_probs[all_data$stage==2,2]
 s3_probs <- all_probs[all_data$stage==3,2]
 s4_probs <- all_probs[all_data$stage==4,2]
+all_canc_probs <- all_probs[all_data$dx=='cancer',2]
 
-nonAdv_sens <- length(nonAdv_probs[nonAdv_probs>=cutoff]) / length(nonAdv_probs)
-advAde_sens <- length(advAde_probs[advAde_probs>=cutoff]) / length(advAde_probs)
-s1_sens <- length(s1_probs[s1_probs>=cutoff]) / length(s1_probs)
-s2_sens <- length(s2_probs[s2_probs>=cutoff]) / length(s2_probs)
-s3_sens <- length(s3_probs[s3_probs>=cutoff]) / length(s3_probs)
-s4_sens <- length(s4_probs[s4_probs>=cutoff]) / length(s4_probs)
+all_les_sens <- sum(all_les_probs>=cutoff) / length(all_les_probs)
+nonAdv_sens <- sum(nonAdv_probs>=cutoff) / length(nonAdv_probs)
+advAde_sens <- sum(advAde_probs>=cutoff) / length(advAde_probs)
+all_ade_sens <- sum(all_ade_probs>=cutoff) / length(all_ade_probs)
+s1_sens <- sum(s1_probs>=cutoff) / length(s1_probs)
+s2_sens <- sum(s2_probs>=cutoff) / length(s2_probs)
+s3_sens <- sum(s3_probs>=cutoff) / length(s3_probs)
+s4_sens <- sum(s4_probs>=cutoff) / length(s4_probs)
+all_canc_sens <- sum(all_canc_probs>=cutoff) / length(all_canc_probs)
 
+all_les_fit <- all_data[all_data$dx!='normal','fit_result']
 nonAdv_fit <- all_data[all_data$Dx_Bin=='Adenoma','fit_result']
 advAde_fit <- all_data[all_data$Dx_Bin=='adv Adenoma','fit_result']
+all_ade_fit <- all_data[all_data$dx=='adenoma','fit_result']
 s1_fit <- all_data[all_data$stage==1,'fit_result']
 s2_fit <- all_data[all_data$stage==2,'fit_result']
 s3_fit <- all_data[all_data$stage==3,'fit_result']
 s4_fit <- all_data[all_data$stage==4,'fit_result']
+all_canc_fit <- all_data[all_data$dx=='cancer','fit_result']
 
-nonAdv_fit_sens <- length(nonAdv_fit[nonAdv_fit>=100]) / length(nonAdv_fit)
-advAde_fit_sens <- length(advAde_fit[advAde_fit>=100]) / length(advAde_fit)
-s1_fit_sens <- length(s1_fit[s1_fit>=100]) / length(s1_fit)
-s2_fit_sens <- length(s2_fit[s2_fit>=100]) / length(s2_fit)
-s3_fit_sens <- length(s3_fit[s3_fit>=100]) / length(s3_fit)
-s4_fit_sens <- length(s4_fit[s4_fit>=100]) / length(s4_fit)
+all_les_fit_sens <- sum(all_les_fit>=fit_thr) / length(all_les_fit)
+nonAdv_fit_sens <- sum(nonAdv_fit>=fit_thr) / length(nonAdv_fit)
+advAde_fit_sens <- sum(advAde_fit>=fit_thr) / length(advAde_fit)
+all_ade_fit_sens <- sum(all_ade_fit>=fit_thr) / length(all_ade_fit)
+s1_fit_sens <- sum(s1_fit>=fit_thr) / length(s1_fit)
+s2_fit_sens <- sum(s2_fit>=fit_thr) / length(s2_fit)
+s3_fit_sens <- sum(s3_fit>=fit_thr) / length(s3_fit)
+s4_fit_sens <- sum(s4_fit>=fit_thr) / length(s4_fit)
+all_canc_fit_sens <- sum(all_canc_fit>=fit_thr) / length(all_canc_fit)
 
-sens_matrix <- matrix(c(nonAdv_fit_sens,nonAdv_sens,advAde_fit_sens,advAde_sens,s1_fit_sens,s1_sens,s2_fit_sens,s2_sens,s3_fit_sens,s3_sens,s4_fit_sens,s4_sens), byrow=F, nrow=2)
+
+sens_matrix <- matrix(c(all_les_fit_sens,all_les_sens,nonAdv_fit_sens,nonAdv_sens,advAde_fit_sens,advAde_sens,all_ade_fit_sens,all_ade_sens,s1_fit_sens,s1_sens,s2_fit_sens,s2_sens,s3_fit_sens,s3_sens,s4_fit_sens,s4_sens,all_canc_fit_sens,all_canc_sens), byrow=F, nrow=2)
 rownames(sens_matrix) <- c('FIT','MMT')
 
 
-pdf('results/figures/Figure3.pdf', height=6, width=9)
-par(mar=c(4,4,2,2))
-x_labels <- c(sprintf(' \nNonadvanced\nAdenoma\n(n=%i)',length(nonAdv_probs)),sprintf('Advanced\nAdenomas\n(n=%i)',length(advAde_probs)),sprintf('Cancer\nStage I\n(n=%i)',length(s1_probs)), sprintf('Cancer\nStage II\n(n=%i)',length(s2_probs)), sprintf('Cancer\nStage III\n(n=%i)',length(s3_probs)), sprintf('Cancer\nStage IV\n(n=%i)',length(s4_probs)))
+pdf('results/figures/Figure3.pdf', height=6, width=10)
+par(mar=c(3.5,4.5,0,0))
+x_labels <- c(sprintf('All\nLesions\n(n=%i)',length(all_les_probs)),sprintf('Nonadvanced\nAdenomas\n(n=%i)',length(nonAdv_probs)),sprintf('Advanced\nAdenomas\n(n=%i)',length(advAde_probs)),sprintf('All\nAdenomas\n(n=%i)',length(all_ade_probs)),sprintf('Cancer\nStage I\n(n=%i)',length(s1_probs)), sprintf('Cancer\nStage II\n(n=%i)',length(s2_probs)), sprintf('Cancer\nStage III\n(n=%i)',length(s3_probs)), sprintf('Cancer\nStage IV\n(n=%i)',length(s4_probs)),sprintf('All\nCancers\n(n=%i)',length(all_canc_probs)))
 bp<-barplot(sens_matrix, beside=T, ylab='Sensitvity (%)', ylim=c(0,1.1), axisnames=F, col=c('grey90','grey25'),axis.lty=1, yaxt='n')
 axis(2, at=seq(0,1,0.1), labels=seq(0,100,10))
-mtext(text=x_labels, side=1, at=c(2,5,8,11,14,17), line=2)
-legend('topleft', legend=c('FIT','MMT'), col=c('grey90','grey25'), pch=15, bty='n', pt.cex=2)
+mtext(text=x_labels, side=1, at=c(2,5,8,11,14,17,20,23,26), line=2, cex=0.8, font=c(2,1,1,2,1,1,1,1,2))
+legend(0,1, legend=c(sprintf('FIT (%.0fng/ml)',ceiling(fit_thr)),'MMT'), col=c('grey90','grey25'), pch=15, bty='n', pt.cex=2)
+
+
 
 
 #McNemar test
 getMcnemarP <- function(model, fit){
-  square <- matrix(c(length(model[model>=cutoff & fit >=100]),
-                     length(model[model>=cutoff & fit<100]),
-                     length(model[model<cutoff & fit >=100]),
-                     length(model[model<cutoff & fit <100])), ncol=2, byrow=T)
+  square <- matrix(c(length(model[model>=cutoff & fit >=fit_thr]),
+                     length(model[model>=cutoff & fit<fit_thr]),
+                     length(model[model<cutoff & fit >=fit_thr]),
+                     length(model[model<cutoff & fit <fit_thr])), ncol=2, byrow=T)
   return(mcnemar.test(square)$p.value)
   }
 
-
-text(2,sens_matrix[2,1]+0.05, pval(getMcnemarP(nonAdv_probs, nonAdv_fit)))
-text(5,sens_matrix[2,2]+0.05, pval(getMcnemarP(advAde_probs, advAde_fit)))
-text(8,sens_matrix[2,3]+0.05, pval(getMcnemarP(s1_probs, s1_fit)))
-text(11,sens_matrix[2,4]+0.05, pval(getMcnemarP(s2_probs, s2_fit)))
-text(14,sens_matrix[2,5]+0.05, pval(getMcnemarP(s3_probs, s3_fit)))
-text(17,sens_matrix[2,6]+0.05, pval(getMcnemarP(s4_probs, s4_fit)))
-
+if(getMcnemarP(all_les_probs, all_les_fit)<0.05){text(2,sens_matrix[2,1]+0.05, pval(getMcnemarP(all_les_probs, all_les_fit)),cex=0.8)}
+if(getMcnemarP(nonAdv_probs, nonAdv_fit)<0.05){text(5,sens_matrix[2,2]+0.05, pval(getMcnemarP(nonAdv_probs, nonAdv_fit)),cex=0.8)}
+if(getMcnemarP(advAde_probs, advAde_fit)<0.05){text(8,sens_matrix[2,3]+0.05, pval(getMcnemarP(advAde_probs, advAde_fit)),cex=0.8)}
+if(getMcnemarP(all_ade_probs, all_ade_fit)<0.05){text(11,sens_matrix[2,4]+0.05, pval(getMcnemarP(all_ade_probs, all_ade_fit)),cex=0.8)}
+if(getMcnemarP(s1_probs, s1_fit)<0.05){text(14,sens_matrix[2,5]+0.05, pval(getMcnemarP(s1_probs, s1_fit)),cex=0.8)}
+if(getMcnemarP(s2_probs, s2_fit)<0.05){text(17,sens_matrix[2,6]+0.05, pval(getMcnemarP(s2_probs, s2_fit)),cex=0.8)}
+if(getMcnemarP(s3_probs, s3_fit)<0.05){text(20,sens_matrix[2,7]+0.05, pval(getMcnemarP(s3_probs, s3_fit)),cex=0.8)}
+if(getMcnemarP(s4_probs, s4_fit)<0.05){text(23,sens_matrix[2,8]+0.05, pval(getMcnemarP(s4_probs, s4_fit)),cex=0.8)}
+if(getMcnemarP(all_canc_probs, all_canc_fit)<0.05){text(26,sens_matrix[2,1]+0.05, pval(getMcnemarP(all_canc_probs, all_canc_fit)),cex=0.8)}
 
 dev.off()
 
@@ -641,11 +661,6 @@ mod_adonis_p <- mod_adonis[[1]][["Pr(>F)"]][1]
 mmt_data <- les_data[,c('lesion',les_model$Xopt)]
 
 ### Leave-1-out
-#iters <- 3
-#lv1_aucs <- c()
-#lv1_all_resp <- c()
-#lv1_all_pred <- c()
-#for(j in 1:iters){
   lv1_probs <- rep(NA,nrow(mmt_data))
   for(i in 1:nrow(mmt_data)){
    train <- mmt_data[-i,]
@@ -654,14 +669,10 @@ mmt_data <- les_data[,c('lesion',les_model$Xopt)]
    lv1_probs[i] <- predict(temp_model$RFopt, test, type='prob')[,2]
   }
   lv1_roc <- roc(mmt_data$lesion~lv1_probs)
-  #lv1_all_pred <- c(lv1_all_pred, lv1_probs)
-  #lv1_all_resp <- c(lv1_all_resp, mmt_data$lesion)
-  #lv1_aucs[j] <- lv1_roc$auc
-#}
 
 ### 10-fold CV
 start <- proc.time()[3]
-iters <- 100
+iters <- 10
 cv10f_aucs <- c()
 cv10f_all_resp <- c()
 cv10f_all_pred <- c()
@@ -685,8 +696,8 @@ time <- end-start
 
 plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
 plot(les_roc, col='purple', lwd=2, add=T)
-plot(oos_roc, col='blue', lwd=2, add=T)
-plot(lv10_roc, col='green3', lwd=2, add=T)
+plot(lv1_roc, col='blue', lwd=2, add=T)
+plot(cv10f_roc, col='green3', lwd=2, add=T)
 
 legend('bottomright', legend=c(sprintf('MMT out-of-bag (AUC: %.3g)',les_roc$auc),
                                sprintf('Leave-1-out (AUC: %.3g)',lv1_roc$auc),
