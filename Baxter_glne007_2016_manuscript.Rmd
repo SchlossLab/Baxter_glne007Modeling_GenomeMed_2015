@@ -73,8 +73,6 @@ layout(rbind(c(1,2),c(3,4)))
 par(oma=c(1,6,1,1))
 
 
-
-
 ### Adenoma vs Normal
 otu_ade_data <- all_data[meta$dx!='cancer',c('lesion',colnames(all_data)[grep('Otu[0123456789]', colnames(all_data))])]
 
@@ -115,7 +113,7 @@ abline(v=100, lty=3)
 legend('bottomleft', legend=c('Detected by both tests', 'Detected by one test', 'Undetected', 'Test cutoffs'), pch=c(21,21,21,NA), lty=c(NA,NA,NA,3), pt.bg=c('black','grey60','grey90',NA), cex=0.8)
 mtext('B', at=0.04, font=2, side=3)
 
-ade_pos <- cbind(all_data[all_data$dx=='adenoma','fit_result']>100, otu_ade_probs[otu_ade_data$lesion==1,2]>0.702)
+ade_pos <- cbind(all_data[all_data$dx=='adenoma','fit_result']>100, otu_ade_probs[otu_ade_data$lesion==1,2]>otu_ade_thr)
 colnames(ade_pos) <- c('FIT','Microbiota')
 ade_table <- 100*table(as.data.frame(ade_pos))/sum(all_data$dx=='adenoma')
 text(x=c(1,1,500,500), y=c(0.9,0.3,0.9,0.3), labels=sprintf('%.3g%%',ade_table[c(3,1,4,2)]))
@@ -239,6 +237,108 @@ legend('bottomright', legend=c("Cancer", "Normal"), pch=c(21, 21), pt.bg=c("red"
 mtext('C', at=1e-7, font=2, side=3)
 
 dev.off()
+```
+
+```{r otu_CVs, echo=F, cache=T}
+##OTU adenoma model
+cv_ade_data <- otu_ade_data[,c('lesion',otu_ade_model$Xopt)]
+
+### Leave-1-out
+  lv1_probs <- rep(NA,nrow(cv_ade_data))
+  for(i in 1:nrow(cv_ade_data)){
+   train <- cv_ade_data[-i,]
+   test <- cv_ade_data[i,]
+   temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
+   lv1_probs[i] <- predict(temp_model$RFopt, test, type='prob')[,2]
+  }
+  lv1_roc <- roc(cv_ade_data$lesion~lv1_probs)
+
+### 10-fold CV
+start <- proc.time()[3]
+iters <- 10
+cv10f_aucs <- c()
+cv10f_all_resp <- c()
+cv10f_all_pred <- c()
+for(j in 1:iters){
+  sampling <- sample(1:370,370,replace=F)
+  cv10f_probs <- rep(NA,nrow(cv_ade_data))
+  for(i in seq(1,370,37)){
+    train <- cv_ade_data[sampling[-(i:(i+36))],]
+    test <- cv_ade_data[sampling[i:(i+36)],]
+    temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
+    cv10f_probs[sampling[i:(i+36)]] <- predict(temp_model$RFopt, test, type='prob')[,2]
+  }
+  cv10f_roc <- roc(cv_ade_data$lesion~cv10f_probs)
+  cv10f_all_pred <- c(cv10f_all_pred, cv10f_probs)
+  cv10f_all_resp <- c(cv10f_all_resp, cv_ade_data$lesion)
+  cv10f_aucs[j] <- cv10f_roc$auc
+}
+cv10f_roc <- roc(cv10f_all_resp~cv10f_all_pred)
+end <- proc.time()[3]
+time <- end-start
+
+plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
+plot(otu_ade_roc, col='purple', lwd=2, add=T)
+plot(lv1_roc, col='blue', lwd=2, add=T)
+plot(cv10f_roc, col='green3', lwd=2, add=T)
+
+legend('bottomright', legend=c(sprintf('Out-of-bag (AUC: %.3g)',otu_ade_roc$auc),
+                               sprintf('Leave-1-out (AUC: %.3g)',lv1_roc$auc),
+                               sprintf('10-fold CV (AUC: %.3g)',cv10f_roc$auc),
+                               sprintf('OOB vs Leave-1-out: p=%.2g', roc.test(otu_ade_roc,lv1_roc)$p.value),
+                               sprintf('OOB vs 10-fold CV: p=%.2g', roc.test(otu_ade_roc,cv10f_roc)$p.value)
+                               ),lty=c(1,1,1,0,0), lwd=2, col=c('purple','blue','green3'), bty='n')
+
+
+## OTU Cancer model
+cv_canc_data <- otu_canc_data[1:290,c('lesion',otu_canc_model$Xopt)]
+
+### Leave-1-out
+  lv1_probs <- rep(NA,nrow(cv_canc_data))
+  for(i in 1:nrow(cv_canc_data)){
+   train <- cv_canc_data[-i,]
+   test <- cv_canc_data[i,]
+   temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
+   lv1_probs[i] <- predict(temp_model$RFopt, test, type='prob')[,2]
+  }
+  lv1_roc <- roc(cv_canc_data$lesion~lv1_probs)
+
+### 10-fold CV
+start <- proc.time()[3]
+iters <- 10
+cv10f_aucs <- c()
+cv10f_all_resp <- c()
+cv10f_all_pred <- c()
+for(j in 1:iters){
+  sampling <- sample(1:290,290,replace=F)
+  cv10f_probs <- rep(NA,nrow(cv_canc_data))
+  for(i in seq(1,290,29)){
+    train <- cv_canc_data[sampling[-(i:(i+28))],]
+    test <- cv_canc_data[sampling[i:(i+28)],]
+    temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
+    cv10f_probs[sampling[i:(i+28)]] <- predict(temp_model$RFopt, test, type='prob')[,2]
+  }
+  cv10f_roc <- roc(cv_canc_data$lesion~cv10f_probs)
+  cv10f_all_pred <- c(cv10f_all_pred, cv10f_probs)
+  cv10f_all_resp <- c(cv10f_all_resp, cv_canc_data$lesion)
+  cv10f_aucs[j] <- cv10f_roc$auc
+}
+cv10f_roc <- roc(cv10f_all_resp~cv10f_all_pred)
+end <- proc.time()[3]
+time <- end-start
+
+plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
+plot(otu_canc_roc, col='purple', lwd=2, add=T)
+plot(lv1_roc, col='blue', lwd=2, add=T)
+plot(cv10f_roc, col='green3', lwd=2, add=T)
+
+legend('bottomright', legend=c(sprintf('Out-of-bag (AUC: %.3g)',otu_canc_roc$auc),
+                               sprintf('Leave-1-out (AUC: %.3g)',lv1_roc$auc),
+                               sprintf('10-fold CV (AUC: %.3g)',cv10f_roc$auc),
+                               sprintf('OOB vs Leave-1-out: p=%.2g', roc.test(otu_canc_roc,lv1_roc)$p.value),
+                               sprintf('OOB vs 10-fold CV: p=%.2g', roc.test(otu_canc_roc,cv10f_roc)$p.value)
+                               ),lty=c(1,1,1,0,0), lwd=2, col=c('purple','blue','green3'), bty='n')
+
 ```
 
 ```{r figure2_MMT, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
@@ -412,6 +512,8 @@ neg_mod_acc <- (length(neg_norm_mod[neg_norm_mod<cutoff]) + length(neg_les_mod[n
 mmt_spec <- coords(les_roc, x=cutoff, input='thr', ret='spec')
 fit_thr <- coords(les_fit_roc, x=mmt_spec, input='spec', ret='thr')
 if(is.na(fit_thr)){fit_thr <- 7}
+low_fit_spec <- coords(les_fit_roc, x=fit_thr, input='thr', ret='spec')
+
 
 all_les_probs <- all_probs[all_data$dx!='normal',2]
 nonAdv_probs <- all_probs[all_data$Dx_Bin=='Adenoma',2]
@@ -464,7 +566,7 @@ x_labels <- c(sprintf('All\nLesions\n(n=%i)',length(all_les_probs)),sprintf('Non
 bp<-barplot(sens_matrix, beside=T, ylab='Sensitvity (%)', ylim=c(0,1.1), axisnames=F, col=c('grey90','grey25'),axis.lty=1, yaxt='n')
 axis(2, at=seq(0,1,0.1), labels=seq(0,100,10))
 mtext(text=x_labels, side=1, at=c(2,5,8,11,14,17,20,23,26), line=2, cex=0.8, font=c(2,1,1,2,1,1,1,1,2))
-legend(0,1, legend=c(sprintf('FIT (%.0fng/ml)',ceiling(fit_thr)),'MMT'), col=c('grey90','grey25'), pch=15, bty='n', pt.cex=2)
+legend(0,1, legend=c(sprintf('FIT (at %.1f%% specificity)',low_fit_spec*100),sprintf('MMT (at %.1f%% specificity)',mmt_spec*100)), col=c('grey90','grey25'), pch=15, bty='n', pt.cex=2)
 
 
 
