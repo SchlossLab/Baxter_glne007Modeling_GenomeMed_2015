@@ -200,46 +200,7 @@ mtext('C', at=1e-7, font=2, side=3)
 dev.off()
 ```
 
-```{r figS2_cancModel, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
-pdf('results/figures/figS2.pdf', height=6, width=8)
-layout(matrix(c(1,3,2,2), nrow=2))
-
-#AUCRF curve
-par(mar=c(5,5,1.5,1))
-plot(otu_canc_model)
-mtext('A', at=-90, font=2, side=3)
-
-#Importance Plot
-par(mar=c(4,0,1,1))
-canc_otus <- otu_canc_model$Xopt
-dotchart(rev(otu_canc_model$ranking[canc_otus]), labels=rev(tax[canc_otus, 'Label']), xlab='Mean Decrease Accuracy')
-mtext('B', at=-0.014, font=2, side=3)
-
-#Abundance stripchart or most predictive otus
-canc_otus <- otu_canc_model$Xopt
-canc_otus <- rev(canc_otus[1:7])
-norm_abunds <- all_data[all_data$dx=='normal', canc_otus]/10000 + 1e-4
-canc_abunds <- all_data[all_data$dx=='cancer', canc_otus]/10000 + 1e-4
-
-par(mar=c(4, 10, 1, 1))
-plot(1, type="n", ylim=c(0,length(canc_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
-index <- 1
-for(i in canc_otus){
-stripchart(at=index-0.35, jitter(norm_abunds[,i], amount=1e-5), pch=21, bg="royalblue1", method="jitter", jitter=0.2, add=T, cex=1, lwd=0.5)
-  stripchart(at=index+0.35, jitter(canc_abunds[,i], amount=1e-5), pch=21, bg="red", method="jitter", jitter=0.2, add=T, cex=1, lwd=0.5)
-  segments(median(norm_abunds[,i]),index-0.7,median(norm_abunds[,i]),index, lwd=3)
-  segments(median(canc_abunds[,i]),index+0.7,median(canc_abunds[,i]),index, lwd=3)
-  index <- index + 2
-}
-axis(2, at=seq(1,index-2,2), labels=tax[canc_otus, 'Label'], las=1, line=-0.5, tick=F, cex.axis=0.8)
-axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
-legend('bottomright', legend=c("Cancer", "Normal"), pch=c(21, 21), pt.bg=c("red","royalblue1"), cex=0.7)
-mtext('C', at=1e-7, font=2, side=3)
-
-dev.off()
-```
-
-```{r otu_CVs, echo=F, cache=T}
+```{r figS2_otu_CVs, echo=F, cache=T, results='hide'}
 ##OTU adenoma model
 cv_ade_data <- otu_ade_data[,c('lesion',otu_ade_model$Xopt)]
 
@@ -277,11 +238,14 @@ cv10f_roc <- roc(cv10f_all_resp~cv10f_all_pred)
 end <- proc.time()[3]
 time <- end-start
 
+pdf('results/figures/figS2.pdf', height=5.5, width=11)
+layout(matrix(c(1,2),nrow=1))
+par(mar=c(4.5,4.5,1,1))
 plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
 plot(otu_ade_roc, col='purple', lwd=2, add=T)
 plot(lv1_roc, col='blue', lwd=2, add=T)
 plot(cv10f_roc, col='green3', lwd=2, add=T)
-
+mtext('A', at=1.12, font=2, side=3)
 legend('bottomright', legend=c(sprintf('Out-of-bag (AUC: %.3g)',otu_ade_roc$auc),
                                sprintf('Leave-1-out (AUC: %.3g)',lv1_roc$auc),
                                sprintf('10-fold CV (AUC: %.3g)',cv10f_roc$auc),
@@ -331,14 +295,53 @@ plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i
 plot(otu_canc_roc, col='purple', lwd=2, add=T)
 plot(lv1_roc, col='blue', lwd=2, add=T)
 plot(cv10f_roc, col='green3', lwd=2, add=T)
-
+mtext('B', at=1.12, font=2, side=3)
 legend('bottomright', legend=c(sprintf('Out-of-bag (AUC: %.3g)',otu_canc_roc$auc),
                                sprintf('Leave-1-out (AUC: %.3g)',lv1_roc$auc),
                                sprintf('10-fold CV (AUC: %.3g)',cv10f_roc$auc),
                                sprintf('OOB vs Leave-1-out: p=%.2g', roc.test(otu_canc_roc,lv1_roc)$p.value),
                                sprintf('OOB vs 10-fold CV: p=%.2g', roc.test(otu_canc_roc,cv10f_roc)$p.value)
                                ),lty=c(1,1,1,0,0), lwd=2, col=c('purple','blue','green3'), bty='n')
+dev.off()
+```
 
+```{r figS3_cancModel, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
+pdf('results/figures/figS3.pdf', height=6, width=8)
+layout(matrix(c(1,3,2,2), nrow=2))
+
+#AUCRF curve
+par(mar=c(5,5,1.5,1))
+plot(otu_canc_model)
+mtext('A', at=-90, font=2, side=3)
+
+#Importance Plot
+par(mar=c(4,0,1,1))
+canc_otus <- otu_canc_model$Xopt
+dotchart(rev(otu_canc_model$ranking[canc_otus]), labels=rev(tax[canc_otus, 'Label']), xlab='Mean Decrease Accuracy')
+mtext('B', at=-0.014, font=2, side=3)
+
+#Abundance stripchart or most predictive otus
+canc_otus <- otu_canc_model$Xopt
+canc_otus <- rev(canc_otus[1:7])
+norm_abunds <- all_data[all_data$dx=='normal', canc_otus]/10000 + 1e-4
+canc_abunds <- all_data[all_data$dx=='cancer', canc_otus]/10000 + 1e-4
+
+par(mar=c(4, 10, 1, 1))
+plot(1, type="n", ylim=c(0,length(canc_otus)*2), xlim=c(1e-4,1), log="x", ylab="", xlab="Relative Abundance (%)", xaxt="n", yaxt="n")
+index <- 1
+for(i in canc_otus){
+stripchart(at=index-0.35, jitter(norm_abunds[,i], amount=1e-5), pch=21, bg="royalblue1", method="jitter", jitter=0.2, add=T, cex=1, lwd=0.5)
+  stripchart(at=index+0.35, jitter(canc_abunds[,i], amount=1e-5), pch=21, bg="red", method="jitter", jitter=0.2, add=T, cex=1, lwd=0.5)
+  segments(median(norm_abunds[,i]),index-0.7,median(norm_abunds[,i]),index, lwd=3)
+  segments(median(canc_abunds[,i]),index+0.7,median(canc_abunds[,i]),index, lwd=3)
+  index <- index + 2
+}
+axis(2, at=seq(1,index-2,2), labels=tax[canc_otus, 'Label'], las=1, line=-0.5, tick=F, cex.axis=0.8)
+axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
+legend('bottomright', legend=c("Cancer", "Normal"), pch=c(21, 21), pt.bg=c("red","royalblue1"), cex=0.7)
+mtext('C', at=1e-7, font=2, side=3)
+
+dev.off()
 ```
 
 ```{r figure2_MMT, warning=F, results='hide', echo=F, fig.width=7, fig.height=7, cache=T}
@@ -420,7 +423,7 @@ abline(h=cutoff, lty=2)
 dev.off()
 ```
 
-```{r figS3_mmtOTUs, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
+```{r figS4_mmtOTUs, warning=F, echo=F, fig.width=7.5, fig.height=10, results='hide'}
 
 les_otus <- les_model$Xopt
 les_otus <- les_otus[les_otus!='fit_result']
@@ -432,7 +435,7 @@ les_tax <- tax[les_otus, 'Label']
 norm_abunds <- all_data[all_data$dx=='normal', les_otus]/10000 + 1e-4
 les_abunds <- all_data[all_data$dx!='normal', les_otus]/10000 + 1e-4
 
-pdf('results/figures/figS3.pdf', width=10, height=10)
+pdf('results/figures/figS4.pdf', width=10, height=10)
 layout(matrix(1:2, nrow=1), widths=c(1,2.5))
 
 #Importance Plot
@@ -454,6 +457,59 @@ for(i in les_otus){
 axis(1, at=c(1e-4, 1e-3, 1e-2, 1e-1, 1), label=c("0", "0.1", "1", "10", "100"))
 legend(x=.2,y=9, legend=c("Lesion", "Normal"), pch=c(21, 21), pt.bg=c("red3","royalblue1"))
 mtext(les_tax, at=1:length(les_otus)*2-1, side=2, las=1, adj=0.5, line=6)
+dev.off()
+```
+
+```{r figS5_mmtCV, echo=F, cache=T, results='hide'}
+mmt_data <- les_data[,c('lesion',les_model$Xopt)]
+
+### Leave-1-out
+  lv1_probs <- rep(NA,nrow(mmt_data))
+  for(i in 1:nrow(mmt_data)){
+   train <- mmt_data[-i,]
+   test <- mmt_data[i,]
+   temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
+   lv1_probs[i] <- predict(temp_model$RFopt, test, type='prob')[,2]
+  }
+  lv1_roc <- roc(mmt_data$lesion~lv1_probs)
+
+### 10-fold CV
+start <- proc.time()[3]
+iters <- 10
+cv10f_aucs <- c()
+cv10f_all_resp <- c()
+cv10f_all_pred <- c()
+for(j in 1:iters){
+  sampling <- sample(1:490,490,replace=F)
+  cv10f_probs <- rep(NA,nrow(mmt_data))
+  for(i in seq(1,490,49)){
+    train <- mmt_data[sampling[-(i:(i+48))],]
+    test <- mmt_data[sampling[i:(i+48)],]
+    temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
+    cv10f_probs[sampling[i:(i+48)]] <- predict(temp_model$RFopt, test, type='prob')[,2]
+  }
+  cv10f_roc <- roc(mmt_data$lesion~cv10f_probs)
+  cv10f_all_pred <- c(cv10f_all_pred, cv10f_probs)
+  cv10f_all_resp <- c(cv10f_all_resp, mmt_data$lesion)
+  cv10f_aucs[j] <- cv10f_roc$auc
+}
+cv10f_roc <- roc(cv10f_all_resp~cv10f_all_pred)
+end <- proc.time()[3]
+time <- end-start
+
+pdf('results/figures/figS5.pdf', height=5, width=6)
+par(mar=c(4.5,4.5,1,1))
+plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
+plot(les_roc, col='purple', lwd=2, add=T)
+plot(lv1_roc, col='blue', lwd=2, add=T)
+plot(cv10f_roc, col='green3', lwd=2, add=T)
+
+legend('bottomright', legend=c(sprintf('MMT out-of-bag (AUC: %.3g)',les_roc$auc),
+                               sprintf('Leave-1-out (AUC: %.3g)',lv1_roc$auc),
+                               sprintf('10-fold CV (AUC: %.3g)',cv10f_roc$auc),
+                               sprintf('OOB vs Leave-1-out: p=%.2g', roc.test(les_roc,lv1_roc)$p.value),
+                               sprintf('OOB vs 10-fold CV: p=%.2g', roc.test(les_roc,cv10f_roc)$p.value)
+                               ),lty=c(1,1,1,0,0), lwd=2, col=c('purple','blue','green3'), bty='n')
 dev.off()
 ```
 
@@ -679,28 +735,26 @@ fit_spec <- sprintf('%.3g (%.3g-%.3g)',100*fit_spec_ci[2],100*fit_spec_ci[1],100
 #Build Output table
 
 stats_table <- matrix(NA, ncol=6, nrow=7)
-colnames(stats_table) <- c('Most Advanced Finding','','MMT','','FIT','')
+colnames(stats_table) <- c('Most Advanced Finding','','FIT','','MMT','')
 stats_table[1,] <- c('','','Positive Results','Sensitivity (95% CI)','Positive Results','Sensitivity (95% CI)')
 stats_table[2,] <- c('','no.','no.','%','no.','%')
-stats_table[3,] <- c('Cancer', num_canc, canc_obs, canc_mod_sens, canc_fit_obs, canc_fit_sens)
-stats_table[4,] <- c('Adenoma', num_ade, ade_obs, ade_mod_sens, ade_fit_obs, ade_fit_sens)
-stats_table[5,] <- c('Any Lesion', num_les, les_obs, les_mod_sens, les_fit_obs, les_fit_sens)
+stats_table[3,] <- c('Cancer', num_canc, canc_fit_obs, canc_fit_sens, canc_obs, canc_mod_sens)
+stats_table[4,] <- c('Adenoma', num_ade, ade_fit_obs, ade_fit_sens, ade_obs, ade_mod_sens)
+stats_table[5,] <- c('Any Lesion', num_les, les_fit_obs, les_fit_sens, les_obs, les_mod_sens)
 stats_table[6,] <- c('','','Negative Results','Specificity (95% CI)','Negative Results','Specificity (95% CI)')
-stats_table[7,] <- c('Negative Colonosopies', num_norm, norm_obs, mod_spec, norm_fit_obs, fit_spec)
+stats_table[7,] <- c('Negative Colonosopies', num_norm, norm_fit_obs, fit_spec, norm_obs, mod_spec)
 
 write(kable(stats_table), file='results/tables/table1.md')
-#render('results/tables/table1.md', output_format='pdf_document', output_file='table1.pdf')
 
 ```
 
-
-```{r figS4_gender, echo=F, results='hide', cache=T, fig.width=9, fig.height=6}
+```{r figS6_gender, echo=F, results='hide', cache=T, fig.width=9, fig.height=6}
 m_roc <- roc(all_data$lesion[all_data$Gender == 'm'] ~ all_probs[all_data$Gender == 'm',2])
 f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender == 'f',2])
 gender_pval <- roc.test(m_roc,f_roc)$p.value
 
 
-pdf('results/figures/figS4.pdf', height=6, width=9)
+pdf('results/figures/figS6.pdf', height=6, width=9)
 layout(matrix(c(1,2),nrow=1), widths=c(8,5))
 par(mar=c(4.5,4.5,1,1))
 
@@ -718,7 +772,7 @@ legend('bottomright', legend=c(sprintf('All Subjects: %.3g',les_roc$auc),
                                sprintf('Females: %.3g',f_roc$auc),
                                sprintf('Male vs Female: p=%.3g',gender_pval)
                                ),lty=c(1,1,1,0), lwd=2, col=c('purple','blue','palevioletred1'), bty='n')
-
+mtext('A', at=1.12, font=2, side=3)
 
 plot(1, type="n", xlim=c(0.5,7), ylim=c(0,1), ylab="MMT Probability of Lesion", xlab="", xaxt="n")
 stripchart(at=1, all_probs[all_data$dx=='normal' & all_data$Gender == 'm', 2], vertical=T, method='jitter', jitter=0.4, pch=21, bg='royalblue1', add=T)
@@ -732,6 +786,7 @@ stripchart(at=6.6, all_probs[all_data$dx=='cancer' & all_data$Gender == 'f',2], 
 axis(1, at=c(2,5), labels=c('Males','Females'))
 abline(h=cutoff, lty=2)
 legend('bottomleft', legend=c('Normal','Adenoma','Cancer'), pt.bg=c('royalblue1','orange','red'), pch=21, bty='n', pt.cex=1.5)
+mtext('B', at=-1, font=2, side=3)
 dev.off()
 
 m_sens <- coords(m_roc, x=cutoff, input='threshold', ret='sensitivity')
@@ -761,59 +816,7 @@ mod_adonis_p <- mod_adonis[[1]][["Pr(>F)"]][1]
 
 ```
 
-```{r leave_p_out, echo=F, cache=T}
-mmt_data <- les_data[,c('lesion',les_model$Xopt)]
-
-### Leave-1-out
-  lv1_probs <- rep(NA,nrow(mmt_data))
-  for(i in 1:nrow(mmt_data)){
-   train <- mmt_data[-i,]
-   test <- mmt_data[i,]
-   temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
-   lv1_probs[i] <- predict(temp_model$RFopt, test, type='prob')[,2]
-  }
-  lv1_roc <- roc(mmt_data$lesion~lv1_probs)
-
-### 10-fold CV
-start <- proc.time()[3]
-iters <- 10
-cv10f_aucs <- c()
-cv10f_all_resp <- c()
-cv10f_all_pred <- c()
-for(j in 1:iters){
-  sampling <- sample(1:490,490,replace=F)
-  cv10f_probs <- rep(NA,nrow(mmt_data))
-  for(i in seq(1,490,49)){
-    train <- mmt_data[sampling[-(i:(i+48))],]
-    test <- mmt_data[sampling[i:(i+48)],]
-    temp_model <- AUCRF(lesion~., data=train, pdel=0.99, ntree=500)
-    cv10f_probs[sampling[i:(i+48)]] <- predict(temp_model$RFopt, test, type='prob')[,2]
-  }
-  cv10f_roc <- roc(mmt_data$lesion~cv10f_probs)
-  cv10f_all_pred <- c(cv10f_all_pred, cv10f_probs)
-  cv10f_all_resp <- c(cv10f_all_resp, mmt_data$lesion)
-  cv10f_aucs[j] <- cv10f_roc$auc
-}
-cv10f_roc <- roc(cv10f_all_resp~cv10f_all_pred)
-end <- proc.time()[3]
-time <- end-start
-
-plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='Sensitivity', xlab='Specificity')
-plot(les_roc, col='purple', lwd=2, add=T)
-plot(lv1_roc, col='blue', lwd=2, add=T)
-plot(cv10f_roc, col='green3', lwd=2, add=T)
-
-legend('bottomright', legend=c(sprintf('MMT out-of-bag (AUC: %.3g)',les_roc$auc),
-                               sprintf('Leave-1-out (AUC: %.3g)',lv1_roc$auc),
-                               sprintf('10-fold CV (AUC: %.3g)',cv10f_roc$auc),
-                               sprintf('OOB vs Leave-1-out: p=%.2g', roc.test(les_roc,lv1_roc)$p.value),
-                               sprintf('OOB vs 10-fold CV: p=%.2g', roc.test(les_roc,cv10f_roc)$p.value)
-                               ),lty=c(1,1,1,0,0), lwd=2, col=c('purple','blue','green3'), bty='n')
-
-```
-
-
-```{r metadata_model, echo=F, cache=T, results='hide'}
+```{r figS7_metadata_model, echo=F, cache=T, results='hide'}
 
 demo_data <- all_data[,c(les_model$Xopt,'Age','BMI','Gender','Smoke')]
 demo_data$lesion <- les_data$lesion
@@ -829,7 +832,7 @@ demo_roc <- roc(demo_data$lesion~demo_probs)
 mmt_probs <- all_probs[rows,2]
 mmt_roc <- roc(demo_data$lesion~mmt_probs)
 
-pdf('results/figures/figS5.pdf', height=5, width=6)
+pdf('results/figures/figS7.pdf', height=5, width=6)
 par(mar=c(4.5,4.5,1,1))
 plot(c(1,0),c(0,1), type='l', lty=3, xlim=c(1.01,0), ylim=c(-0.01,1.01), xaxs='i', yaxs='i', ylab='', xlab='', cex.axis=1.2)
 plot(mmt_roc, col='red', lwd=2, add=T)
@@ -857,31 +860,32 @@ demo_mc <- mcnemar.test(mc)
 
 ```
 
-
 ```{r figures, echo=F}
 
 canc_ROC <- 'Fig. 1C'
 canc_scatter <- 'Fig. 1D'
 ade_ROC <- 'Fig. 1A'
 ade_scatter <- 'Fig. 1B'
-
 ROC <- 'Fig. 2A'
-table1 <- 'Table 1'
 stripFIT <- 'Fig. 2B'
 stripMMT <- 'Fig. 2C'
+table1 <- 'Table 1'
 bar <- 'Fig. 3'
 scatter <- 'Fig. 4A'
 fit_neg_strip <- 'Fig. 4B'
 pred_values <- 'Table 2'
 
-canc_varImp <- 'Fig. S2B'
-canc_stripChart <- 'Fig. S2C'
-canc_aucrf <- 'Fig. S2A'
 ade_aucrf <- 'Fig. S1A'
 ade_varImp <- 'Fig. S1B'
-mmt_otus <- 'Fig. S3'
-gender <- 'Fig. S4'
-demo_fig <- 'Fig. S5'
+ade_cv_rocs <- 'Fig. 2A'
+canc_cv_rocs <- 'Fig. 2B'
+canc_aucrf <- 'Fig. S3A'
+canc_varImp <- 'Fig. S3B'
+canc_stripChart <- 'Fig. S3C'
+mmt_otus <- 'Fig. S4'
+mmt_cv_rocs <- 'Fig. S5'
+gender <- 'Fig. S6'
+demo_fig <- 'Fig. S7'
 
 
 ```
