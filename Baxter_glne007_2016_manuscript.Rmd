@@ -216,7 +216,7 @@ cv_ade_data <- otu_ade_data[,c('lesion',otu_ade_model$Xopt)]
 
 ### 10-fold CV
 start <- proc.time()[3]
-iters <- 10
+iters <- 100
 cv10f_aucs <- c()
 cv10f_all_resp <- c()
 cv10f_all_pred <- c()
@@ -269,7 +269,7 @@ cv_canc_data <- otu_canc_data[1:290,c('lesion',otu_canc_model$Xopt)]
 
 ### 10-fold CV
 start <- proc.time()[3]
-iters <- 10
+iters <- 100
 cv10f_aucs <- c()
 cv10f_all_resp <- c()
 cv10f_all_pred <- c()
@@ -357,7 +357,7 @@ set.seed(53015)
 les_model <- AUCRF(lesion ~ ., data=les_data, ntree=500, pdel=0.05, ranking='MDG')
 opt_model <- les_model$RFopt
 all_probs <- predict(opt_model, type='prob')
-all_probs <- (all_probs-0.2)/0.8
+all_probs <- (all_probs-0.2)/0.8 #adjustment for wider spread of probabilities
 les_roc <- roc(les_data$lesion~all_probs[,2])
 les_fit_roc <- roc(les_data$lesion~les_data$fit_result)
 
@@ -395,6 +395,7 @@ points(coords(les_fit_roc, x=100, input='threshold', ret='specificity'),coords(l
 points(coords(ade_fit_roc, x=100, input='threshold', ret='specificity'),coords(ade_fit_roc, x=100, input='threshold', ret='sensitivity'), col='orange', cex=1.5, pch=10)
 
 cutoff <- coords(roc=canc_roc, x='best', best.method='y', ret=c('threshold'))
+cutoff <- 0.57
 
 points(coords(canc_roc, x=cutoff, input='threshold', ret='specificity'),coords(canc_roc, x=cutoff, input='threshold', ret='sensitivity'), col='red', cex=1.5, pch=16)
 points(coords(les_roc, x=cutoff, input='threshold', ret='specificity'),coords(les_roc, x=cutoff, input='threshold', ret='sensitivity'), col='darkred', cex=1.5, pch=16)
@@ -475,7 +476,7 @@ mmt_data <- les_data[,c('lesion',les_model$Xopt)]
 
 ### 10-fold CV
 start <- proc.time()[3]
-iters <- 10
+iters <- 100
 cv10f_aucs <- c()
 cv10f_all_resp <- c()
 cv10f_all_pred <- c()
@@ -622,29 +623,50 @@ x_labels <- c(sprintf('All\nLesions\n(n=%i)',length(all_les_probs)),sprintf('Non
 bp<-barplot(sens_matrix, beside=T, ylab='Sensitvity (%)', ylim=c(0,1.1), axisnames=F, col=c('grey90','grey25'),axis.lty=1, yaxt='n')
 axis(2, at=seq(0,1,0.1), labels=seq(0,100,10))
 mtext(text=x_labels, side=1, at=c(2,5,8,11,14,17,20,23,26), line=2, cex=0.8, font=c(2,1,1,2,1,1,1,1,2))
-legend(0,1, legend=c(sprintf('FIT (at %.1f%% specificity)',low_fit_spec*100),sprintf('MMT (at %.1f%% specificity)',mmt_spec*100)), col=c('grey90','grey25'), pch=15, bty='n', pt.cex=2)
+legend(0,1, legend=c(sprintf('FIT (at %.1f%% specificity)',mmt_spec*100),sprintf('MMT (at %.1f%% specificity)',mmt_spec*100)), col=c('grey90','grey25'), pch=15, bty='n', pt.cex=2)
 
 
+### Significance tests with pROC
+les_p <- roc.test(les_fit_roc, les_roc, specificity=mmt_spec, method='specificity', alternative='less', paired=TRUE, boot.n=1000)$p.value
+
+nonAdv_fit_roc <- roc(all_data[all_data$Dx_Bin=='Adenoma' | all_data$dx=='normal', 'lesion']~all_data[all_data$Dx_Bin=='Adenoma' | all_data$dx=='normal', 'fit_result'])
+nonAdv_roc <- roc(all_data[all_data$Dx_Bin=='Adenoma' | all_data$dx=='normal', 'lesion']~all_probs[all_data$Dx_Bin=='Adenoma' | all_data$dx=='normal', 2])
+nonAdv_p <- roc.test(nonAdv_fit_roc,nonAdv_roc, specificity=mmt_spec, method='specificity', alternative='less', paired=TRUE, boot.n=1000)$p.value
+
+advAde_fit_roc <- roc(all_data[all_data$Dx_Bin=='adv Adenoma' | all_data$dx=='normal', 'lesion']~all_data[all_data$Dx_Bin=='adv Adenoma' | all_data$dx=='normal', 'fit_result'])
+advAde_roc <- roc(all_data[all_data$Dx_Bin=='adv Adenoma' | all_data$dx=='normal', 'lesion']~all_probs[all_data$Dx_Bin=='adv Adenoma' | all_data$dx=='normal', 2])
+advAde_p <- roc.test(advAde_fit_roc, advAde_roc, specificity=mmt_spec, method='specificity', alternative='less', paired=TRUE, boot.n=1000)$p.value
 
 
-#McNemar test
-getMcnemarP <- function(model, fit){
-  square <- matrix(c(length(model[model>=cutoff & fit >=fit_thr]),
-                     length(model[model>=cutoff & fit<fit_thr]),
-                     length(model[model<cutoff & fit >=fit_thr]),
-                     length(model[model<cutoff & fit <fit_thr])), ncol=2, byrow=T)
-  return(mcnemar.test(square)$p.value)
+allAde_p <- roc.test(ade_fit_roc, ade_roc, specificity=mmt_spec, method='specificity', alternative='less', paired=TRUE, boot.n=1000)$p.value
+
+s1_fit_roc <- roc(all_data[all_data$stage==1 | all_data$dx=='normal', 'lesion']~all_data[all_data$stage==1 | all_data$dx=='normal', 'fit_result'])
+s1_roc <- roc(all_data[all_data$stage==1 | all_data$dx=='normal', 'lesion']~all_probs[all_data$stage==1 | all_data$dx=='normal', 2])
+s1_p <- roc.test(s1_fit_roc, s1_roc, specificity=mmt_spec, method='specificity', alternative='less', paired=TRUE, boot.n=1000)$p.value
+  
+s2_fit_roc <- roc(all_data[all_data$stage==2 | all_data$dx=='normal', 'lesion']~all_data[all_data$stage==2 | all_data$dx=='normal', 'fit_result']) 
+s2_roc <- roc(all_data[all_data$stage==2 | all_data$dx=='normal', 'lesion']~all_probs[all_data$stage==2 | all_data$dx=='normal', 2])
+s2_p <- roc.test(s2_fit_roc, s2_roc, specificity=mmt_spec, method='specificity', alternative='less', paired=TRUE, boot.n=1000)$p.value
+
+s3_fit_roc <- roc(all_data[all_data$stage==3 | all_data$dx=='normal', 'lesion']~all_data[all_data$stage==3 | all_data$dx=='normal', 'fit_result'])
+s3_roc <- roc(all_data[all_data$stage==3 | all_data$dx=='normal', 'lesion']~all_probs[all_data$stage==3 | all_data$dx=='normal', 2])
+s3_p <- roc.test(s3_fit_roc, s3_roc, specificity=mmt_spec, method='specificity', alternative='less', paired=TRUE, boot.n=1000)$p.value
+
+s4_fit_roc <- roc(all_data[all_data$stage==4 | all_data$dx=='normal', 'lesion']~all_data[all_data$stage==4 | all_data$dx=='normal', 'fit_result'])
+s4_roc <- roc(all_data[all_data$stage==4 | all_data$dx=='normal', 'lesion']~all_probs[all_data$stage==4 | all_data$dx=='normal', 2])
+s4_p <- roc.test(s4_fit_roc, s4_roc, specificity=mmt_spec, method='specificity', alternative='less', paired=TRUE, boot.n=1000)$p.value
+
+allCanc_p <- roc.test(canc_fit_roc, canc_roc, specificity=mmt_spec, method='specificity', alternative='less', paired=TRUE, boot.n=1000)$p.value
+
+
+all_p <- c(les_p, nonAdv_p, advAde_p, allAde_p, s1_p, s2_p, s3_p, s4_p, allCanc_p)
+for(i in 1:length(all_p)){
+  if(all_p[i]<0.1){
+    text(x=i*3-1, y=sens_matrix[2,i]*1.1, '*', cex=2.5)  
+    #text(x=i*3-1, y=sens_matrix[2,i]*1.05, sprintf('p=%.1g',all_p[i]))
   }
+}
 
-if(getMcnemarP(all_les_probs, all_les_fit)<0.05){text(2,sens_matrix[2,1]+0.05, pval(getMcnemarP(all_les_probs, all_les_fit)),cex=0.8)}
-if(getMcnemarP(nonAdv_probs, nonAdv_fit)<0.05){text(5,sens_matrix[2,2]+0.05, pval(getMcnemarP(nonAdv_probs, nonAdv_fit)),cex=0.8)}
-if(getMcnemarP(advAde_probs, advAde_fit)<0.05){text(8,sens_matrix[2,3]+0.05, pval(getMcnemarP(advAde_probs, advAde_fit)),cex=0.8)}
-if(getMcnemarP(all_ade_probs, all_ade_fit)<0.05){text(11,sens_matrix[2,4]+0.05, pval(getMcnemarP(all_ade_probs, all_ade_fit)),cex=0.8)}
-if(getMcnemarP(s1_probs, s1_fit)<0.05){text(14,sens_matrix[2,5]+0.05, pval(getMcnemarP(s1_probs, s1_fit)),cex=0.8)}
-if(getMcnemarP(s2_probs, s2_fit)<0.05){text(17,sens_matrix[2,6]+0.05, pval(getMcnemarP(s2_probs, s2_fit)),cex=0.8)}
-if(getMcnemarP(s3_probs, s3_fit)<0.05){text(20,sens_matrix[2,7]+0.05, pval(getMcnemarP(s3_probs, s3_fit)),cex=0.8)}
-if(getMcnemarP(s4_probs, s4_fit)<0.05){text(23,sens_matrix[2,8]+0.05, pval(getMcnemarP(s4_probs, s4_fit)),cex=0.8)}
-if(getMcnemarP(all_canc_probs, all_canc_fit)<0.05){text(26,sens_matrix[2,1]+0.05, pval(getMcnemarP(all_canc_probs, all_canc_fit)),cex=0.8)}
 
 dev.off()
 
@@ -823,9 +845,8 @@ demo_data$lesion <- les_data$lesion
 rows <- apply(is.na(demo_data), 1, sum)==0
 demo_data <- demo_data[rows,]
 
-set.seed(120715)
+set.seed(010516)
 demo_rf <-AUCRF(lesion ~ ., data=demo_data, ntree=500, pdel=0.99, ranking='MDG')
-
 demo_probs <- predict(demo_rf$RFopt,type='prob')[,2]
 demo_roc <- roc(demo_data$lesion~demo_probs)
 
@@ -840,7 +861,6 @@ plot(demo_roc, col='green3', lwd=2, add=T)
 plot(les_fit_roc, col='blue', lwd=2, add=T, lty=1)
 mtext(side=2, text="Sensitivity", line=2.5, cex=1)
 mtext(side=1, text="Specificity", line=2.5, cex=1)
-#mtext('A', at=1.12, font=2, side=3)
 legend('bottomright', legend=c(sprintf('MMT+Age,BMI,Gender,Smoking: %.3g', demo_roc$auc),
                                 sprintf('MMT: %.3g',mmt_roc$auc),
                                sprintf('FIT: %.3g',les_fit_roc$auc)),
@@ -848,7 +868,7 @@ legend('bottomright', legend=c(sprintf('MMT+Age,BMI,Gender,Smoking: %.3g', demo_
 dev.off()
 
 mmt_sens <- coords(mmt_roc, x=cutoff, input='thr', ret='sens')
-demo_sens <- coords(demo_roc, x=0.837, input='spec', ret='sens')
+demo_sens <- coords(demo_roc, x=mmt_spec, input='spec', ret='sens')
 demo_cutoff <- coords(demo_roc, x=demo_sens, input='sens', ret='thr')
 
 mc <- matrix(c(sum(mmt_probs>=cutoff & demo_probs>=demo_cutoff),
@@ -925,7 +945,7 @@ In the present study, we demonstrate the potential for microbiota analysis to co
 
 **Sequence Curation.**  The 16S rRNA gene sequences were curated using the mothur software package (v1.36), as described previously [@mothur;@miseq]. Briefly, paired-end reads were merged into contigs, screened for quality, aligned to SILVA 16S rRNA sequence database, and screened for chimeras. Sequences were classified using a naive Bayesian classifier trained against a 16S rRNA gene training set provided by the Ribosomal Database Project (RDP) [@wang2007naive]. Curated sequences were clustered into operational taxonomic units (OTUs) using a 97% similarity cutoff with the average neighbor clustering algorithm. Species-level classifications for OTUs of interest were determined by blasting the predominant sequences within each OTU to the NCBI 16S rRNA database. The putative species was only reported for OTUs with greater than 99% sequence identity to a single species in the database; otherwise the consensus RDP classification was used. The number of sequences in each sample was rarefied to 10,000 per sample to minimize the effects of uneven sampling.
 
-**Statistical Methods.**  All statistical analyses were performed using R (v.3.2.0). Random Forest models were generated using the AUCRF package [@calle2011auc]. The AUC of ROC curves were compared using the method described by DeLong et al. [@delong1988comparing]. The optimal cutoff for the MMT was determined using Youden's _J_ statistic as implemented in the pROC package in R [@youden1950index]. This cutoff was determined using the ROC curve for differentiating cancer from normal. The sensitivities of FIT and the MMT were compared using McNemar's Chi-squared test. To control for diagnosis while testing the effects of sex on the microbiome we used PERMANOVA as implemented in the adonis function in the vegan R package [@dixon2003vegan].
+**Statistical Methods.**  All statistical analyses were performed using R (v.3.2.0). Random Forest models were generated using the AUCRF package [@calle2011auc]. The AUC of ROC curves were compared using the method described by DeLong et al. [@delong1988comparing]. The optimal cutoff for the MMT was determined using Youden's _J_ statistic [@youden1950index]. This cutoff was determined using the ROC curve for differentiating cancer from normal. Comparisons of sensitivities of FIT and the MMT at the same specificity were performed using the method deveoped by Pepe et al. with 1000 bootsrap replicates [@pepe2009estimation]. All of the aforementioned statistics for analyzing ROC curves were performed using the pROC package in R [@robin2011proc]. To control for diagnosis while testing the effects of sex on the microbiome we used PERMANOVA as implemented in the adonis function in the vegan R package [@dixon2003vegan].
 
 
 ###Results
@@ -942,34 +962,33 @@ Most of the adenomas and some of the carcinomas were not detected by both tests,
 _**Comparing MMT to FIT.**_ 
 To determine whether microbiota sequence data could be used to complement FIT, we compared the performance of the MMT to FIT. For differentiating any lesions from normal, the AUC for the MMT was significantly higher than FIT (MMT AUC:`r signif(les_roc$auc, 3)`, FIT AUC:`r signif(les_fit_roc$auc, 3)`, `r pval(roc.test(les_roc, les_fit_roc)$p.value)`). Subdividing the lesions, detecting adenomas by the MMT (AUC:`r signif(ade_roc$auc, 3)`) was significantly better than FIT (AUC:`r signif(ade_fit_roc$auc, 3)`, `r pval(roc.test(ade_roc, ade_fit_roc)$p.value)`), but not for differentiating cancer from normal (MMT AUC:`r signif(canc_roc$auc, 3)`, FIT AUC:`r signif(canc_fit_roc$auc, 3)`, `r pval(roc.test(canc_roc, canc_fit_roc)$p.value)`) (`r ROC`). To generate a categorical prediction from the MMT, we determined that the models's optimal threshold for detecing cancer (`r round(cutoff, 3)` probabilitiy of a lesion) using Youden's J statisitc [@youden1950index]. Samples scoring above this cutoff were classified as lesions, and those below the cutoff were classified as normal. We then compared the sensitivity and specificity of the MMT to those of FIT using a threshold of 100 ng/ml of hemoglobin.  At these cutoffs the MMT detected `r sprintf('%.1f',100*canc_sens_ci[2])`% of cancers and `r sprintf('%.1f',100*ade_sens_ci[2])`% of adenomas compared to `r sprintf('%.1f',100*canc_fit_sens_ci[2])`% and `r sprintf('%.1f',100*ade_fit_sens_ci[2])`% for FIT (`r table1`, `r stripFIT`, `r stripMMT`). When adenomas and cancers were pooled together, the MMT detected `r sprintf('%.1f',100*les_sens_ci[2])`% of lesions, while FIT only detected `r sprintf('%.1f',100*les_fit_sens_ci[2])`%. However, the increased sensitivity of the MMT was accompanied by a decrease in specificity (`r sprintf('%.1f',100*mod_spec_ci[2])`%) compared to FIT (`r sprintf('%.1f',100*fit_spec_ci[2])`%).
 
-To better understand the relationship between the MMT and FIT, we compared the results of the two tests for each sample (`r scatter`). All samples that tested positive by FIT also tested positive by the MMT, indicating that the MMT did not miss any of the lesions that FIT was able to detect. However the MMT was able to detect `r sprintf('%.1f',100*neg_canc_mod_sens)`% of cancers and `r signif(100*neg_ade_mod_sens, 3)`% of adenomas that FIT had failed to detect, while maintaining a specificity of `r signif(100*neg_mod_spec, 3)`% (`r fit_neg_strip`). This result demonstrated that incorporation of data from a subject's microbiota complemented FIT to improve its sensitivity.
+To better understand the relationship between the MMT and FIT, we compared the results of the two tests for each sample (`r scatter`). All but one of the samples that tested positive by FIT also tested positive by the MMT. However the MMT was able to detect `r sprintf('%.1f',100*neg_canc_mod_sens)`% of cancers and `r signif(100*neg_ade_mod_sens, 3)`% of adenomas that FIT had failed to detect, while maintaining a specificity of `r signif(100*neg_mod_spec, 3)`% (`r fit_neg_strip`). This result demonstrated that incorporation of data from a subject's microbiota complemented FIT to improve its sensitivity.
 
 To make a fairer comparison of the sensitivities of these two tests, we reduced the cutoff for FIT to closely match the specificity of the MMT. At a 7 ng/ml cutoff FIT had a specificity of `r round(100*low_fit_spec,1)`%, compared to `r round(100*mmt_spec, 1)`% for the MMT. At the lower cutoff for FIT there was no significant difference in sensitivity for cancer between the two tests, but the MMT remained significantly more sensitive for detecting adenomas (p<0.001) and all lesions grouped together (p<0.001, `r bar`). 
 
-The purpose of screening is to identify asymptomatic individuals with early stage disease (i.e., true positives).  Therefore, we estimated the number of true positives captured through FIT and MMT in the recommended screening population in the United States (adults ages 50-75 years).  The prevalence of lesions in an average-risk population was obtained through a previously published meta-analysis [@heitman2009prevalence]. Based on sensitivities of FIT and MMT in our dataset, we estimate that MMT would detect approximately 48 thousand additional cancers, 1.9 million additional advanced adenomas, and 5.9 million additional non-advanced adenomas compared to using FIT alone (`r pred_values`). Thus the improved sensitivity of the MMT would substantially increase the number of true positives identified in the recommended screening population of the United States. Additional studies will be needed to determine whether the increased number of true positives identified by MMT justify the increased number of false positives (and subsequent colonoscopies) that would result from the decreased specificity of MMT.  
+The purpose of screening is to identify asymptomatic individuals with early stage disease (i.e., true positives).  Therefore, we estimated the number of true positives captured through FIT and MMT in the recommended screening population in the United States (adults ages 50-75 years).  The prevalence of lesions in an average-risk population was obtained through a previously published meta-analysis [@heitman2009prevalence]. Based on sensitivities of FIT and MMT in our dataset, we estimate that MMT would detect approximately 48 thousand additional cancers, 1.9 million additional advanced adenomas, and 5.9 million additional non-advanced adenomas compared to using FIT alone (`r pred_values`). Thus the improved sensitivity of the MMT would substantially increase the number of true positives identified in the recommended screening population of the United States.
 
 
 _**Effect of patient characteristics on model performance.**_ 
 Previous studies have identified differences in diagnostic test performance for certain demographic groups or for people taking certain medications [@symonds2015factors;@kapidzic2015gender;@levi2009sensitivity]. Therefore we tested whether the MMT performance differed between patient populations. We found no difference in model performance according to age, BMI, NSAID usage, diabetes, smoking, or previous history of polyps (all p>0.05). However the model was significantly better at differentiating normal from lesion for females than for males (`r pval(gender_pval)`; `r gender`). For females the model detected `r 100*signif(f_sens, 3)`% of lesions with a specificity of `r 100*signif(f_spec, 3)`%. For males the model detected `r 100*signif(m_sens, 3)`% of lesions with a specificity of `r 100*signif(m_spec, 3)`%.  This difference was more pronounced for adenomas. The MMT detected `r 100*signif(f_ade_sens, 3)`% of adenomas in females and `r 100*signif(m_ade_sens, 3)`% in males. Despite performing more poorly overall for males, the MMT did have a higher sensitivity for cancer among males (`r 100*signif(m_canc_sens, 3)`%) than females (`r 100*signif(f_canc_sens, 3)`%). The difference in performance between males and females appeared to be due to differences in FIT results rather than differences in the microbiome. After correcting for diagnosis, there was a significant effect of sex on FIT result (`r pval(fit_aov_p)`, two-way ANOVA), but not on the overall structure of the microbiome (PERMANOVA: `r pval(mod_adonis_p)`). 
 
-We have previously shown that incorporating patient metadata into microbiome-based diagnostic models can improve screening accuracy [@zackular2014human]. To test whether the same was true for the MMT we generated a random forest model that combined patients' age, BMI, sex, and smoking status with the OTUs and FIT result from the MMT. The AUC of the ROC curve for this model (`r sprintf('%.3f',demo_roc$auc)`) was not significantly higher than that of the MMT (AUC: `r sprintf('%.3f',les_roc$auc)`, p=`r sprintf('%.2g',roc.test(demo_roc, les_roc)$p.value)`, `r demo_fig`). However, when the model with patient metadata was set to the same specificity as the MMT (83.7%), it had significantly higher sensitivity for lesions (`r sprintf('%.1f',100*demo_sens)`%) than the MMT (`r sprintf('%.1f',100*les_sens_ci[2])`%, p=`r sprintf('%.1g',demo_mc$p.value)`). This result supports our previous observations that patient metadata could be used to further improve screening accuracy.
+We have previously shown that incorporating patient metadata into microbiome-based diagnostic models can improve screening accuracy [@zackular2014human]. To test whether the same was true for the MMT we generated a random forest model that combined patients' age, BMI, sex, and smoking status with the OTUs and FIT result from the MMT. The AUC of the ROC curve for this model (`r sprintf('%.3f',demo_roc$auc)`) was not significantly higher than that of the MMT (AUC: `r sprintf('%.3f',les_roc$auc)`, p=`r sprintf('%.2g',roc.test(demo_roc, les_roc)$p.value)`, `r demo_fig`). When the model with patient metadata was set to the same specificity as the MMT (`r round(100*mmt_spec, 1)`%), it did not improve the sensitivity for lesions (`r sprintf('%.1f',100*demo_sens)`%) compared to MMT (`r sprintf('%.1f',100*les_sens_ci[2])`%, p=`r sprintf('%.1g',demo_mc$p.value)`). Thus, contrary to our previous findings, incorporation of patient metadata did not significantly improve the MMT.
 
 ###Discussion  
 
-We confirmed previous findings that the gut microbiota can be used to differentiate healthy individuals from those with colonic lesions. Although FIT was better at detecting lesions than a model using only the microbiota, microbiota-based models detected a subset of lesions that were not detected by FIT. This suggested that the two methods could complement each other. Based on this observation we developed a cross-validated random forest model that combined both FIT and the microbiota to detect colonic lesions.  The resulting MMT had higher sensitivity than FIT for detecting lesions, especially adenomas. MMT was also able to detect the majority of lesions missed by FIT. However, the increased sensitivity of MMT was accompanied by a decrease in specificity compared to FIT. We anticipate that inclusion of additional host markers to the MMT could further improve its sensitivity and/or specificity.
+We confirmed previous findings that the gut microbiota can be used to differentiate healthy individuals from those with colonic lesions. Although FIT was better at detecting lesions than a model using only the microbiota, microbiota-based models detected a subset of lesions that were not detected by FIT. This suggested that the two methods could complement each other. Based on this observation we developed a cross-validated random forest model that combined both FIT and the microbiota to detect colonic lesions. The resulting MMT had higher sensitivity than FIT for detecting lesions, especially adenomas. The MMT was also able to detect the majority of cancers missed by FIT. However, the increased sensitivity of MMT was accompanied by a decrease in specificity compared to FIT. With a false positive rate more than three times higher than FIT (`r round(100*(1-mmt_spec), 1)`% versus `r round(100*(1-fit_spec_ci[2]), 1)`%), an annual MMT would result in more colonoscopies than using FIT as the primary screening test. However, the higher sensitivity of the MMT might make it possible to reduce the frequency of screening, thereby offsetting the difference in the number of colonoscopies. Additional studies would be needed identify the appropriate screening inverval and to determine whether the increased number of true positives identified by MMT justify the increased number of false positives. 
 
-
-It was recently shown that when FIT was combined with host-associated DNA biomarkers, the ability to detect adenomas and carcinomas was significantly improved over FIT alone [@imperiale2014multitarget]. The sensitivity of the host-associated DNA screen was 92.3% for cancer and 42.4% for adenomas, which are both slightly lower than what we observed with our MMT. Regardless of the relative performance, such results support the assertion that because of the large interpersonal variation in markers for adenomas and carcinomas, it is necessary to employ a panel of biomarkers and to use a model that integrates the biomarkers. The accuracy of our model may be further improved by incorporating additional indicators such as the host-associated biomarkers or those targeting specific genes involved in the underlying mechanism of tumorigenesis such as bacterial toxins [@wu2009human;@arthur2012intestinal;@zeller2014potential]. More generally, predictive and diagnostic models for other diseases with a microbial etiology may benefit from a similar approach. For example, we recently demonstrated the ability to detect _Clostridium difficile_ infection based on the composition of the microbiota [@schubert2015antibiotic]. Such models are likely to be useful as microbiota sequencing gains traction as a tool for characterizing health.
+It was recently shown that when FIT was combined with host-associated DNA biomarkers, the ability to detect adenomas and carcinomas was significantly improved over FIT alone [@imperiale2014multitarget]. The sensitivity of the host-associated DNA screen was 92.3% for cancer and 42.4% for adenomas with a specificity of 89.8%, all very similar to what we observed with our MMT. Such results support the assertion that because of the large interpersonal variation in markers for adenomas and carcinomas, it is necessary to employ a panel of biomarkers and to use a model that integrates the biomarkers. The accuracy of our model may be further improved by incorporating additional indicators such as the host-associated biomarkers or those targeting specific genes involved in the underlying mechanism of tumorigenesis such as bacterial toxins [@wu2009human;@arthur2012intestinal;@zeller2014potential]. More generally, predictive and diagnostic models for other diseases with a microbial etiology may benefit from a similar approach. For example, we recently demonstrated the ability to detect _Clostridium difficile_ infection based on the composition of the microbiota [@schubert2015antibiotic]. Such models are likely to be useful as microbiota sequencing gains traction as a tool for characterizing health.
 
 Surprisingly most of the OTUs that work well for identifying cancers, including _Fusobacterium nucleatum_ (OTU264), _Peptostroptococcus stomatis_ (OTU310), and _Parvimonas micra_ (OTU281), were excluded from the MMT. This is likely due to these OTUs being positively correlated with FIT (all p<0.001, Spearman correlation), meaning they add little information when used in combination with FIT. Instead the MMT is enriched for OTUs that help detect adenomas. Thus the MMT model relies primarily on FIT for detecting cancer, and uses the microbiota to help identify adenomas undetectable by FIT alone. It is also interesting that most of the OTUs used in the MMT were enriched in normal individuals, suggesting that a loss of beneficial organisms in addition to the emergence of pathogens may be important for colorectal cancer development. Many of the OTUs that were depleted in patients with lesions belonged to the Ruminococcoaceae and Lachnospiraceae families, which contain the predominant producers of butyrate, a short-chain fatty acid with anti-inflammatory and anti-tumorigenic properties [@pryde2002microbiology;@segain2000butyrate;@d1996butyrate;@hague1995apoptosis]. Likewise Zeller et al. observed a depletion of a potential butyrate-producing _Eubacterium spp._ in patients with CRC [@zeller2014potential]. Loss of butyrate or other anti-inflammatory microbial metabolites may contribute to CRC development. These possibilities highlight the need for longitudinal studies to better understand how changes to an individual's microbiome or the metabolic profile of the gut might predispose them to CRC.
 
 Like other groups, we noticed that the microbiota of CRC patients contained higher levels of bacterial taxa traditionally thought of as oral pathogens, including _Fusobacterium_, _Porphyromonas_, _Peptostreptococus_, _Gemella_, _Parvimonas_, and _Prevotella_. Periodontal pathogens have been shown to promote the progression of oral cancer [@gallimidi2015periodontal].  Therefore it is possible that these taxa could influence the progression of CRC by a similar mechanism. These observation may warrant further investigation into a potential link between periodontal diseases and CRC. Furthermore, since the structure of an individual's oral microbiome is correlated with that of the gut [@ding2014dynamics], alterations in the oral community could potentially be a proxy for ongoing or future changes to the gut community.
 
-Although it is exciting that the addition of the microbiota can improve the sensitivity of FIT, further validation is needed prior to clinical adoption. This represents the largest cohort to date, but still only represents 490 patients. In contrast, the cohort used to validate the Multitarget stool DNA test included 9,989 subjects. Development of a larger cohort will allow us to apply the MMT to a separate validation set. It is also unclear how sensitive the MMT is to variation in sample preparation and processing. Many of the samples included in the current study were collected after the subjects’ colonoscopy. A previous study showed that the microbiome quickly returns to normal following colonoscopy [20]. Likewise we found no difference in the microbiome between samples collected prior to or after colonoscopy (PERMANOVA: p=0.45). Regardless, we would have greater confidence in the predictive potential of the microbiota if all samples were collected prior to colonoscopy. Despite these shortcomings, the ability to improve the sensitivity of detecting adenomas suggests that further methods development and validation are warranted.
+Although it is exciting that the addition of the microbiota can improve the sensitivity of FIT, further validation is needed prior to clinical adoption. This represents the largest cohort to date, but still only consists of 490 patients. In contrast, the cohort used to validate the Multitarget stool DNA test included 9,989 subjects. Development of a larger cohort will allow us to apply the MMT to a separate validation set. It is also unclear how sensitive the MMT is to variation in sample preparation and processing. Many of the samples included in the current study were collected 1-2 weeks after the subjects’ colonoscopy. A previous study showed that the microbiome quickly returns to normal following colonoscopy [20]. Likewise we found no difference in the microbiome between samples collected prior to or after colonoscopy (PERMANOVA: p=0.45). Regardless, we would have greater confidence in the predictive potential of the microbiota if all samples were collected prior to colonoscopy. Despite these shortcomings, the ability to improve the sensitivity of detecting adenomas suggests that further methods development and validation are warranted.
 
  
 ###Conclusions  
-Our findings demonstrate the potential for combining the analysis of a patient's microbiota with conventional stool-based tests to improve CRC detection. Using the random forest algorithm it was possible to interpret FIT results in the context of the microbiota. The MMT had higher sensitivity for lesions, regardless of the stages of tumorigenesis. Moreover the model detected the majority of lesions that FIT was unable to detect. The shortcoming of the MMT is its lower specificity but, by conducting the FIT and MMT in series, it is possible to maximize the number of correctly identified individuals with preclinical lesions. The potential value of the MMT is its higher sensitivity which, is the purpose of preventive screening – finding lesions earlier so that cancer would be avoided.
+Our findings demonstrate the potential for combining the analysis of a patient's microbiota with conventional stool-based tests to improve CRC detection. Using the random forest algorithm it was possible to interpret FIT results in the context of the microbiota. The MMT had higher sensitivity for lesions, regardless of the stages of tumorigenesis. Moreover the model detected the majority of cancers that FIT was unable to detect. The shortcoming of the MMT is its lower specificity. However, the potential value of the MMT is its higher sensitivity, which is the purpose of preventive screening – finding lesions earlier so that cancer would be avoided.
   
 
 **Abbreviations:**  
@@ -999,7 +1018,7 @@ MMT: multitarget microbiota test
  
 **Figure 3. Relationship between FIT and MMT for each sample.** (A) Scatterplot of MMT and FIT results for each sample.  Dashed lines show the cutoff for each test. Points with a FIT result of 0 are jittered to improve visibility. (B) Stripchart of MMT results for samples separated by binary FIT result.
 
-**Figure 4. Sensitivities for FIT and MMT for each stage of tumor development with matching specificities.**  The cutoff for FIT was reduced to 7 ng/ml to closely match the specificity of the MMT. P-values based on McNemar's chi-squared test.
+**Figure 4. Sensitivities for FIT and MMT for each stage of tumor development with matching specificities.**  The cutoff for FIT was reduced to 7 ng/ml to match the specificity of the MMT. Sensitivities were compared using the method proposed by Pepe et al. (* = p<0.05, 1000 bootstrap replicates).
  
 ###Tables  
 **Table 1. Sensitivities and specificities for FIT and MMT.** The 95% confidence intervals were computed with 2000 stratified bootstrap replicates.
