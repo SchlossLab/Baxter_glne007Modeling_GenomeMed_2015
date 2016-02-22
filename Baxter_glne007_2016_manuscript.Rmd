@@ -770,6 +770,77 @@ write(kable(stats_table), file='results/tables/table1.md')
 
 ```
 
+```{r table2_screeningPop, echo=F}
+mmt_spec <- coords(les_roc, x=cutoff, input='thr', ret='spec')
+fit_thr <- coords(les_fit_roc, x=mmt_spec, input='spec', ret='thr')
+if(is.na(fit_thr)){fit_thr <- 100}
+low_fit_spec <- coords(les_fit_roc, x=fit_thr, input='thr', ret='spec')
+
+
+all_les_probs <- all_probs[all_data$dx!='normal',2]
+nonAdv_probs <- all_probs[all_data$Dx_Bin=='Adenoma',2]
+advAde_probs <- all_probs[all_data$Dx_Bin=='adv Adenoma',2]
+all_ade_probs <- all_probs[all_data$dx=='adenoma',2]
+s1_probs <- all_probs[all_data$stage==1,2]
+s2_probs <- all_probs[all_data$stage==2,2]
+s3_probs <- all_probs[all_data$stage==3,2]
+s4_probs <- all_probs[all_data$stage==4,2]
+all_canc_probs <- all_probs[all_data$dx=='cancer',2]
+
+all_les_sens <- sum(all_les_probs>=cutoff) / length(all_les_probs)
+nonAdv_sens <- sum(nonAdv_probs>=cutoff) / length(nonAdv_probs)
+advAde_sens <- sum(advAde_probs>=cutoff) / length(advAde_probs)
+all_ade_sens <- sum(all_ade_probs>=cutoff) / length(all_ade_probs)
+s1_sens <- sum(s1_probs>=cutoff) / length(s1_probs)
+s2_sens <- sum(s2_probs>=cutoff) / length(s2_probs)
+s3_sens <- sum(s3_probs>=cutoff) / length(s3_probs)
+s4_sens <- sum(s4_probs>=cutoff) / length(s4_probs)
+all_canc_sens <- sum(all_canc_probs>=cutoff) / length(all_canc_probs)
+
+all_les_fit <- all_data[all_data$dx!='normal','fit_result']
+nonAdv_fit <- all_data[all_data$Dx_Bin=='Adenoma','fit_result']
+advAde_fit <- all_data[all_data$Dx_Bin=='adv Adenoma','fit_result']
+all_ade_fit <- all_data[all_data$dx=='adenoma','fit_result']
+s1_fit <- all_data[all_data$stage==1,'fit_result']
+s2_fit <- all_data[all_data$stage==2,'fit_result']
+s3_fit <- all_data[all_data$stage==3,'fit_result']
+s4_fit <- all_data[all_data$stage==4,'fit_result']
+all_canc_fit <- all_data[all_data$dx=='cancer','fit_result']
+
+all_les_fit_sens <- sum(all_les_fit>=fit_thr) / length(all_les_fit)
+nonAdv_fit_sens <- sum(nonAdv_fit>=fit_thr) / length(nonAdv_fit)
+advAde_fit_sens <- sum(advAde_fit>=fit_thr) / length(advAde_fit)
+all_ade_fit_sens <- sum(all_ade_fit>=fit_thr) / length(all_ade_fit)
+s1_fit_sens <- sum(s1_fit>=fit_thr) / length(s1_fit)
+s2_fit_sens <- sum(s2_fit>=fit_thr) / length(s2_fit)
+s3_fit_sens <- sum(s3_fit>=fit_thr) / length(s3_fit)
+s4_fit_sens <- sum(s4_fit>=fit_thr) / length(s4_fit)
+all_canc_fit_sens <- sum(all_canc_fit>=fit_thr) / length(all_canc_fit)
+
+
+total_pop <- 80494283
+canc_pop <- round(total_pop*0.003, 0)
+advAde_pop <- round(total_pop*0.057, 0)
+nonAdv_pop <- round(total_pop*0.177, 0)
+norm_pop <- total_pop-(canc_pop+advAde_pop+nonAdv_pop)
+
+canc_tp_mmt <- round(canc_pop*all_canc_sens, 0)
+canc_tp_fit <- round(canc_pop*all_canc_fit_sens, 0)
+advAde_tp_mmt <- round(advAde_pop*advAde_sens, 0)
+advAde_tp_fit <- round(advAde_pop*advAde_fit_sens, 0)
+nonAdv_tp_mmt <- round(nonAdv_pop*nonAdv_sens, 0)
+nonAdv_tp_fit <- round(nonAdv_pop*nonAdv_fit_sens, 0)
+
+fp_mmt <- norm_pop*mmt_spec
+fp_fit <-norm_pop*fit_spec_ci[2]
+
+truePos_table <- matrix(c('Cancer','Advanced Adenoma','Non-advanced Adenoma','0.03%', '5.7%', '17.7%', canc_pop, advAde_pop, nonAdv_pop, canc_tp_mmt, advAde_tp_mmt, nonAdv_tp_mmt, canc_tp_fit, advAde_tp_fit, nonAdv_tp_fit), nrow=3)
+colnames(truePos_table) <- c('Condition','Prevalence','Number of Persons, ages 50-75 years, with Condition','True Positives identified by FIT','True Positives identified by MMT')
+
+write(kable(truePos_table), file='results/tables/table2.md')
+```
+
+
 ```{r figS6_gender, echo=F, results='hide', cache=T, fig.width=9, fig.height=6}
 m_roc <- roc(all_data$lesion[all_data$Gender == 'm'] ~ all_probs[all_data$Gender == 'm',2])
 f_roc <- roc(all_data$lesion[all_data$Gender == 'f'] ~ all_probs[all_data$Gender == 'f',2])
