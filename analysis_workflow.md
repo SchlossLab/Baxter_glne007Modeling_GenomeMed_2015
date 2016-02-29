@@ -36,7 +36,7 @@ At this point we need to run code/mothur.batch, which contains most of the comma
 ### OTU clustering and classification
 The next step is OTU clustering (and some downstream mothur commands) using the cluster.batch file. This step is very memory intensive, so we run it with 1 processors and 150gb of memory.
 
-	qsub cluster.pbs
+	qsub code/cluster.pbs
 
 To make the taxonomy file form mothur more palatable, run the trimTax.py python script. The output is used for labeling OTU classifcations in the Rmd script.
 
