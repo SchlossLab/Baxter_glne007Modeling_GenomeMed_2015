@@ -33,10 +33,15 @@ We are in the process of making this analysis workflow fully automated from raw 
     |  |- tables/      # text version of tables to be rendered with kable in R
     |  |- figures/     # graphs, likely designated for manuscript figures
     |
-    |- Baxter_glne007_2015_manuscript.Rmd       # executable Rmarkdown for this study, if applicable
-    |- Baxter_glne007_2015_manuscript.docx      # docx rendered version of the Rmd file
-    |- Baxter_GenMed_2015_manuscript.docx	# submission-ready version of manuscript
-    |- Baxter_GenMed_2015_CoverLetter.docx	# cover letter for submission
+    |- Baxter_glne007_2016_manuscript.Rmd       # executable Rmarkdown for this study, if applicable
+    |- Baxter_glne007_2016_manuscript.docx      # docx rendered version of the Rmd file
+    |- Baxter_GenMed_2016_manuscript.docx	# cleaned up version of the final manuscript
+    |- Baxter_GenMed_2016_CoverLetter.docx	# cover letter for submission
+    |- Baxter_GenMed_2016_revisions1.docx # first set of revisions
+    |- Baxter_GenMed_2016_revisions2.docx # second set of revisions
+    |
+    |- rebuttal.docx # rebuttal for first revisions
+    |- rebuttal2.docx # reubttal for second revisions
     |
     |- bmc.csl	# citation style guide for BioMed Central
     |- manuscript_format.docx	# reference document for formatting docx made from Rmd
