@@ -38,9 +38,6 @@ The next step is OTU clustering (and some downstream mothur commands) using the 
 
 	qsub code/cluster.pbs
 
-To make the taxonomy file form mothur more palatable, run the trimTax.py python script. The output is used for labeling OTU classifcations in the Rmd script.
-
-	python code/trimTax.py data/glne007.final.an.unique_list.0.03.cons.taxonomy data/glne007.0.03.trim.tax
 
 ### Generating and Testing models
 The bulk of the analyses for this study are done through the Baxter_glne007_2016_manuscript.Rmd knitr document. It will generate and test the random forest models, generate figures, and render a docx of the manuscript.

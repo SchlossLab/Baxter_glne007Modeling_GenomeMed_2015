@@ -46,6 +46,11 @@ all_data$lesion[all_data$dx=='adenoma' | all_data$dx=='cancer'] <- 1
 all_data$lesion[all_data$dx=='normal'] <- 0
 ```
 
+```{r trimTax, engine='sh', echo=F, results='hide'}
+python code/trimTax.py data/glne007.final.an.unique_list.0.03.cons.taxonomy data/glne007.0.03.trim.tax 1
+
+```
+
 ```{r pval, echo=F}
 pval <- function(p){
   if(p < 0.001){p <- 'p<0.001'}

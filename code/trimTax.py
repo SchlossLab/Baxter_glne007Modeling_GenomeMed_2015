@@ -1,12 +1,13 @@
-#!/usr/local/bin/python3
+#!/usr/local/bin/python
 
 import sys
 import re
 
 tax_file = open(sys.argv[1],'r')
 outfile = open(sys.argv[2],'w')
+# sys.argv[3] is the minimum taxonomic level. 1=genus, 5=phylum.
 
-print('\t'.join(['OTU','Classification','Label']), end='\n', file=outfile)
+outfile.write('\t'.join(['OTU','Classification','Label'+'\n']))
 
 next(tax_file)
 for line in tax_file:
@@ -14,26 +15,20 @@ for line in tax_file:
 	line=line.split('\t')
 	taxon=re.sub('\([0-9]+\)|"','',line[2])
 	taxon=taxon.split(';')
-	if not taxon[-2] == 'unclassified':
-			taxon = taxon[-2]
-	else:
-		if not taxon[-3] == 'unclassified':
-			taxon = taxon[-3]
+	level = -1*int(sys.argv[3]) - 1 
+	while level > -8:
+		if not taxon[level] == 'unclassified':
+			taxon = taxon[level]
+			break
 		else:
-			if not taxon[-4] == 'unclassified':
-				taxon = taxon[-4]
-			else:
-				if not taxon[-5] == 'unclassified':
-					taxon = taxon[-5]
-				else:
-					if not taxon[-6] == 'unclassified':
-						taxon = taxon[-6]
-					else:
-						taxon = taxon[-7]
+			level = level-1
+	if level == -8:
+		taxon = 'Unclassified'		
+			
 	otu = line[0]
 	otu=re.sub('Otu0*','OTU',otu)
 	label=[taxon,' (',otu,')']
 	label=''.join(label)
-	print('\t'.join([line[0],otu, taxon, label]), file=outfile, end='\n')
+	outfile.write('\t'.join([line[0],otu, taxon, label+'\n']))
 
 tax_file.close()
