@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 *_cache
+cache/*
 *_files
 
 *.Rout
