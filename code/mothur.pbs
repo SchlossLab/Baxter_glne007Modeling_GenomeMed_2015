@@ -15,7 +15,7 @@ cd $PBS_O_WORKDIR
 
 NCPUS=`wc -l $PBS_NODEFILE | awk '{print $1}'`
 
-/share/scratch/schloss/mothur/mothur ./code/mothur.batch
+/mnt/EXT/Schloss-data/bin/mothur ./code/mothur.batch
 
 echo "qsub working directory absolute is"
 echo $PBS_O_WORKDIR
