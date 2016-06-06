@@ -4,7 +4,7 @@
 
 First you'll need to clone this directory. The following workflow is designed to be run from the root directory of the repository.
 
-	git clone https://github.com/SchlossLab/Baxter_glne007Modeling_2015.git
+	git clone https://github.com/SchlossLab/Baxter_glne007Modeling_GenomeMed_2015.git
 
 ### Acquiring the raw data
 Download .sra files from the NCBI Sequence Read Archive.  The accession number for this study is SRP062005.  
@@ -14,7 +14,7 @@ Download .sra files from the NCBI Sequence Read Archive.  The accession number f
 
 Extract fastq files from the sra files. You will need to have the [SRA Toolkit](http://www.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?cmd=show&f=software&m=software&s=software) installed on your system. This command will also delete the sra files so that they don't waste storage space. 
 
-	for FILE in ls data/*.sra; do fastq-dump --split-files --outdir data/ $FILE && rm -f $FILE; done
+	for FILE in data/*.sra; do fastq-dump --split-files --outdir data/ $FILE && rm -f $FILE; done
 
 
 ### Sequence Curation
