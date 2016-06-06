@@ -4,7 +4,7 @@
 
 First you'll need to clone this directory. The following workflow is designed to be run from the root directory of the repository.
 
-	git clone https://github.com/SchlossLab/Baxter_glne007Modeling_2015.git
+	git clone https://github.com/SchlossLab/Baxter_glne007Modeling_GenomeMed_2015.git
 
 ### Acquiring the raw data
 Download .sra files from the NCBI Sequence Read Archive.  The accession number for this study is SRP062005.  
